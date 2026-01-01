@@ -181,4 +181,15 @@ All significant network changes are documented with:
 
 ---
 
+## VLAN Architecture
+
+| VLAN ID | Name     | Subnet          | Gateway        | Status |
+|--------|----------|-----------------|----------------|--------|
+| 10     | MGMT     | 10.10.10.0/24   | 10.10.10.1     | Assigned, IP configured (not enforced) |
+| 20     | SERVERS  | 10.10.20.0/24   | 10.10.20.1     | Assigned, IP configured (not enforced) |
+| 30     | CLIENTS  | 10.10.30.0/24   | 10.10.30.1     | Assigned, IP configured (not enforced) |
+| 40     | LAB      | 10.10.40.0/24   | 10.10.40.1     | Assigned, IP configured (not enforced) |
+| 50     | IOT      | 10.10.50.0/24   | 10.10.50.1     | Assigned, IP configured (not enforced) |
+
+
 *Last Updated:* Initial draft
