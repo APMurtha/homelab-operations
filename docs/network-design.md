@@ -191,5 +191,7 @@ All significant network changes are documented with:
 | 40     | LAB      | 10.10.40.0/24   | 10.10.40.1     | Assigned, IP configured (not enforced) |
 | 50     | IOT      | 10.10.50.0/24   | 10.10.50.1     | Assigned, IP configured (not enforced) |
 
+VLAN 40 trunking to OPNsense verified. End-host testing pending due to unavailable test device.
+
 
 *Last Updated:* Initial draft
