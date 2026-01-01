@@ -193,5 +193,7 @@ All significant network changes are documented with:
 
 VLAN 40 trunking to OPNsense verified. End-host testing pending due to unavailable test device.
 
+VLAN 40 (LAB) trunking and routing verified using temporary access port testing. 
+End-to-end connectivity to OPNsense gateway (10.10.40.1) confirmed.
 
 *Last Updated:* Initial draft
