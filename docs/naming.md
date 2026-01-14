@@ -1,0 +1,92 @@
+# 📛 Naming & Identity Scheme (Lord of the Rings)
+
+## Purpose
+
+This homelab uses a **role-based naming convention inspired by _The Lord of the Rings_**.  
+Names are chosen to reflect **function, trust level, and responsibility**, making the environment easier to operate, document, and explain in professional or interview contexts.
+
+The theme is aesthetic; the **intentional structure** is the point.
+
+---
+
+## 🖥️ Compute & Infrastructure Hosts
+
+| Name | Role | Description |
+|-----|-----|-------------|
+| **orthanc** | Proxmox Hypervisor | The central tower that houses all other systems. Runs and manages all VMs and containers. |
+| **rivendell** | Media / Docker Server | Home to media and content services (Plex, Jellyfin, Audiobookshelf, *arr stack). A place of culture and stories. |
+| **minas-tirith** | Telemetry & Observability | The watchful city. Hosts Grafana, Loki, Promtail, Netdata, and centralized logging. |
+| **palantir** | DNS (Pi-hole + Unbound) | Seeing stones used for name resolution, visibility, and DNS enforcement. |
+| **ithilien** | Bastion / Access Host | Hardened SSH/MOSH jump host used for administrative access into protected networks. |
+| **lothlorien** | UniFi Controller | Centralized management plane for wireless infrastructure. Stable, isolated, and trusted. |
+
+---
+
+## 🌐 Network Infrastructure Naming
+
+| Component | Name | Purpose |
+|--------|------|--------|
+| Firewall / Router | **anduin** | OPNsense gateway and inter-VLAN router. Central control point for traffic flow and policy enforcement. |
+| Managed Switch | **osgiliath** | VLAN-aware distribution layer between firewall, hosts, and access points. |
+| Wireless Access Point | **ithil** | Trusted Wi-Fi access point bridged into the VLAN architecture. |
+
+---
+
+## 🗄️ Storage Naming
+
+| Name | Type | Description |
+|-----|-----|-------------|
+| **moria** | ZFS Pool | Primary data pool for media, containers, and persistent storage. Named for depth, durability, and scale. |
+
+> Storage names are intentionally distinct from hostnames to avoid coupling data identity to compute lifecycle.
+
+---
+
+## 🧩 VLAN Naming Conventions
+
+VLANs use **numeric IDs with functional names**, prioritizing clarity over theme.
+
+| VLAN ID | Name | Purpose |
+|-------:|------|--------|
+| 10 | MGMT | Management plane (firewall, hypervisor, admin access) |
+| 20 | SERVERS | Infrastructure services and application servers |
+| 30 | CLIENTS | Trusted user devices |
+| 40 | LAB | Experimental systems and testing |
+| 50 | IOT | Untrusted IoT devices |
+| 60 | GUEST | Internet-only guest access |
+
+---
+
+## 🧠 Design Principles
+
+- **Role-based naming**  
+  Names encode *function*, not operating system or software stack.
+- **Clear trust boundaries**  
+  Names help signal access level and security posture.
+- **Scalable**  
+  New systems can be added without renaming existing infrastructure.
+- **Operational clarity**  
+  Names are used consistently across DNS, firewall rules, logs, dashboards, and documentation.
+- **Interview-friendly**  
+  Easy to explain, intentional, and professional.
+
+---
+
+## 🔮 Reserved / Future Names
+
+| Name | Intended Role |
+|-----|--------------|
+| **gondor** | Central authentication (LDAP / FreeIPA / Authentik) |
+| **rohan** | Client services or VDI |
+| **barad-dur** | External-facing DMZ / reverse proxy |
+| **isengard** | Automation, CI/CD, orchestration |
+
+---
+
+## 📌 Notes
+
+- Naming is consistent across:
+  - DNS records
+  - Firewall aliases and rules
+  - Monitoring labels and dashboards
+- The theme supports memorability; **the structure supports operations**.
