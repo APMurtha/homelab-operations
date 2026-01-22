@@ -65,8 +65,11 @@ This documentation is maintained as a **living document** and evolves alongside 
 
 - **Platform:** Proxmox VE
 - **Hostname:** `orthanc`  
-- **NIC Configuration:**  
-  - Single physical NIC configured as a VLAN trunk  
+- **NIC Configuration:**
+  - Multiple physical NICs
+  - Dedicated interfaces used for management and server traffic
+  - Intel i350-T2 interfaces carry server VLAN traffic
+  - VLAN trunking handled at the switch and hypervisor layers
 - **Role:**  
   - Hosts Linux VMs and containers  
   - VLAN awareness handled at the hypervisor level
