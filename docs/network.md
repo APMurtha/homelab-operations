@@ -25,9 +25,9 @@ This documentation is maintained as a **living document** and evolves alongside 
 
 ### Firewall / Router
 
+- **Software:** OPNsense
 - **Device:** Protectli Vault FW4C  
 - **Hostname:** `anduin`  
-- **Software:** :contentReference[oaicite:0]{index=0}  
 - **Role:**  
   - Inter-VLAN routing  
   - Firewall policy enforcement  
@@ -61,7 +61,7 @@ This documentation is maintained as a **living document** and evolves alongside 
 
 ### Virtualization Platform
 
-- **Platform:** :contentReference[oaicite:1]{index=1}  
+- **Platform:** Proxmox VE
 - **Hostname:** `orthanc`  
 - **NIC Configuration:**  
   - Single physical NIC configured as a VLAN trunk  
@@ -114,6 +114,7 @@ There is **no flat network**.
   - `anduin` (OPNsense management)
   - `orthanc` (Proxmox host)
   - `osgiliath` (switch management)
+  - `ithil` (UniFi wireless access point management)
 - **Access:** Restricted via explicit firewall rules
 
 ---
@@ -126,6 +127,7 @@ There is **no flat network**.
   - `palantir` (Pi-hole + Unbound DNS)
   - `rivendell` (Docker / media services)
   - `minas-tirith` (monitoring & telemetry)
+  - `lothlorien` (UniFi Controller, Docker)
 
 ---
 
@@ -175,12 +177,16 @@ There is **no flat network**.
 ## 7. DNS & DHCP Architecture
 
 ### DNS
-
-- **Primary Resolver:** :contentReference[oaicite:2]{index=2} (`palantir`)
+- **Primary Resolver:** Pi-hole (`palantir`)
 - **Upstream:** Unbound
 - **Policy:**
   - All VLANs are forced to use internal DNS
   - Direct external DNS is blocked by firewall rules
+
+> **Verification:**  
+> DNS egress filtering is enforced at the firewall. Client attempts to resolve
+> domains via external resolvers (e.g., `1.1.1.1`) time out, confirming that
+> all DNS traffic is forced through internal resolvers.
 
 ---
 
