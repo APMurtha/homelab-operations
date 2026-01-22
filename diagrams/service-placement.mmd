@@ -1,0 +1,37 @@
+flowchart LR
+  subgraph vlan10["VLAN10 MGMT 10.10.10.0/24"]
+    opn[anduin (OPNsense - FW4C)]
+    sw[osgiliath (TP-Link TL-SG108E)]
+  end
+
+  subgraph vlan20["VLAN20 SERVERS 10.10.20.0/24"]
+    pve[orthanc (Proxmox Host)]
+    pal[palantir LXC<br/>Pi-hole + Unbound]
+    minas[minas-tirith VM/LXC<br/>Grafana + Loki + Promtail + Netdata]
+    loth[lothlorien LXC/VM<br/>UniFi Controller]
+    riv[rivendell VM/LXC<br/>Media Docker Host]
+  end
+
+  subgraph vlan30["VLAN30 CLIENTS 10.10.30.0/24"]
+    clients[Workstations / Phones / iPad]
+  end
+
+  subgraph vlan50["VLAN50 IOT 10.10.50.0/24"]
+    iot[IoT Devices<br/>(HomePods, etc.)]
+  end
+
+  opn --- sw
+  sw --- pve
+  pve --- pal
+  pve --- minas
+  pve --- loth
+  pve --- riv
+
+  clients -->|DNS| pal
+  iot -->|DNS| pal
+
+  riv -->|VPN overlay| gluetun[Gluetun (Mullvad)]
+  gluetun --> qb[qBittorrent]
+  gluetun --> arrs[*arr stack (Prowlarr/Sonarr/Radarr/etc.)]
+  riv --> abs[Audiobookshelf]
+  riv --> jf[Jellyfin]
