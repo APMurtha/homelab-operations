@@ -40,3 +40,9 @@ flowchart TB
   pve --> auth
   pve --> media
 
+  %% Legend
+  subgraph legend["Legend"]
+    lg_auth[Auth & Access Gateway<br/>Centralized authentication, SSO, and access control]
+    lg_obs[Observability<br/>Metrics, logs, and system visibility]
+    lg_dns[DNS Services<br/>Name resolution and DNS policy enforcement]
+  end

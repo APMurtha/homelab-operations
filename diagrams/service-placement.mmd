@@ -39,3 +39,9 @@ flowchart LR
   riv --> abs[Audiobookshelf]
   riv --> jf[Jellyfin]
 
+  %% Legend
+  subgraph legend["Legend"]
+    lg_auth[Auth & Reverse Proxy<br/>SSO, identity-aware access to services]
+    lg_media[Media Services<br/>User-facing applications and content delivery]
+    lg_infra[Infrastructure Services<br/>Core network and management functions]
+  end
