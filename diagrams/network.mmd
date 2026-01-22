@@ -30,11 +30,13 @@ flowchart TB
     dns[palantir - Pi-hole + Unbound<br/>Authoritative local + recursive DNS]
     obs[minas-tirith - Observability<br/>Grafana + Loki + Promtail + Netdata]
     unifi[lothlorien - UniFi Controller]
+    auth[elessar - Auth & Access Gateway<br/>SSO / Reverse Proxy]
     media[rivendell - Media Host<br/>Docker: Jellyfin/Audiobookshelf/*arr/qBittorrent+Gluetun]
   end
 
   pve --> dns
   pve --> obs
   pve --> unifi
+  pve --> auth
   pve --> media
 

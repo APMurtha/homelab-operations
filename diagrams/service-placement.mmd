@@ -9,6 +9,7 @@ flowchart LR
     pal[palantir - LXC<br/>Pi-hole + Unbound]
     minas[minas-tirith - VM/LXC<br/>Grafana + Loki + Promtail + Netdata]
     loth[lothlorien - LXC/VM<br/>UniFi Controller]
+    auth[elessar - VM/LXC<br/>Auth & Reverse Proxy]
     riv[rivendell - VM/LXC<br/>Media Docker Host]
   end
 
@@ -26,8 +27,10 @@ flowchart LR
   pve --- minas
   pve --- loth
   pve --- riv
+  pve --- auth
 
   clients -->|DNS| pal
+  clients -->|Auth| auth
   iot -->|DNS| pal
 
   riv -->|VPN overlay| gluetun[Gluetun - VPN client]
