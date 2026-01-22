@@ -50,11 +50,13 @@ This documentation is maintained as a **living document** and evolves alongside 
 
 ### Wireless Access
 
-- **Device:** AmpliFi Alien  
-- **Hostname:** `ithil`  
-- **Mode:** Bridge mode  
-- **Role:**  
-  - Wireless access only  
+- **Device:** UniFi U7 Pro
+- **Hostname:** `ithil`
+- **Management:** UniFi Controller (`lothlorien`)
+- **Mode:** Access Point (no routing)
+- **Role:**
+  - Wireless access only
+  - VLAN-aware SSIDs
   - All routing and firewalling handled upstream by `anduin`
 
 ---
@@ -122,19 +124,20 @@ There is **no flat network**.
 ### VLAN 20 — Servers
 
 - **Gateway:** `10.10.20.1`
-- **Addressing:** Static preferred
+- **Addressing:** Static only
 - **Systems:**
   - `palantir` (Pi-hole + Unbound DNS)
   - `rivendell` (Docker / media services)
   - `minas-tirith` (monitoring & telemetry)
-  - `lothlorien` (UniFi Controller, Docker)
-
+  - `lothlorien` (UniFi Controller)
+  - `elessar` (Authentication & Access Gateway) 
 ---
 
 ### VLAN 30 — Clients
 
 - **Gateway:** `10.10.30.1`
 - **Addressing:** DHCP (OPNsense)
+- **SSID:** Valinor
 - **Systems:**
   - Desktops
   - Laptops
@@ -145,6 +148,8 @@ There is **no flat network**.
 ### VLAN 40 — Lab
 
 - **Gateway:** `10.10.40.1`
+- **Addressing:** DHCP (OPNsense)
+- **SSID:** Isengard
 - **Purpose:**
   - Service testing
   - Failure simulations
@@ -158,6 +163,7 @@ There is **no flat network**.
 
 - **Gateway:** `10.10.50.1`
 - **Addressing:** DHCP (OPNsense)
+- **SSID:** Gondolin
 - **Systems:**
   - Apple HomePods
   - Smart TVs
@@ -169,7 +175,8 @@ There is **no flat network**.
 ### VLAN 60 — Guest
 
 - **Gateway:** `10.10.60.1`
-- **Addressing:** DHCP
+- **Addressing:** DHCP (OPNsense)
+- **SSID:** Bree
 - **Access:** Internet only
 
 ---
@@ -195,12 +202,12 @@ There is **no flat network**.
 - **Provided by:** OPNsense (`anduin`)
 - **Enabled on:**
   - VLAN 30 (CLIENTS)
+  - VLAN 40 (LAB)
   - VLAN 50 (IOT)
   - VLAN 60 (GUEST)
 - **Disabled on:**
   - VLAN 10 (MGMT)
   - VLAN 20 (SERVERS)
-  - VLAN 40 (LAB)
 
 ---
 
