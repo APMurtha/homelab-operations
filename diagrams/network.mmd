@@ -1,9 +1,9 @@
 flowchart TB
   internet((Internet)) --> wan[WAN]
-  wan --> opn[anduin (OPNsense)<br/>Protectli Vault FW4C]
+  wan --> opn[anduin - OPNsense<br/>Protectli Vault FW4C]
 
-  opn --> sw[osgiliath (Managed Switch)<br/>TP-Link TL-SG108E]
-  sw --> ap[ithil (WiFi AP, Bridge Mode)<br/>AmpliFi Alien]
+  opn --> sw[osgiliath - Managed Switch<br/>TP-Link TL-SG108E]
+  sw --> ap[ithil - UniFi U7 Pro<br/>VLAN-aware Access Point]
 
   subgraph vlans["VLANs / Subnets"]
     v10["VLAN10 MGMT<br/>10.10.10.0/24"]
@@ -19,19 +19,18 @@ flowchart TB
   opn --- v30
   opn --- v40
   opn --- v50
-
   opn --- v60
 
-  sw --> pve[orthanc (Proxmox Host)<br/>(runs VMs/LXCs)]
-  sw --> adminpc[Admin Client(s)<br/>(PC/iPad via LAN/WiFi)]
+  sw --> pve[orthanc - Proxmox Host<br/>runs VMs/LXCs]
+  sw --> adminpc[Admin Clients<br/>PC/iPad via LAN/WiFi]
   ap --> wifi_clients[WiFi Clients]
   ap --> wifi_iot[IoT WiFi Devices]
 
   subgraph services["Core Services"]
-    dns[palantir (Pi-hole + Unbound)<br/>Authoritative local + recursive DNS]
-    obs[minas-tirith (Telemetry/Observability)<br/>Grafana + Loki + Promtail + Netdata]
-    unifi[lothlorien (UniFi Controller)]
-    media[rivendell (Media Host)<br/>Docker: Jellyfin/Audiobookshelf/*arr/qBittorrent+Gluetun]
+    dns[palantir - Pi-hole + Unbound<br/>Authoritative local + recursive DNS]
+    obs[minas-tirith - Observability<br/>Grafana + Loki + Promtail + Netdata]
+    unifi[lothlorien - UniFi Controller]
+    media[rivendell - Media Host<br/>Docker: Jellyfin/Audiobookshelf/*arr/qBittorrent+Gluetun]
   end
 
   pve --> dns
@@ -39,7 +38,3 @@ flowchart TB
   pve --> unifi
   pve --> media
 
-  classDef plane fill:#111,stroke:#666,stroke-width:1px,color:#fff;
-  classDef service fill:#0b2,stroke:#070,stroke-width:1px,color:#fff;
-  class opn,sw,ap,pve plane;
-  class dns,obs,unifi,media service;
