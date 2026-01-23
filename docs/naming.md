@@ -19,6 +19,7 @@ The theme is aesthetic; the **intentional structure** is the point.
 | **palantir** | DNS (Pi-hole + Unbound) | Seeing stones used for name resolution, visibility, and DNS enforcement. |
 | **ithilien** | Bastion / Access Host | Hardened SSH/MOSH jump host used for administrative access into protected networks. |
 | **lothlorien** | UniFi Controller | Centralized management plane for wireless infrastructure. Stable, isolated, and trusted. |
+| **elessar** | Central Authentication | Authentik + Nginx Proxy Manager |
 
 ---
 
@@ -76,7 +77,8 @@ VLANs use **numeric IDs with functional names**, prioritizing clarity over theme
 
 | Name | Intended Role |
 |-----|--------------|
-| **gondor** | Central authentication (LDAP / FreeIPA / Authentik) |
+| **barad-dur** | 2nd Proxmox Node |
+| **cirith-ungol** | 3rd Proxmox Node |
 | **rohan** | Client services or VDI |
 | **barad-dur** | External-facing DMZ / reverse proxy |
 | **isengard** | Automation, CI/CD, orchestration |
