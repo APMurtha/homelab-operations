@@ -66,6 +66,19 @@ VLANs use **numeric IDs with functional names**, prioritizing clarity over theme
 
 ---
 
+## 📶 Wireless SSID Naming
+
+Wireless networks use Tolkien-themed names that map directly to VLANs and trust levels.
+
+| SSID Name | VLAN | Trust Level | Purpose |
+|----------|------:|-------------|--------|
+| **Valinor** | 30 | Trusted | Primary client network for personal devices |
+| **Isengard** | 40 | Experimental | Lab and test devices; breakable by design |
+| **Gondolin** | 50 | Restricted | IoT devices with limited east-west access |
+| **Bree** | 60 | Untrusted | Guest access, internet-only |
+
+___
+
 ## 🧠 Design Principles
 
 - **Role-based naming**  
@@ -88,7 +101,7 @@ VLANs use **numeric IDs with functional names**, prioritizing clarity over theme
 | **barad-dur** | 2nd Proxmox Node |
 | **cirith-ungol** | 3rd Proxmox Node |
 | **rohan** | Client services or VDI |
-| **isengard** | Automation, CI/CD, orchestration |
+| **aule** | Automation, CI/CD, orchestration |
 | **tengol** | outbound SMTP relay lab (SPF/DKIM/DMARC practice) |
 | **yavanna** | Home Assistant Automation + IoT coordination across realms |
 | **haldir** | Last-Man-Standing Node Pi-based watcher for UPS, WoL, and critical monitoring when primary infrastructure is down. |
