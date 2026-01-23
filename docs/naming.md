@@ -14,7 +14,7 @@ The theme is aesthetic; the **intentional structure** is the point.
 | Name | Role | Description |
 |-----|-----|-------------|
 | **orthanc** | Proxmox Hypervisor | The central tower that houses all other systems. Runs and manages all VMs and containers. |
-| **rivendell** | Media / Docker Server | Home to media and content services (Plex, Jellyfin, Audiobookshelf, *arr stack). A place of culture and stories. |
+| **rivendell** | Media / Docker Server | Home to media and content services (Plex, Jellyfin, Audiobookshelf, Arr stack). A place of culture and stories. |
 | **minas-tirith** | Telemetry & Observability | The watchful city. Hosts Grafana, Loki, Promtail, Netdata, and centralized logging. |
 | **palantir** | DNS (Pi-hole + Unbound) | Seeing stones used for name resolution, visibility, and DNS enforcement. |
 | **ithilien** | Bastion / Access Host | Hardened SSH/MOSH jump host used for administrative access into protected networks. |
@@ -42,6 +42,14 @@ The theme is aesthetic; the **intentional structure** is the point.
 > Storage names are intentionally distinct from hostnames to avoid coupling data identity to compute lifecycle.
 
 ---
+
+## 🧑‍💻 Administrative Endpoints
+
+| Name | Role | Description |
+|------|------|-------------|
+| denethor | Admin Workstation | Primary privileged management workstation for infrastructure administration. |
+
+___
 
 ## 🧩 VLAN Naming Conventions
 
@@ -80,8 +88,10 @@ VLANs use **numeric IDs with functional names**, prioritizing clarity over theme
 | **barad-dur** | 2nd Proxmox Node |
 | **cirith-ungol** | 3rd Proxmox Node |
 | **rohan** | Client services or VDI |
-| **barad-dur** | External-facing DMZ / reverse proxy |
 | **isengard** | Automation, CI/CD, orchestration |
+| **tengol** | outbound SMTP relay lab (SPF/DKIM/DMARC practice) |
+| **yavanna** | Home Assistant Automation + IoT coordination across realms |
+| **haldir** | Last-Man-Standing Node Pi-based watcher for UPS, WoL, and critical monitoring when primary infrastructure is down. |
 
 ---
 
