@@ -33,9 +33,10 @@ Core technologies include **OPNsense**, **Proxmox VE**, **Pi-hole**, Docker, and
 - **Telemetry & Logs:** `minas-tirith`
 - **Bastion Host:** `ithilien`
 - **Storage Pool:** `moria` (ZFS)
+- **Authentication** `elessar` (Authentik + NPM)
 
 The network is fully segmented using VLANs:
-- MGMT, SERVERS, CLIENTS, LAB, IOT, and GUEST
+- MGMT, SERVERS, CLIENTS, LAB, IOT, APPLE_IOT, and GUEST
 - No flat network
 - Inter-VLAN traffic denied by default
 

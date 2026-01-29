@@ -2,7 +2,7 @@
 
 ## 1. Purpose & Scope
 
-This document describes the **design, implementation, and operation** of the homelab network.  
+This document describes the **design, implementation, and operation** of the homelab network.
 The environment is intentionally designed to simulate **real-world Linux network administration** tasks, including segmentation, firewall policy design, DNS enforcement, monitoring, and change management.
 
 This documentation is maintained as a **living document** and evolves alongside the network.
@@ -26,24 +26,24 @@ This documentation is maintained as a **living document** and evolves alongside 
 ### Firewall / Router
 
 - **Software:** OPNsense
-- **Device:** Protectli Vault FW4C  
-- **Hostname:** `anduin`  
-- **Role:**  
-  - Inter-VLAN routing  
-  - Firewall policy enforcement  
-  - DHCP (selected VLANs)  
-- **Notes:**  
+- **Device:** Protectli Vault FW4C
+- **Hostname:** `anduin`
+- **Role:**
+  - Inter-VLAN routing
+  - Firewall policy enforcement
+  - DHCP (selected VLANs)
+- **Notes:**
   No non-essential services are run on the firewall.
 
 ---
 
 ### Switching
 
-- **Device:** TP-Link TL-SG108E (8-port managed switch)  
-- **Hostname:** `osgiliath`  
-- **Role:**  
-  - Layer 2 switching  
-  - 802.1Q VLAN tagging  
+- **Device:** TP-Link TL-SG108E (8-port managed switch)
+- **Hostname:** `osgiliath`
+- **Role:**
+  - Layer 2 switching
+  - 802.1Q VLAN tagging
 - **Management:** Web UI
 
 ---
@@ -64,21 +64,21 @@ This documentation is maintained as a **living document** and evolves alongside 
 ### Virtualization Platform
 
 - **Platform:** Proxmox VE
-- **Hostname:** `orthanc`  
+- **Hostname:** `orthanc`
 - **NIC Configuration:**
   - Multiple physical NICs
   - Dedicated interfaces used for management and server traffic
   - Intel i350-T2 interfaces carry server VLAN traffic
   - VLAN trunking handled at the switch and hypervisor layers
-- **Role:**  
-  - Hosts Linux VMs and containers  
+- **Role:**
+  - Hosts Linux VMs and containers
   - VLAN awareness handled at the hypervisor level
 
 ---
 
 ## 4. Logical Network Architecture
 
-The network is segmented using VLANs to separate **management, servers, clients, IoT, lab, and guest traffic**.  
+The network is segmented using VLANs to separate **management, servers, clients, IoT, lab, and guest traffic**.
 All routing and policy enforcement occurs on `anduin` (OPNsense).
 
 VLAN tagging is applied consistently across:
@@ -98,14 +98,15 @@ There is **no flat network**.
 
 ### VLAN Summary
 
-| VLAN ID | Name | Subnet | Purpose |
-|-------:|------|--------|--------|
-| 10 | MGMT | 10.10.10.0/24 | Network and infrastructure management |
-| 20 | SERVERS | 10.10.20.0/24 | Core infrastructure and application services |
-| 30 | CLIENTS | 10.10.30.0/24 | Trusted user devices |
-| 40 | LAB | 10.10.40.0/24 | Testing and experimental systems |
-| 50 | IOT | 10.10.50.0/24 | Untrusted IoT devices |
-| 60 | GUEST | 10.10.60.0/24 | Internet-only guest access |
+| VLAN ID | Name        | Subnet          | Purpose |
+|-------:|-------------|------------------|--------|
+| 10 | MGMT        | 10.10.10.0/24 | Network and infrastructure management |
+| 20 | SERVERS     | 10.10.20.0/24 | Core infrastructure and application services |
+| 30 | CLIENTS     | 10.10.30.0/24 | Trusted user devices |
+| 40 | LAB         | 10.10.40.0/24 | Testing and experimental systems |
+| 50 | IOT         | 10.10.50.0/24 | General IoT devices |
+| 60 | GUEST       | 10.10.60.0/24 | Internet-only guest access |
+| 70 | APPLE_IOT   | 10.10.70.0/24 | Apple ecosystem devices requiring mDNS |
 
 ---
 
@@ -133,7 +134,8 @@ There is **no flat network**.
   - `rivendell` (Docker / media services)
   - `minas-tirith` (monitoring & telemetry)
   - `lothlorien` (UniFi Controller)
-  - `elessar` (Authentication & Access Gateway) 
+  - `elessar` (Authentication & Access Gateway)
+
 ---
 
 ### VLAN 30 — Clients
@@ -157,7 +159,7 @@ There is **no flat network**.
   - Service testing
   - Failure simulations
   - Experimental configurations
-- **Status:**  
+- **Status:**
   Trunking and routing verified end-to-end.
 
 ---
@@ -168,7 +170,6 @@ There is **no flat network**.
 - **Addressing:** DHCP (OPNsense)
 - **SSID:** Gondolin
 - **Systems:**
-  - Apple HomePods
   - Smart TVs
   - Network-connected appliances
 - **Trust Level:** Untrusted
@@ -184,16 +185,30 @@ There is **no flat network**.
 
 ---
 
+### VLAN 70 — Apple IoT
+
+- **Gateway:** `10.10.70.1`
+- **Addressing:** DHCP (OPNsense)
+- **SSID:** Lorien
+- **Systems:**
+  - Apple TVs
+  - HomePods
+- **Notes:**
+  Selective mDNS reflection is enabled to support Apple service discovery while maintaining VLAN isolation.
+
+---
+
 ## 7. DNS & DHCP Architecture
 
 ### DNS
 - **Primary Resolver:** Pi-hole (`palantir`)
+- **Secondary Resolver:** Pi-hole (`bombadil`) — out-of-band continuity
 - **Upstream:** Unbound
 - **Policy:**
   - All VLANs are forced to use internal DNS
   - Direct external DNS is blocked by firewall rules
 
-> **Verification:**  
+> **Verification:**
 > DNS egress filtering is enforced at the firewall. Client attempts to resolve
 > domains via external resolvers (e.g., `1.1.1.1`) time out, confirming that
 > all DNS traffic is forced through internal resolvers.
@@ -208,6 +223,7 @@ There is **no flat network**.
   - VLAN 40 (LAB)
   - VLAN 50 (IOT)
   - VLAN 60 (GUEST)
+  - VLAN 70 (APPLE_IOT)
 - **Disabled on:**
   - VLAN 10 (MGMT)
   - VLAN 20 (SERVERS)
@@ -226,7 +242,7 @@ There is **no flat network**.
 
 - CLIENTS → DNS (Pi-hole only)
 - CLIENTS → Media services
-- IOT → Internet (DNS, NTP, required service ports only)
+- IOT / APPLE_IOT → Internet (DNS, NTP, required service ports only)
 - MGMT → Infrastructure administration
 - SERVERS → Required outbound services only
 
@@ -254,6 +270,20 @@ This mirrors formal change management practices used in production environments.
 - Configuration automation (Ansible)
 - Centralized authentication services
 - Further reduction of temporary access exceptions
+
+---
+
+## Appendix A: Wireless SSID Lore (Optional)
+
+SSID theming is applied **only at the wireless layer** to provide intuitive context for users without affecting operational clarity.
+
+| SSID      | Lore Blurb |
+|-----------|------------|
+| Valinor   | The Blessed Realm — calm, orderly, and meant for everyday life. |
+| Isengard  | A place of industry and experiment, where new things are forged. |
+| Gondolin  | Hidden and protected, kept safe from the wider world. |
+| Bree      | A crossroads for travelers — welcoming, but not to be trusted. |
+| Lorien    | Fair, quiet, and carefully guarded; harmony through careful design. |
 
 ---
 

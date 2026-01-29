@@ -5,12 +5,12 @@ flowchart LR
   end
 
   subgraph vlan20["VLAN20 SERVERS 10.10.20.0/24"]
-    pve[orthanc - Proxmox Host]
+    pve[orthanc - Proxmox Host<br/>Netdata (host-level)]
     pal[palantir - LXC<br/>Pi-hole + Unbound]
-    minas[minas-tirith - VM/LXC<br/>Grafana + Loki + Promtail + Netdata]
+    minas[minas-tirith - VM<br/>Grafana + Prometheus + Loki + Promtail + Uptime Kuma]
     loth[lothlorien - LXC/VM<br/>UniFi Controller]
     auth[elessar - VM/LXC<br/>Auth & Reverse Proxy]
-    riv[rivendell - VM/LXC<br/>Media Docker Host]
+    riv[rivendell - VM<br/>Media Docker Host<br/>Netdata (workload-level)]
   end
 
   subgraph vlan30["VLAN30 CLIENTS 10.10.30.0/24"]
@@ -33,15 +33,34 @@ flowchart LR
   clients -->|Auth| auth
   iot -->|DNS| pal
 
+  %% Media stack (rivendell)
   riv -->|VPN overlay| gluetun[Gluetun - VPN client]
   gluetun --> qb[qBittorrent]
   gluetun --> arrs[*arr stack<br/>Prowlarr / Sonarr / Radarr etc.]
   riv --> abs[Audiobookshelf]
   riv --> jf[Jellyfin]
 
+  %% Telemetry flows (minas-tirith)
+  minas --> prom[(Prometheus)]
+  minas --> loki[(Loki)]
+  minas --> promtail[Promtail (local journald)]
+  promtail -->|ingest| loki
+  minas --> grafana[Grafana]
+  grafana -->|metrics| prom
+  grafana -->|logs| loki
+  minas --> kuma[Uptime Kuma]
+
+  %% Netdata scope (diagnostics)
+  pve -->|real-time host diagnostics| net_pve[Netdata UI<br/>orthanc:19999]
+  riv -->|real-time workload diagnostics| net_riv[Netdata UI<br/>rivendell:19999]
+
+  %% Future hook (disabled today)
+  riv -.->|future: ship logs to Loki| promtail_future[Promtail (rivendell)]
+
   %% Legend
   subgraph legend["Legend"]
     lg_auth[Auth & Reverse Proxy<br/>SSO, identity-aware access to services]
     lg_media[Media Services<br/>User-facing applications and content delivery]
     lg_infra[Infrastructure Services<br/>Core network and management functions]
+    lg_obs[Observability<br/>Metrics, logs, uptime, and diagnostics]
   end
