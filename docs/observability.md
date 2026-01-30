@@ -10,6 +10,8 @@ This stack is designed for:
 - Alerting
 - Preparation for future security monitoring
 
+---
+
 ## Core Node: minas-tirith
 
 `minas-tirith` hosts the central telemetry services:
@@ -20,32 +22,55 @@ This stack is designed for:
 - Promtail (log ingestion)
 - Uptime Kuma (availability checks)
 
-Retention is explicitly limited to prevent disk exhaustion.
+Telemetry retention is intentionally limited to prevent disk exhaustion.
+
+---
 
 ## Real-Time Diagnostics: Netdata
 
 Netdata is deployed selectively for live troubleshooting:
 
-- `orthanc` — Proxmox host (VM/LXC contention, IO wait, CPU steal)
-- `rivendell` — Docker-heavy media host
+- `orthanc` — Proxmox host
+- `rivendell` — Docker / media workloads
 
 Netdata is used for:
 - Explaining transient lag
-- Identifying contention sources
+- Identifying contention
 - Real-time correlation
 
 Netdata Cloud is intentionally not used.
 
-## Access Model
+---
 
-- Telemetry services are accessed from trusted internal networks
-- No public exposure
-- No external SaaS dependencies
+## Log Collection
 
-## Philosophy
+Logs are centrally collected to support troubleshooting and security visibility.
 
-- Netdata answers: “What is happening right now?”
-- Grafana answers: “Has this been getting worse?”
-- SIEM (future) will answer: “Is this malicious or abnormal?”
+- Promtail ingests local system logs and network syslog
+- Loki stores logs for short-term analysis
+- Grafana provides search and dashboards
 
-Each layer has a distinct purpose.
+Logs are retained only as long as operationally useful.
+
+---
+
+## Security Telemetry (IDS)
+
+### Overview
+OPNsense runs **Suricata in IDS-only mode** to provide network-level security telemetry.
+Traffic is observed but not blocked.
+
+### Scope
+- Appliance: OPNsense
+- Interfaces monitored:
+  - WAN
+  - VLAN20_SERVERS
+- Rule source: Emerging Threats Open (ET Open)
+
+### Data Flow
+```text
+OPNsense (Suricata)
+  → Syslog (RFC5424)
+  → Promtail
+  → Loki
+  → Grafana
