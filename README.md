@@ -18,7 +18,7 @@ The homelab is built to support:
 - Safe experimentation via isolated lab networks
 - Resume-ready documentation and change tracking
 
-Core technologies include **OPNsense**, **Proxmox VE**, **Pi-hole**, Docker, and open-source observability tools.
+Core technologies include **OPNsense**, **Proxmox VE**, **Pi-hole**, Docker, and open-source observability tools (Grafana, Loki, Netdata).
 
 ---
 
@@ -26,14 +26,15 @@ Core technologies include **OPNsense**, **Proxmox VE**, **Pi-hole**, Docker, and
 
 - **Firewall / Router:** `anduin` (OPNsense)
 - **Switch:** `osgiliath` (VLAN-aware L2)
-- **Wireless AP:** `ithil` (bridge mode)
+- **Wireless AP:** `ithil` (UniFi U7 Pro, VLAN-aware access point)
+- **UniFi Controller:** `lothlorien`
 - **Hypervisor:** `orthanc` (Proxmox VE)
 - **DNS:** `palantir` (Pi-hole + Unbound)
 - **Media / Docker:** `rivendell`
-- **Telemetry & Logs:** `minas-tirith`
+- **Observability:** `minas-tirith`
 - **Bastion Host:** `ithilien`
 - **Storage Pool:** `moria` (ZFS)
-- **Authentication** `elessar` (Authentik + NPM)
+- **Authentication:** `elessar` (Authentik + NPM)
 
 The network is fully segmented using VLANs:
 - MGMT, SERVERS, CLIENTS, LAB, IOT, APPLE_IOT, and GUEST
