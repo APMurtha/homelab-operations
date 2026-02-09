@@ -25,7 +25,7 @@ Core technologies include **OPNsense**, **Proxmox VE**, **Pi-hole**, Docker, and
 ## 🗺️ Architecture at a Glance
 
 - **Firewall / Router:** `anduin` (OPNsense)
-- **Switch:** `osgiliath` (VLAN-aware L2)
+- **Switch:** UniFi USW-24-G2 (Layer 2, VLAN-aware)
 - **Wireless AP:** `ithil` (UniFi U7 Pro, VLAN-aware access point)
 - **UniFi Controller:** `lothlorien`
 - **Hypervisor:** `orthanc` (Proxmox VE)

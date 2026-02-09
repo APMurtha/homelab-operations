@@ -3,9 +3,11 @@
 ## 1. Purpose & Scope
 
 This document describes the **design, implementation, and operation** of the homelab network.
-The environment is intentionally designed to simulate **real-world Linux network administration** tasks, including segmentation, firewall policy design, DNS enforcement, monitoring, and change management.
+The environment is intentionally designed to simulate **real-world Linux and network
+administration** practices, including segmentation, firewall policy design, DNS enforcement,
+monitoring, and disciplined change management.
 
-This documentation is maintained as a **living document** and evolves alongside the network.
+This documentation reflects the **authoritative, known-good state** of the network.
 
 ---
 
@@ -13,11 +15,11 @@ This documentation is maintained as a **living document** and evolves alongside 
 
 - Enforce clear **network segmentation** to reduce blast radius
 - Apply **least-privilege** traffic policies
+- Maintain a stable and isolated **management plane**
 - Centralize DNS resolution and logging
-- Support observability through monitoring and telemetry
-- Maintain stability during incremental changes
+- Support observability and troubleshooting
 - Enable safe experimentation via isolated lab networks
-- Use tools and patterns relevant to small enterprise environments
+- Mirror small-enterprise operational patterns
 
 ---
 
@@ -32,32 +34,43 @@ This documentation is maintained as a **living document** and evolves alongside 
   - Inter-VLAN routing
   - Firewall policy enforcement
   - DHCP (selected VLANs)
-- **Notes:**
+- **Notes:**  
   No non-essential services are run on the firewall.
 
 ---
 
 ### Switching
 
-- **Device:** TP-Link TL-SG108E (8-port managed switch)
-- **Hostname:** `osgiliath`
+- **Device:** UniFi USW-24-G2
 - **Role:**
   - Layer 2 switching
   - 802.1Q VLAN tagging
-- **Management:** Web UI
+  - LACP aggregation
+- **Management:** UniFi Network Controller
 
 ---
 
 ### Wireless Access
 
-- **Device:** UniFi U7 Pro
+- **Device:** UniFi Access Point
 - **Hostname:** `ithil`
-- **Management:** UniFi Controller (`lothlorien`)
+- **Management:** UniFi Network Controller (`lothlorien`)
 - **Mode:** Access Point (no routing)
 - **Role:**
-  - Wireless access only
-  - VLAN-aware SSIDs
+  - VLAN-aware wireless access
   - All routing and firewalling handled upstream by `anduin`
+
+---
+
+### Network Controller
+
+- **Software:** UniFi Network Controller
+- **Hostname:** `lothlorien`
+- **Platform:** LXC container on Proxmox
+- **Role:**  
+  Switch and access point management only
+
+UniFi gateways are **not** used.
 
 ---
 
@@ -66,33 +79,194 @@ This documentation is maintained as a **living document** and evolves alongside 
 - **Platform:** Proxmox VE
 - **Hostname:** `orthanc`
 - **NIC Configuration:**
-  - Multiple physical NICs
-  - Dedicated interfaces used for management and server traffic
-  - Intel i350-T2 interfaces carry server VLAN traffic
-  - VLAN trunking handled at the switch and hypervisor layers
-- **Role:**
-  - Hosts Linux VMs and containers
+  - Dedicated management interface
+  - Dedicated server VLAN interfaces
   - VLAN awareness handled at the hypervisor level
+- **Role:**  
+  Hosts Linux VMs and containers
 
 ---
 
-## 4. Logical Network Architecture
+## 4. Authoritative Network Architecture (Post-Recovery – 2026-02)
 
-The network is segmented using VLANs to separate **management, servers, clients, IoT, lab, and guest traffic**.
-All routing and policy enforcement occurs on `anduin` (OPNsense).
+This section documents the **current, stable, known-good architecture** reached after
+recovery from management-plane instability during switch migration.
 
-VLAN tagging is applied consistently across:
-- The managed switch
-- The Proxmox virtualization layer
-- Firewall interfaces
-
-There is **no flat network**.
+This is **not aspirational design**.
 
 ---
 
-## 5. IP Addressing & VLAN Plan
+### Management Network Is Untagged by Design
 
-### Base Address Space
+- **Network:** `10.10.10.0/24`
+- **Gateway:** `10.10.10.1`
+- **OPNsense Interface:** `igc1`
+- **VLAN ID:** none (untagged)
+
+Used **only** for infrastructure:
+- OPNsense
+- UniFi switch
+- UniFi access points
+- UniFi controller
+- Proxmox hosts
+
+MGMT is intentionally **untagged**.
+
+Previous attempts to tag management traffic caused:
+- UniFi adoption and reprovision loops
+- loss of controller connectivity
+- fallback to default addressing
+
+MGMT is therefore:
+- untagged
+- never carried on trunks
+- isolated from client and workload VLANs
+
+---
+
+### VLANs Traverse Only a Dedicated LAGG
+
+All VLAN traffic is carried exclusively over a dedicated aggregated link:
+
+- **OPNsense:** `igc2 + igc3 → LAGG`
+- **UniFi switch:** ports 3–4 → LAGG
+
+The MGMT uplink **never carries VLANs**.
+
+This hard separation ensures:
+- management-plane stability
+- predictable failure domains
+- elimination of native VLAN bleed
+
+---
+
+### Router Uplink Is Not a Trunk
+
+The switch → firewall uplink:
+- carries **only untagged MGMT**
+- blocks all tagged VLANs
+- uses a dedicated port profile
+
+Treating the router uplink as a trunk was identified as a primary failure mode
+during recovery and is explicitly prohibited.
+
+---
+
+### UniFi Is Controller-Only
+
+UniFi provides:
+- switching
+- wireless
+- centralized management
+
+UniFi does **not** provide:
+- routing
+- DHCP
+- firewalling
+- NAT
+
+All L3 and security functions are handled by OPNsense.
+
+---
+
+### Access Points Require Untagged MGMT
+
+UniFi access points:
+- require untagged MGMT to remain adopted
+- receive client networks via tagged VLANs
+
+AP-facing ports therefore:
+- provide untagged MGMT
+- carry only required VLANs
+- are never full trunks
+
+---
+
+## 5. UniFi Ethernet Port Profiles (Authoritative)
+
+This section documents the **approved UniFi port profiles** and their allowed usage.
+Misapplication has previously resulted in management-plane outages.
+
+---
+
+### MGMT_UPLINK
+
+**Purpose:**  
+Dedicated management uplink between the switch and firewall.
+
+**Configuration:**
+- **Native network:** Default / LAN (MGMT)
+- **Tagged VLANs:** Block All
+
+**Used on:**
+- Switch port connected to OPNsense `igc1`
+
+**Must never be used on:**
+- LAGG ports
+- AP ports
+- Server or client access ports
+
+---
+
+### LAGG_TRUNK
+
+**Purpose:**  
+Exclusive VLAN trunk between switch and firewall.
+
+**Configuration:**
+- **Native network:** None
+- **Tagged VLANs:** 20, 30, 40, 50, 60, 70
+
+**Used on:**
+- Switch ports 3–4
+- Connected to OPNsense `igc2 + igc3`
+
+**Must never be used on:**
+- Router management uplink
+- AP ports
+- Access ports
+
+---
+
+### AP_TRUNK
+
+**Purpose:**  
+Safe VLAN trunk for access points.
+
+**Configuration:**
+- **Native network:** Default / LAN (MGMT)
+- **Tagged VLANs:** 30, 40, 50, 60, 70
+
+**Used on:**
+- UniFi AP ports only
+
+---
+
+### SERVERS_ACCESS
+
+**Purpose:**  
+Single-VLAN access for server workloads.
+
+**Configuration:**
+- **Native network:** SERVERS (VLAN 20)
+- **Tagged VLANs:** Block All
+
+---
+
+### MGMT_ACCESS
+
+**Purpose:**  
+Direct management-only access.
+
+**Configuration:**
+- **Native network:** Default / LAN (MGMT)
+- **Tagged VLANs:** Block All
+
+---
+
+## 6. IP Addressing & VLAN Plan
+
+### Address Space
 
 - **RFC1918 Range:** `10.10.0.0/16`
 
@@ -100,28 +274,23 @@ There is **no flat network**.
 
 | VLAN ID | Name        | Subnet          | Purpose |
 |-------:|-------------|------------------|--------|
-| 10 | MGMT        | 10.10.10.0/24 | Network and infrastructure management |
-| 20 | SERVERS     | 10.10.20.0/24 | Core infrastructure and application services |
+| — | MGMT        | 10.10.10.0/24 | Infrastructure management (untagged) |
+| 20 | SERVERS     | 10.10.20.0/24 | Core infrastructure and services |
 | 30 | CLIENTS     | 10.10.30.0/24 | Trusted user devices |
 | 40 | LAB         | 10.10.40.0/24 | Testing and experimental systems |
 | 50 | IOT         | 10.10.50.0/24 | General IoT devices |
 | 60 | GUEST       | 10.10.60.0/24 | Internet-only guest access |
-| 70 | APPLE_IOT   | 10.10.70.0/24 | Apple ecosystem devices requiring mDNS |
+| 70 | APPLE_IOT   | 10.10.70.0/24 | Apple ecosystem devices |
 
 ---
 
-## 6. VLAN Details
+## 7. VLAN Details
 
-### VLAN 10 — Management (MGMT)
+### MGMT — Management
 
 - **Gateway:** `10.10.10.1`
 - **Addressing:** Static only
-- **Systems:**
-  - `anduin` (OPNsense management)
-  - `orthanc` (Proxmox host)
-  - `osgiliath` (switch management)
-  - `ithil` (UniFi wireless access point management)
-- **Access:** Restricted via explicit firewall rules
+- **Systems:** Infrastructure devices only
 
 ---
 
@@ -129,49 +298,31 @@ There is **no flat network**.
 
 - **Gateway:** `10.10.20.1`
 - **Addressing:** Static only
-- **Systems:**
-  - `palantir` (Pi-hole + Unbound DNS)
-  - `rivendell` (Docker / media services)
-  - `minas-tirith` (monitoring & telemetry)
-  - `lothlorien` (UniFi Controller)
-  - `elessar` (Authentication & Access Gateway)
 
 ---
 
 ### VLAN 30 — Clients
 
 - **Gateway:** `10.10.30.1`
-- **Addressing:** DHCP (OPNsense)
+- **Addressing:** DHCP
 - **SSID:** Valinor
-- **Systems:**
-  - Desktops
-  - Laptops
-  - Mobile devices
 
 ---
 
 ### VLAN 40 — Lab
 
 - **Gateway:** `10.10.40.1`
-- **Addressing:** DHCP (OPNsense)
+- **Addressing:** DHCP
 - **SSID:** Isengard
-- **Purpose:**
-  - Service testing
-  - Failure simulations
-  - Experimental configurations
-- **Status:**
-  Trunking and routing verified end-to-end.
+- **Purpose:** Testing and experimentation
 
 ---
 
 ### VLAN 50 — IoT
 
 - **Gateway:** `10.10.50.1`
-- **Addressing:** DHCP (OPNsense)
+- **Addressing:** DHCP
 - **SSID:** Gondolin
-- **Systems:**
-  - Smart TVs
-  - Network-connected appliances
 - **Trust Level:** Untrusted
 
 ---
@@ -179,112 +330,54 @@ There is **no flat network**.
 ### VLAN 60 — Guest
 
 - **Gateway:** `10.10.60.1`
-- **Addressing:** DHCP (OPNsense)
+- **Addressing:** DHCP
 - **SSID:** Bree
-- **Access:** Internet only
 
 ---
 
 ### VLAN 70 — Apple IoT
 
 - **Gateway:** `10.10.70.1`
-- **Addressing:** DHCP (OPNsense)
+- **Addressing:** DHCP
 - **SSID:** Lorien
-- **Systems:**
-  - Apple TVs
-  - HomePods
-- **Notes:**
-  Selective mDNS reflection is enabled to support Apple service discovery while maintaining VLAN isolation.
+- **Notes:**  
+  Selective mDNS reflection enabled
 
 ---
 
-## 7. DNS & DHCP Architecture
+## 8. DNS & DHCP Architecture
 
 ### DNS
-- **Primary Resolver:** Pi-hole (`palantir`)
-- **Secondary Resolver:** Pi-hole (`bombadil`) — out-of-band continuity
-- **Upstream:** Unbound
-- **Policy:**
-  - All VLANs are forced to use internal DNS
-  - Direct external DNS is blocked by firewall rules
 
-> **Verification:**
-> DNS egress filtering is enforced at the firewall. Client attempts to resolve
-> domains via external resolvers (e.g., `1.1.1.1`) time out, confirming that
-> all DNS traffic is forced through internal resolvers.
+- **Resolver:** Pi-hole (`palantir`)
+- **Upstream:** Unbound
+- **Policy:**  
+  External DNS is blocked; all VLANs use internal resolvers.
 
 ---
 
 ### DHCP
 
-- **Provided by:** OPNsense (`anduin`)
-- **Enabled on:**
-  - VLAN 30 (CLIENTS)
-  - VLAN 40 (LAB)
-  - VLAN 50 (IOT)
-  - VLAN 60 (GUEST)
-  - VLAN 70 (APPLE_IOT)
-- **Disabled on:**
-  - VLAN 10 (MGMT)
-  - VLAN 20 (SERVERS)
+- **Provided by:** OPNsense
+- **Enabled on:** VLANs 30, 40, 50, 60, 70
+- **Disabled on:** MGMT, SERVERS
 
 ---
 
-## 8. Firewall Policy Philosophy
+## 9. Firewall Policy Philosophy
 
-### Default Policy
-
-- **Inter-VLAN traffic:** Deny by default
-- **WAN inbound:** Deny all
-- **WAN outbound:** Explicit allow by role
-
-### High-Level Allowed Flows
-
-- CLIENTS → DNS (Pi-hole only)
-- CLIENTS → Media services
-- IOT / APPLE_IOT → Internet (DNS, NTP, required service ports only)
-- MGMT → Infrastructure administration
-- SERVERS → Required outbound services only
-
-Selective multicast and mDNS reflection are enabled **only where required** to support Apple device discovery without compromising isolation.
+- Inter-VLAN traffic denied by default
+- Explicit allow rules only
+- WAN inbound denied
+- Outbound access allowed by role
 
 ---
 
-## 9. Change Management
+## 10. Change Management
 
-All significant network changes are documented in the `changelog/` directory and include:
-
-- Date
-- Description
-- Reason for change
-- Impact assessment
-- Rollback considerations
-
-This mirrors formal change management practices used in production environments.
+All significant network changes are documented in `changelog/`.
+Incidents and recovery procedures are documented separately.
 
 ---
 
-## 10. Future Enhancements
-
-- Expanded alerting and dashboards
-- Configuration automation (Ansible)
-- Centralized authentication services
-- Further reduction of temporary access exceptions
-
----
-
-## Appendix A: Wireless SSID Lore (Optional)
-
-SSID theming is applied **only at the wireless layer** to provide intuitive context for users without affecting operational clarity.
-
-| SSID      | Lore Blurb |
-|-----------|------------|
-| Valinor   | The Blessed Realm — calm, orderly, and meant for everyday life. |
-| Isengard  | A place of industry and experiment, where new things are forged. |
-| Gondolin  | Hidden and protected, kept safe from the wider world. |
-| Bree      | A crossroads for travelers — welcoming, but not to be trusted. |
-| Lorien    | Fair, quiet, and carefully guarded; harmony through careful design. |
-
----
-
-*Last updated: Maintained continuously*
+*Last updated: 2026-02 — authoritative post-recovery state*
