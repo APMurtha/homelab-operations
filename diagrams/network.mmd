@@ -2,36 +2,50 @@ flowchart TB
   internet((Internet)) --> wan[WAN]
   wan --> opn[anduin - OPNsense<br/>Protectli Vault FW4C]
 
-  opn --> sw[osgiliath - Managed Switch<br/>TP-Link TL-SG108E]
-  sw --> ap[ithil - UniFi U7 Pro<br/>VLAN-aware Access Point]
+  %% Management uplink (untagged only)
+  opn --> mgmtlink[MGMT uplink (igc1)<br/>untagged only]
+  mgmtlink --> sw[osgiliath - UniFi Switch<br/>UniFi USW-24-G2]
 
+  %% VLAN trunk (LAGG)
+  opn --> lagg[LAGG (igc2 + igc3)<br/>Tagged VLANs only]
+  lagg --> sw
+
+  %% Access layer
+  sw --> ap[ithil - UniFi Access Point<br/>VLAN-aware Access Point]
+
+  %% VLANs and subnets
   subgraph vlans["VLANs / Subnets"]
-    v10["VLAN10 MGMT<br/>10.10.10.0/24"]
+    v_mgmt["MGMT (untagged)<br/>10.10.10.0/24"]
     v20["VLAN20 SERVERS<br/>10.10.20.0/24"]
     v30["VLAN30 CLIENTS<br/>10.10.30.0/24"]
     v40["VLAN40 LAB<br/>10.10.40.0/24"]
     v50["VLAN50 IOT<br/>10.10.50.0/24"]
     v60["VLAN60 GUEST<br/>10.10.60.0/24"]
+    v70["VLAN70 APPLE_IOT<br/>10.10.70.0/24"]
   end
 
-  opn --- v10
+  %% Firewall interfaces to VLANs
+  opn --- v_mgmt
   opn --- v20
   opn --- v30
   opn --- v40
   opn --- v50
   opn --- v60
+  opn --- v70
 
-  sw --> pve[orthanc - Proxmox Host<br/>runs VMs/LXCs]
-  sw --> adminpc[Admin Clients<br/>PC/iPad via LAN/WiFi]
+  %% Downstream systems
+  sw --> pve[orthanc - Proxmox Host<br/>runs VMs and LXCs]
+  sw --> adminpc[Admin Clients<br/>PC / iPad via LAN or WiFi]
   ap --> wifi_clients[WiFi Clients]
   ap --> wifi_iot[IoT WiFi Devices]
 
+  %% Core services
   subgraph services["Core Services"]
     dns[palantir - Pi-hole + Unbound<br/>Authoritative local + recursive DNS]
     obs[minas-tirith - Observability<br/>Grafana + Loki + Promtail + Netdata]
     unifi[lothlorien - UniFi Controller]
     auth[elessar - Auth & Access Gateway<br/>SSO / Reverse Proxy]
-    media[rivendell - Media Host<br/>Docker: Jellyfin/Audiobookshelf/*arr/qBittorrent+Gluetun]
+    media[rivendell - Media Host<br/>Docker: Jellyfin / Audiobookshelf / *arr / qBittorrent + Gluetun]
   end
 
   pve --> dns
@@ -42,7 +56,7 @@ flowchart TB
 
   %% Legend
   subgraph legend["Legend"]
-    lg_auth[Auth & Access Gateway<br/>Centralized authentication, SSO, and access control]
+    lg_auth[Auth & Access Gateway<br/>Centralized authentication and access control]
     lg_obs[Observability<br/>Metrics, logs, and system visibility]
     lg_dns[DNS Services<br/>Name resolution and DNS policy enforcement]
   end
