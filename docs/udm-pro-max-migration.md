@@ -1,6 +1,6 @@
 # UDM Pro Max migration preparation
 
-Status: **PLANNED**. Prepared 2026-11-02; an [initial read-only SSH discovery of `anduin`](anduin-discovery-2026-11-02.md) has now verified selected firewall-side facts. No production change occurred. The UDM Pro Max is ordered, not installed. Use [network.md](network.md) for the February 2026 design and [the discovery checklist](../runbooks/udm-discovery.md) for remaining evidence.
+Status: **PLANNED CUTOVER; HARDWARE ARRIVED (owner report)**. An [initial read-only SSH discovery of `anduin`](anduin-discovery-2026-11-02.md) verified selected firewall-side facts. No production change occurred. The UDM Pro Max has arrived but installation and setup have not been verified. Use the [isolated initial setup checklist](../runbooks/udm-isolated-initial-setup.md) now; use this document for the later cutover. The February 2026 design remains in [network.md](network.md).
 
 ## Discovery access status — 2026-11-02
 
@@ -41,7 +41,7 @@ Do not promote a historical assertion to verified by repeating it here. Keep raw
 | `elessar` | reserved at `10.10.20.50` in Kea; authentication and reverse proxy role untested | reservation **VERIFIED** 2026-11-02; service role historical |
 | UniFi UNAS Pro 8 | management IP, port, VLAN, data paths and dependencies **UNKNOWN** | owner report, medium |
 
-**PLANNED:** UDM Pro Max first, retaining the ARRIS modem. UniFi Cable Internet replaces the modem only after the gateway is stable. Pro XG 24 PoE, aggregation switch (model undecided), patch panels/Cat6A/Etherlighting, UniFi UPS/UPS Pro, PDU Pro and rack compute are planning items; no installation is established.
+**HARDWARE ARRIVED (owner report); not yet installed:** UDM Pro Max. **PLANNED:** Replace Anduin while retaining the ARRIS modem; replace the modem with UniFi Cable Internet only after the gateway is stable. Pro XG 24 PoE, aggregation switch (model undecided), patch panels/Cat6A/Etherlighting, UniFi UPS/UPS Pro, PDU Pro and rack compute are later planning items; no installation is established.
 
 ### Target gateway-to-switch link — owner decision, 2026-11-02
 
@@ -83,12 +83,18 @@ Kea DHCPv4 configuration and a running process were verified 2026-11-02. Confirm
 
 For each live rule record source, destination, protocol/ports, action, logging, schedule, alias expansion, order, family, gateway/interface and purpose. Map to UniFi source/destination zone, network and rule order; record any unsupported feature and its compensating design. Test both permitted and forbidden flows from representative clients. A Network backup does **not** contain OPNsense firewall, NAT, routes or DHCP configuration.
 
-## Readiness gates
+## What blocks the cutover, and what does not block initial setup
 
-1. **Discovery complete:** WAN IPv4/IPv6, modem behavior, all OPNsense interfaces/VLANs/rules/aliases/NAT/routes/VPNs, Kea scopes/options/reservations, DNS enforcement, actual `osgiliath` MGMT uplink/LAG member/spare port and native/tagged settings, SSIDs, Proxmox bridges, UNAS management/storage paths, firewall-IP dependencies and monitoring are recorded with dates. Keep sensitive source files private.
-2. **Design reviewed:** exact gateway IPs, a single Cat6 UDM-to-`osgiliath` port with untagged MGMT (if required) and tagged VLANs 20–70, WAN settings, zone matrix, DHCP options, DNS, NAT, VPN, IPv6 and controller migration path are approved. Confirm the actual UDM port, switch port/profile, management reachability and 1 Gbps negotiation in a rehearsal. The OPNsense LAGG is for rollback only and must not be reproduced on the UDM. Confirm UDM feature support and throughput for every required policy.
-3. **Recovery rehearsed:** save private OPNsense configuration, UniFi Network backup, switch port profile/port map and screenshots or notes. Label every cable. Confirm direct OPNsense console access, modem activation details, spare client, power and a timed abort decision. Rehearse restoring the original cable path and single-DHCP/gateway state in isolation. A production rollback is untested until actually exercised; record rehearsal result and elapsed time.
-4. **Preconfigure in isolation:** connect UDM only to an isolated test segment with separate address space; no production LAN/WAN or shared DHCP. Update its software, restore a compatible self-hosted Network backup, inspect migrated site/networks/profiles/SSIDs/adoption references, stage gateway/zone/DHCP/NAT settings and export a private backup. Confirm the backup is a Network backup, restore compatibility and single-site behavior on the actual versions. Identify whether devices use local L2 discovery, DNS, DHCP option 43 or a custom inform URL; document the exact inform-host transition and reversal. Ensure the test UDM cannot answer production DHCP or use `10.10.x.1` on a connected production segment. Keep `lothlorien` operational until adoption migration is confirmed and reversible. Do not forget devices from the old controller until the new controller has remained stable through acceptance.
+**Initial isolated setup can start now.** It needs power, a directly connected test laptop and local administrator access; the chosen setup flow or online updates may also need a safe Internet source. The UDM LAN must remain physically separate from production. A temporary OPNsense-fed connection may enter **UDM WAN only** for setup/updates; disconnect it before staging an overlapping UDM LAN/VLAN subnet. The [setup checklist](../runbooks/udm-isolated-initial-setup.md) ends before any production connection or device migration. A compatible `lothlorien` backup is needed before a restore, not before power-on/update.
+
+**Genuine cutover blockers:**
+
+1. A manual `lothlorien` UI check records Network version, a current private backup, site count, adopted-device status and how `osgiliath`/`ithil` reach their controller. Confirm the backup can be restored to the UDM's Network version and define a reversible adoption transition. Do not retire `lothlorien` during staging.
+2. Identify the actual `osgiliath` MGMT uplink, both OPNsense LAGG member ports, and one suitable UDM switch port. Verify its native/untagged MGMT behavior and tagged VLANs 20–70. Have labeled cable positions and an accessible management path for reconnecting Anduin. The UDM target uses one Cat6 link, never a LAG.
+3. Approve the exact gateway IPs, Kea-to-UDM DHCP scopes/reservations/options, DNS path and **single active gateway/DHCP** sequence. Translate required firewall/zone policy, IPv6 behavior, WAN/NAT/port forwards, static routes and any **actually used** VPN dependency. The saved Anduin broad allows and disabled CLIENTS DNS block require an explicit policy decision; a deny-by-default design statement is insufficient.
+4. Rehearse the physical rollback and establish a stop time: private Anduin/UniFi backups, old port/profile map, direct management access, ARRIS power-cycle and WAN DHCP checks, plus representative tests for management, every active subnet, required services and blocked flows. Keep Anduin intact until UDM acceptance and soak.
+
+**Documentation that can follow an operational UDM:** full host-by-host Proxmox and NAS inventory, exhaustive historical alias/unused VPN annotation, rack upgrade details and polished as-built diagrams. Record only the critical service paths needed for cutover acceptance beforehand. Unknowns that affect a required flow must still be resolved before that flow is migrated.
 
 ## Stage 1: UDM gateway cutover with ARRIS retained
 

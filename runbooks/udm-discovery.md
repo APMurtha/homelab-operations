@@ -1,6 +1,6 @@
 # Read-only discovery for the UDM Pro Max migration
 
-Status: **IN PROGRESS**. Bounded OPNsense SSH reads ran on 2026-11-02; the other target checks below remain proposals. Obtain each system's authorized read-only access and confirm the target before use. Run one bounded query at a time; do not export raw configuration into Git. Redact public IPs, host IDs, MACs and other sensitive values in shared notes.
+Status: **REFERENCE ONLY FOR THE LATER CUTOVER**. Bounded OPNsense SSH reads ran on 2026-11-02. The owner is prioritizing the [isolated UDM initial setup](udm-isolated-initial-setup.md), with manual `lothlorien` UI checks for Network version, backup and adoption status; no additional API integration is planned. The other target checks below are optional proposals unless they resolve a specific cutover blocker. Do not export raw configuration into Git. Redact public IPs, host IDs, MACs and other sensitive values in shared notes.
 
 For the SSH route to `anduin`, use the [SSH discovery procedure](opnsense-ssh-discovery-plan.md). Andrew authorized accepting the saved/new host key for this target without independent console verification, while rejecting changed keys. A bounded root/password SSH read was completed 2026-11-02; see the [findings](../docs/anduin-discovery-2026-11-02.md). Independent host-key provenance remains unknown.
 
