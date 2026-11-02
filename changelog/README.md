@@ -32,6 +32,9 @@ Procedural details are intentionally excluded and belong in `runbooks/`.
 
 ### 2026
 
+- `2026-11-02-select-single-udm-uplink.md`
+  Select one Cat6 UDM-to-Osgiliath uplink and defer tagged MGMT to a separate change
+
 - `2026-11-02-prepare-udm-migration-documentation.md`
   Prepare discovery and staged UDM migration documentation; no production change
 

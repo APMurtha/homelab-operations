@@ -7,7 +7,7 @@ The environment is intentionally designed to simulate **real-world Linux and net
 administration** practices, including segmentation, firewall policy design, DNS enforcement,
 monitoring, and disciplined change management.
 
-This document retains the **February 2026 post-recovery design**. An [initial SSH discovery on 2026-11-02](anduin-discovery-2026-11-02.md) verified the OPNsense side of the topology and found DHCP/firewall differences. Switch tagging and effective client behavior remain unverified; see [migration preparation](udm-pro-max-migration.md).
+This document retains the **February 2026 post-recovery design**. An [initial SSH discovery on 2026-11-02](anduin-discovery-2026-11-02.md) verified the OPNsense side of the topology and found DHCP/firewall differences. Switch tagging and effective client behavior remain unverified. The [UDM migration plan](udm-pro-max-migration.md) retires the LAGG and both dedicated gateway uplinks in favor of one Cat6 gateway-to-switch link; the sections below describe the existing/historical OPNsense arrangement, not the UDM target.
 
 ---
 

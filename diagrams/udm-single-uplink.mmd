@@ -1,0 +1,9 @@
+%% PLANNED 2026-11-02: gateway migration architecture; port IDs and native VLAN behavior require UniFi discovery.
+flowchart LR
+  wan[Comcast / ARRIS Surfboard] --> udm[UDM Pro Max]
+  udm -->|One Cat6 link; planned 1 Gbps| osg[osgiliath / USW-24-G2]
+  osg --> mgmt[MGMT 10.10.10.0/24<br/>untagged for initial cutover if required]
+  osg --> vlans[Tagged VLANs 20, 30, 40, 50, 60, 70]
+  osg --> ap[ithil / U7 Pro]
+  osg --> hosts[Proxmox and services]
+  old[anduin / OPNsense<br/>MGMT cable + LAGG retained for rollback] -. disconnected during UDM operation .- osg
