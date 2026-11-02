@@ -7,7 +7,7 @@ The environment is intentionally designed to simulate **real-world Linux and net
 administration** practices, including segmentation, firewall policy design, DNS enforcement,
 monitoring, and disciplined change management.
 
-This documentation records the **historical post-recovery design as of February 2026**. Live configuration has not been re-verified for the UDM migration; see [migration preparation](udm-pro-max-migration.md).
+This document retains the **February 2026 post-recovery design**. An [initial SSH discovery on 2026-11-02](anduin-discovery-2026-11-02.md) verified the OPNsense side of the topology and found DHCP/firewall differences. Switch tagging and effective client behavior remain unverified; see [migration preparation](udm-pro-max-migration.md).
 
 ---
 
@@ -289,7 +289,7 @@ Direct management-only access.
 ### MGMT — Management
 
 - **Gateway:** `10.10.10.1`
-- **Addressing:** Static only
+- **Addressing:** No dynamic Kea pool; DHCP reservations exist (verified OPNsense configuration 2026-11-02)
 - **Systems:** Infrastructure devices only
 
 ---
@@ -297,7 +297,7 @@ Direct management-only access.
 ### VLAN 20 — Servers
 
 - **Gateway:** `10.10.20.1`
-- **Addressing:** Static only
+- **Addressing:** No dynamic Kea pool; DHCP reservations exist (verified OPNsense configuration 2026-11-02)
 
 ---
 
@@ -352,21 +352,22 @@ Direct management-only access.
 - **Resolver:** Pi-hole (`palantir`)
 - **Upstream:** Unbound
 - **Policy:**  
-  External DNS is blocked; all VLANs use internal resolvers.
+  Internal DNS is the design intent. The saved CLIENTS direct-DNS block was disabled in the 2026-11-02 OPNsense read; actual enforcement remains to be tested.
 
 ---
 
 ### DHCP
 
-- **Provided by:** OPNsense
-- **Enabled on:** VLANs 30, 40, 50, 60, 70
-- **Disabled on:** MGMT, SERVERS
+- **Provided by:** Kea DHCPv4 on OPNsense (configuration and process verified 2026-11-02)
+- **Dynamic pools on:** VLANs 30, 40, 50, 60, 70 (`10.10.X.100–199`)
+- **Reservation-only scopes on:** MGMT and SERVERS; Kea is configured for these interfaces too
+- **DHCPv6:** Disabled in the checked Kea configuration
 
 ---
 
 ## 9. Firewall Policy Philosophy
 
-- Inter-VLAN traffic denied by default
+- Inter-VLAN deny by default is the **design goal**. The 2026-11-02 saved rule set contains broad allows on several VLANs; effective behavior remains to be tested.
 - Explicit allow rules only
 - WAN inbound denied
 - Outbound access allowed by role

@@ -1,6 +1,6 @@
 # UDM Pro Max migration preparation
 
-Status: **PLANNED**. Prepared 2026-11-02; no production change or live configuration verification has occurred for this plan. The UDM Pro Max is ordered, not installed. Use [network.md](network.md) for the February 2026 design and [the discovery checklist](../runbooks/udm-discovery.md) to replace assumptions with dated evidence.
+Status: **PLANNED**. Prepared 2026-11-02; an [initial read-only SSH discovery of `anduin`](anduin-discovery-2026-11-02.md) has now verified selected firewall-side facts. No production change occurred. The UDM Pro Max is ordered, not installed. Use [network.md](network.md) for the February 2026 design and [the discovery checklist](../runbooks/udm-discovery.md) for remaining evidence.
 
 ## Discovery access status — 2026-11-02
 
@@ -8,15 +8,15 @@ Status: **PLANNED**. Prepared 2026-11-02; no production change or live configura
 
 **VERIFIED transport only:** The owner supplied `https://10.10.10.1/` for `anduin`. The initial HTTPS request failed certificate validation. The owner then supplied the local trust certificate `~/.config/nest/certs/anduin.pem`. With `curl --cacert` and normal hostname verification, an HTTPS GET of `/` returned `200` and `ssl_verify_result=0` on 2026-11-02. HEAD returned `403`, so use the bounded GET result for this transport check. No credential was sent and no OPNsense configuration was read. The sandboxed attempt could not open TCP 443; the verified GET succeeded outside the sandbox. TLS trust is resolved for this endpoint through this explicit CA file; no global trust override or insecure option was used.
 
-**AUTHENTICATION BLOCKED:** NEST 2.0.0 has no bundled OPNsense helper, scoped OPNsense credential path or per-endpoint CA setting. Its UniFi API key is for UniFi Site Manager and must not be reused. Andrew reports that a read-only OPNsense API account/key still needs setup. Creating that account/key changes production OPNsense configuration and is outside the current discovery-only authorization. Consequently no authenticated read-only connectivity test ran, and NEST access to OPNsense interfaces, DHCP, firewall, NAT, WAN and IPv6 resources is unverified. A reviewed, narrowly scoped connector can use the existing PEM and a local hidden credential/OS store after the account exists; it must validate the OPNsense hostname and use only approved GET endpoints.
+**API authentication remains on hold:** NEST 2.0.0 has no bundled OPNsense helper, scoped OPNsense credential path or per-endpoint CA setting. Its UniFi API key is for UniFi Site Manager and must not be reused. No OPNsense API account/key or connector was created. The approved SSH read was used instead; it does not imply API access.
 
-**SSH access gate:** Andrew reports OPNsense version `26.7.1_1-amd64` and root/password SSH access. Neither version nor SSH access has been verified in this session. Local `known_hosts` entries exist for `10.10.10.1`, but Andrew confirms they were not independently verified. No SSH command was run. [The SSH discovery proposal](../runbooks/opnsense-ssh-discovery-plan.md) requires a console-verified host-key fingerprint before a minimal identity check; full collection then needs separate approval.
+**SSH access:** Andrew explicitly authorized using the existing SSH host key or accepting a new key for this host without independent console verification, while stopping on a changed key. Root/password authentication occurred at a hidden prompt in Andrew's terminal. The SSH session returned hostname `anduin`, UID 0 and OPNsense `26.7.1_1 (amd64)`. The [dated discovery](anduin-discovery-2026-11-02.md) details the bounded findings and limits. Independent host-key provenance remains **UNKNOWN**.
 
 The [OPNsense API access review](opnsense-api-access-review.md) maps proposed GET endpoints to upstream ACL privileges and records the areas the API cannot establish alone. It is a proposal until the installed OPNsense version and ACLs are checked.
 
 **Owner report, not API-verified:** `lothlorien` is linked to UniFi Site Manager. This makes the NEST Site Manager route a candidate, but the scoped API key is absent and no authenticated host/site inventory has been read.
 
-**UNKNOWN:** OPNsense, UniFi controller, Pi-hole, Proxmox and UNAS live configuration. No authenticated read-only connection is currently configured for those systems in this work session. The NEST UniFi helper uses the official Site Manager/Network API; whether the linked self-hosted `lothlorien` is exposed to this key/account is untested. Obtain an owner-confirmed endpoint and authorized local access method for each target; do not infer credentials from the OS user, Git remote or other NEST systems. The OPNsense/Proxmox/UNAS discovery commands remain proposals until access is verified.
+**UNKNOWN:** Complete effective OPNsense firewall behavior and remaining OPNsense details, plus UniFi controller, Pi-hole, Proxmox and UNAS live configuration. The NEST UniFi helper uses the official Site Manager/Network API; whether the linked self-hosted `lothlorien` is exposed to this key/account is untested. Obtain an owner-confirmed endpoint and authorized local access method for each remaining target; do not infer credentials from the OS user, Git remote or other NEST systems.
 
 ## Evidence labels
 
@@ -31,37 +31,37 @@ Do not promote a historical assertion to verified by repeating it here. Keep raw
 
 | Component | Address / connection | Evidence and confidence |
 |---|---|---|
-| Comcast/Xfinity → ARRIS Surfboard → `anduin` OPNsense FW4C | WAN lease, modem model and bridge mode **UNKNOWN** | Surfboard/ISP from owner, medium; WAN settings unknown |
-| `anduin` → `osgiliath` USW-24-G2 | MGMT untagged on `igc1`; VLANs 20–70 on `igc2` + `igc3` LAGG to switch ports 3–4 | **HISTORICAL**, February 2026 recovery design, medium |
+| Comcast/Xfinity → ARRIS Surfboard → `anduin` OPNsense FW4C | WAN uses DHCPv4 and DHCPv6; runtime IPv4 and global IPv6 present. Modem model/bridge mode and actual lease details **UNKNOWN** | OPNsense side **VERIFIED** 2026-11-02; modem/ISP owner report |
+| `anduin` → `osgiliath` USW-24-G2 | MGMT `10.10.10.1/24` untagged on `igc1`; VLANs 20–70 on `igc2` + `igc3` `lagg0`; switch ports 3–4 remain unverified | OPNsense side **VERIFIED** 2026-11-02; switch side **HISTORICAL** |
 | `ithil` U7 Pro; `lothlorien` self-hosted Network | AP native MGMT and tagged client VLANs; controller placement/version/adoption **UNKNOWN** | **HISTORICAL** design plus owner hardware report, medium |
 | `orthanc` Proxmox; `moria` ZFS | `10.10.10.2`; separate management and Intel i350-T2 workload NICs | owner and January 2026 change, medium |
 | `cirith-ungol`, `dol-guldur` Proxmox | `10.10.10.3`, `.4`; three-node `mordor` cluster | owner report, medium; live cluster status unknown |
 | `palantir` Pi-hole + Unbound | `10.10.20.10` | owner report, medium; forwarding/enforcement unknown |
 | `rivendell`, `minas-tirith`, `ithilien` | `10.10.20.30`, `.40`, `.70` | owner report, medium; live role/address unknown |
-| `elessar` | authentication and reverse proxy; address unknown | owner and repository, medium |
+| `elessar` | reserved at `10.10.20.50` in Kea; authentication and reverse proxy role untested | reservation **VERIFIED** 2026-11-02; service role historical |
 | UniFi UNAS Pro 8 | management IP, port, VLAN, data paths and dependencies **UNKNOWN** | owner report, medium |
 
 **PLANNED:** UDM Pro Max first, retaining the ARRIS modem. UniFi Cable Internet replaces the modem only after the gateway is stable. Pro XG 24 PoE, aggregation switch (model undecided), patch panels/Cat6A/Etherlighting, UniFi UPS/UPS Pro, PDU Pro and rack compute are planning items; no installation is established.
 
 ### Addressing reference
 
-Preserve subnet and gateway addresses. The repository calls MGMT **untagged**, although the owner calls it VLAN 10. Treat the VLAN 10 tag as **UNKNOWN** until switch and firewall inspection; do not tag MGMT merely to match a name.
+Preserve subnet and gateway addresses. MGMT is called VLAN 10 by the owner, but OPNsense has **no VLAN 10 interface**: `igc1` directly holds `10.10.10.1/24` (verified 2026-11-02). Switch port tagging remains unknown; do not tag MGMT merely to match a name.
 
 | Network | Subnet | Intended gateway | DHCP / SSID (historical) |
 |---|---|---|---|
-| MGMT (VLAN 10 label; untagged in 2026 design) | 10.10.10.0/24 | 10.10.10.1 | static |
-| SERVERS / 20 | 10.10.20.0/24 | 10.10.20.1 | static |
-| CLIENTS / 30 | 10.10.30.0/24 | 10.10.30.1 | Kea? / Valinor |
-| LAB / 40 | 10.10.40.0/24 | 10.10.40.1 | Kea? / Isengard |
-| IOT / 50 | 10.10.50.0/24 | 10.10.50.1 | Kea? / Gondolin |
-| GUEST / 60 | 10.10.60.0/24 | 10.10.60.1 | Kea? / Bree |
-| APPLE_IOT / 70 | 10.10.70.0/24 | 10.10.70.1 | Kea? / Lorien |
+| MGMT (VLAN 10 label; untagged on OPNsense) | 10.10.10.0/24 | 10.10.10.1 | Kea reservation-only; no dynamic pool |
+| SERVERS / 20 | 10.10.20.0/24 | 10.10.20.1 | Kea reservation-only; no dynamic pool |
+| CLIENTS / 30 | 10.10.30.0/24 | 10.10.30.1 | Kea pool .100–199 / Valinor (SSID historical) |
+| LAB / 40 | 10.10.40.0/24 | 10.10.40.1 | Kea pool .100–199 / Isengard (SSID historical) |
+| IOT / 50 | 10.10.50.0/24 | 10.10.50.1 | Kea pool .100–199 / Gondolin (SSID historical) |
+| GUEST / 60 | 10.10.60.0/24 | 10.10.60.1 | Kea pool .100–199 / Bree (SSID historical) |
+| APPLE_IOT / 70 | 10.10.70.0/24 | 10.10.70.1 | Kea pool .100–199 / Lorien (SSID historical) |
 
-The owner reports Kea on OPNsense. `docs/network.md` only says OPNsense DHCP, with no backend or scope details. Confirm live backend, enabled scopes, reservations, lease times and options before building UDM DHCP. Never run Kea and UDM DHCP on the same production subnet simultaneously.
+Kea DHCPv4 configuration and a running process were verified 2026-11-02. Confirm lease behavior and every reservation/option before building UDM DHCP. Never run Kea and UDM DHCP on the same production subnet simultaneously.
 
 ## Firewall policy translation worksheet
 
-**UNKNOWN:** every row's actual OPNsense rule order, floating/interface scope, aliases, NAT, IPv6 behavior and tested outcome. Fill this from the discovery runbook before approval. A deny-by-default design statement is not proof of implementation. UniFi zone defaults and rule order must be reviewed on the installed Network version. Create separate zones where distinct trust policies require them; placing all VLANs in one broad Internal zone can erase intended boundaries. Include gateway-local services, IPv6 and established/related behavior in tests.
+**PARTIALLY VERIFIED:** Saved rules, alias names and NAT categories were inspected 2026-11-02; broad enabled allows and a disabled CLIENTS direct-DNS block conflict with the deny-by-default design. Complete active rule order, floating/interface behavior, IPv6 policy and tested outcomes remain **UNKNOWN**. Fill the matrix from the [dated findings](anduin-discovery-2026-11-02.md) and later client tests before approval. UniFi zone defaults and rule order must be reviewed on the installed Network version. Create separate zones where distinct trust policies require them; placing all VLANs in one broad Internal zone can erase intended boundaries. Include gateway-local services, IPv6 and established/related behavior in tests.
 
 | Source → destination | Intended behavior (historical) | Required evidence before translation |
 |---|---|---|

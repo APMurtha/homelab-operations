@@ -13,10 +13,10 @@ The ordered gateway requires a reviewed inventory, policy translation and rollba
 Documentation only. No firewall, DHCP, DNS, controller, switch, wireless, Proxmox, modem or storage configuration was changed.
 
 ## Validation / Success Criteria
-Reviewed existing architecture, diagrams, incident reports and changelog. The new plan records unknowns and separates the ARRIS-to-UDM gateway cutover from the later cable modem replacement. Live network behavior remains unverified.
+Reviewed existing architecture, diagrams, incident reports and changelog. The plan separates the ARRIS-to-UDM gateway cutover from the later cable modem replacement. A bounded, read-only SSH inspection of `anduin` verified selected interfaces, Kea settings, saved firewall rules and NAT, and runtime WAN/routing observations. The [dated findings](../docs/anduin-discovery-2026-11-02.md) record the evidence and remaining gaps. Effective firewall and client behavior remain unverified.
 
 ## Rollback Plan
 Revert this documentation branch if the review rejects it. Production rollback is documented separately in `docs/udm-pro-max-migration.md` and requires an isolated rehearsal before cutover.
 
 ## Outcome
-Documentation prepared for review; discovery and migration remain pending.
+Documentation and initial OPNsense discovery prepared for review; the remaining systems and migration remain pending.

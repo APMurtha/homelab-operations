@@ -36,10 +36,10 @@ Core technologies include **OPNsense**, **Proxmox VE**, **Pi-hole**, Docker, and
 - **Storage Pool:** `moria` (ZFS)
 - **Authentication:** `elessar` (Authentik + NPM)
 
-The network is fully segmented using VLANs:
+The network design uses these VLANs; effective segmentation still needs testing:
 - MGMT, SERVERS, CLIENTS, LAB, IOT, APPLE_IOT, and GUEST
 - No flat network
-- Inter-VLAN traffic denied by default
+- Inter-VLAN deny by default is the design intent; [initial OPNsense discovery](docs/anduin-discovery-2026-11-02.md) found broad allows that require policy review
 
 ---
 
