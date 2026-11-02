@@ -20,6 +20,8 @@ The theme is aesthetic; the **intentional structure** is the point.
 | **ithilien** | Bastion / Access Host | Hardened SSH/MOSH jump host used for administrative access into protected networks. |
 | **lothlorien** | UniFi Controller | Centralized management plane for wireless infrastructure. Stable, isolated, and trusted. |
 | **elessar** | Central Authentication | Authentik + Nginx Proxy Manager |
+| **cirith-ungol** | Proxmox Cluster Node | Owner reports member of `mordor` at 10.10.10.3; live status unverified. |
+| **dol-guldur** | Proxmox Cluster Node | Owner reports member of `mordor` at 10.10.10.4; live status unverified. |
 
 ---
 
@@ -99,7 +101,6 @@ ___
 | Name | Intended Role |
 |-----|--------------|
 | **barad-dur** | 2nd Proxmox Node |
-| **cirith-ungol** | 3rd Proxmox Node |
 | **rohan** | Client services or VDI |
 | **aule** | Automation, CI/CD, orchestration |
 | **tengol** | outbound SMTP relay lab (SPF/DKIM/DMARC practice) |

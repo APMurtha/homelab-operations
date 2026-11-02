@@ -52,3 +52,8 @@ runbooks/    Operational procedures and how-tos
 incidents/   Incident analysis and lessons learned
 changelog/   Chronological change history
 automation/  Scripts and configuration automation
+```
+
+## Migration preparation
+
+The [UDM Pro Max migration plan](docs/udm-pro-max-migration.md) and [read-only discovery checklist](runbooks/udm-discovery.md) distinguish the February 2026 documented design from live facts still to be verified. The ordered UDM and later cable modem are not installed.

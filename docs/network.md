@@ -7,7 +7,7 @@ The environment is intentionally designed to simulate **real-world Linux and net
 administration** practices, including segmentation, firewall policy design, DNS enforcement,
 monitoring, and disciplined change management.
 
-This documentation reflects the **authoritative, known-good state** of the network.
+This documentation records the **historical post-recovery design as of February 2026**. Live configuration has not been re-verified for the UDM migration; see [migration preparation](udm-pro-max-migration.md).
 
 ---
 
@@ -87,12 +87,12 @@ UniFi gateways are **not** used.
 
 ---
 
-## 4. Authoritative Network Architecture (Post-Recovery – 2026-02)
+## 4. Documented Network Architecture (Post-Recovery – 2026-02)
 
-This section documents the **current, stable, known-good architecture** reached after
+This section documents the **then-stable architecture** reached after
 recovery from management-plane instability during switch migration.
 
-This is **not aspirational design**.
+This was documented as an implemented recovery state in February 2026. Current cabling and settings require read-only verification.
 
 ---
 
@@ -182,7 +182,7 @@ AP-facing ports therefore:
 
 ---
 
-## 5. UniFi Ethernet Port Profiles (Authoritative)
+## 5. UniFi Ethernet Port Profiles (Documented February 2026)
 
 This section documents the **approved UniFi port profiles** and their allowed usage.
 Misapplication has previously resulted in management-plane outages.
@@ -380,4 +380,4 @@ Incidents and recovery procedures are documented separately.
 
 ---
 
-*Last updated: 2026-02 — authoritative post-recovery state*
+*Historical post-recovery state: 2026-02. Migration review: 2026-11-02.*

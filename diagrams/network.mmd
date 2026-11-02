@@ -1,5 +1,7 @@
+%% Historical February 2026 topology plus owner-reported hardware; live links unverified.
 flowchart TB
-  internet((Internet)) --> wan[WAN]
+  internet((Internet)) --> modem[ARRIS Surfboard<br/>owner reported; WAN details unknown]
+  modem --> wan[WAN]
   wan --> opn[anduin - OPNsense<br/>Protectli Vault FW4C]
 
   %% Management uplink (untagged only)
@@ -35,6 +37,9 @@ flowchart TB
 
   %% Downstream systems
   sw --> pve[orthanc - Proxmox Host<br/>runs VMs and LXCs]
+  sw -.-> pve2[cirith-ungol - Proxmox<br/>owner reported]
+  sw -.-> pve3[dol-guldur - Proxmox<br/>owner reported]
+  sw -.-> nas[UNAS Pro 8<br/>uplink and MGMT IP unknown]
   sw --> adminpc[Admin Clients<br/>PC / iPad via LAN or WiFi]
   ap --> wifi_clients[WiFi Clients]
   ap --> wifi_iot[IoT WiFi Devices]

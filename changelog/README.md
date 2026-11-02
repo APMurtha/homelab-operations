@@ -32,6 +32,9 @@ Procedural details are intentionally excluded and belong in `runbooks/`.
 
 ### 2026
 
+- `2026-11-02-prepare-udm-migration-documentation.md`
+  Prepare discovery and staged UDM migration documentation; no production change
+
 - `2026-02-08-migrate-switch-tplink-to-unifi.md`  
   Migrate core switch from TP-Link to UniFi
 
