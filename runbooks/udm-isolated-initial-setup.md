@@ -1,6 +1,14 @@
 # UDM Pro Max isolated initial setup
 
-Status: **READY TO USE; execution not yet verified**. The owner reports that the UDM Pro Max has arrived. This checklist changes only the new, isolated UDM. `anduin`, the ARRIS Surfboard, `osgiliath`, `lothlorien` and all adopted devices remain in production. Follow the [migration plan](../docs/udm-pro-max-migration.md) for the later gateway cutover; the eventual UDM-to-`osgiliath` link is **one Cat6 cable**, with no LAG.
+Status: **INITIAL SETUP AND UPDATES COMPLETE (owner report, 2026-11-02)**. Do not repeat initialization or firmware work. The owner reports all seven networks created, DHCP disabled on each, and the UDM still isolated from production. Live readback remains pending. `anduin`, the ARRIS Surfboard, `osgiliath`, `lothlorien` and all adopted production devices must remain unchanged. Follow the [migration plan](../docs/udm-pro-max-migration.md) for remaining configuration and cutover; the eventual UDM-to-`osgiliath` link is **one Cat6 cable**, with no LAG. The unchecked items below retain verification requirements; they do not imply completed work should be repeated.
+
+## Current setup receipt and remaining checks
+
+- **Owner report:** networks MGMT/10, SERVERS/20, CLIENTS/30, LAB/40, IOT/50, GUEST/60 and APPLE_IOT/70 exist at their `10.10.X.1/24` gateways, with DHCP off everywhere.
+- **Owner-supplied address:** `10.10.30.136`. One bounded HTTPS attempt from denethor timed out. Determine whether this is UDM WAN or LAN, its current cabling and any overlap with staged CLIENTS before further connection work. Do not bridge production to the isolated LAN.
+- **Pending:** OS/Network versions, local offline login, direct recovery port/subnet, temporary WAN removal, backup/restore result and adopted-device inventory. Keep all existing networks until the approved before/after diff is ready; do not delete/recreate them to follow this historical checklist.
+- **MGMT reconciliation:** prior plan defers tagged management. A UDM VLAN 10 object is owner-reported, but the production MGMT path is untagged. Verify the UDM uplink's native network and resulting frames against the switch profile before proposing a change; no production tagging change is authorized.
+- **Next workstation:** owner selected returning to the laptop with the previous access setup. See the existing plan's handoff and supported-automation section. No UDM changes may execute before exact proposed changes are shown and approved.
 
 ## Boundary before power-on
 
