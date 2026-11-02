@@ -2,6 +2,10 @@
 
 Status: **PLANNED**. Commands below are proposals, not evidence they ran. Obtain each system's authorized read-only access and confirm the target before use. Run one bounded query at a time; do not export raw configuration into Git. Redact public IPs, host IDs, MACs and other sensitive values in shared notes.
 
+Access checkpoint (2026-11-02): Andrew's `andrew-network` NEST binding is now present and the local status helper works. It reports no scoped UniFi API key or selected target. This confirms only local routing/prerequisites. Before any target command, establish the specific endpoint, authenticated identity and verified host key or provider identity. For a self-hosted controller, first confirm whether Site Manager exposes it; otherwise use an owner-authorized local UI or SSH route. Do not use another household's profile or credentials.
+
+OPNsense transport checkpoint (2026-11-02): owner-provided `https://10.10.10.1/` was reachable by TCP/TLS outside the command sandbox, but the certificate issuer was not locally trusted (`curl` error 60). Confirm the certificate or install/select an independently trusted CA before authenticated reads; do not pass `-k` or equivalent. The owner reports the self-hosted controller is linked to Site Manager, but no scoped API key has been entered yet.
+
 | Target | Proposed read-only checks | Safety / handling |
 |---|---|---|
 | OPNsense `anduin` UI | System > Interfaces, Assignments, VLANs, Gateways, Routes; Firewall > Rules (all tabs, including floating), Aliases, NAT (outbound/port forward/1:1), VPN sections; Services > Kea DHCP, DNS, Unbound; System > Settings > General | UI viewing only. Avoid Apply/Save, renew/release, tests that change state. Private configuration backup later for rollback; never commit it. Record exact interface/IP, WAN DHCP/IPv6, rule order, NAT, routes, VPN listeners, DHCP pools/reservations/options and DNS. |

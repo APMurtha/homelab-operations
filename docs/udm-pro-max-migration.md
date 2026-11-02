@@ -2,6 +2,16 @@
 
 Status: **PLANNED**. Prepared 2026-11-02; no production change or live configuration verification has occurred for this plan. The UDM Pro Max is ordered, not installed. Use [network.md](network.md) for the February 2026 design and [the discovery checklist](../runbooks/udm-discovery.md) to replace assumptions with dated evidence.
 
+## Discovery access status — 2026-11-02
+
+**VERIFIED locally (not a live network finding):** NEST 2.0.0 initially failed its scoped `home.py --person andrew --system andrew-network status` check because the required Andrew/network binding did not exist. `systems.py show` reported a missing binding. After creating the local binding with `systems.py bind --person andrew --system andrew-network`, both `show` and the scoped `status` command succeeded. `unifi-access doctor --local` reports Python ready and no scoped API key; scoped status reports no selected UniFi target or household profile. At this step, no service authentication or network connectivity was tested. This was a missing local skill configuration, not an observed network or production authentication failure.
+
+**VERIFIED transport only:** The owner supplied `https://10.10.10.1/` for `anduin`. A single HTTPS HEAD request reached that address outside the command sandbox, but TLS validation failed with `curl` error 60 (`unable to get local issuer certificate`). No HTTP status or configuration was read, and no credential was sent. The sandboxed attempt could not open TCP 443; the outside-sandbox result distinguishes that policy boundary from actual LAN reachability. A trusted CA or independently verified certificate path is required before a secure authenticated request. Do not disable TLS verification to work around this.
+
+**Owner report, not API-verified:** `lothlorien` is linked to UniFi Site Manager. This makes the NEST Site Manager route a candidate, but the scoped API key is absent and no authenticated host/site inventory has been read.
+
+**UNKNOWN:** OPNsense, UniFi controller, Pi-hole, Proxmox and UNAS live configuration. No authenticated read-only connection is currently configured for those systems in this work session. The NEST UniFi helper uses the official Site Manager/Network API; whether the linked self-hosted `lothlorien` is exposed to this key/account is untested. Obtain an owner-confirmed endpoint and authorized local access method for each target; do not infer credentials from the OS user, Git remote or other NEST systems. The OPNsense/Proxmox/UNAS discovery commands remain proposals until access is verified.
+
 ## Evidence labels
 
 - **VERIFIED**: observed read-only on the named live system, with date and method.
