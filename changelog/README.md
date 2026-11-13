@@ -32,6 +32,16 @@ Procedural details are intentionally excluded and belong in `runbooks/`.
 
 ### 2026
 
+- [2026-11-04-complete-udm-service-recovery.md](2026-11-04-complete-udm-service-recovery.md)
+  Record completed UDM service recovery, owner acceptance and remaining gaps
+
+
+- `2026-11-02-select-single-udm-uplink.md`
+  Select one Cat6 UDM-to-Osgiliath uplink and defer tagged MGMT to a separate change
+
+- `2026-11-02-prepare-udm-migration-documentation.md`
+  Prepare discovery and staged UDM migration documentation; no production change
+
 - `2026-02-08-migrate-switch-tplink-to-unifi.md`  
   Migrate core switch from TP-Link to UniFi
 

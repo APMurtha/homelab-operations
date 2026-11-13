@@ -1,3 +1,6 @@
+> **Historical pre-UDM snapshot.** This is not current topology, service exposure
+> or an execution procedure. Use [current architecture](../network.md).
+
 flowchart TB
   internet((Internet)) --> wan[WAN]
   wan --> opn[OPNsense Firewall/Router<br/>Protectli Vault FW4C]

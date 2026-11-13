@@ -1,12 +1,9 @@
+# Telemetry retention policy reference
 
----
-
-# 3️⃣ Runbook: Telemetry retention policy
-
-📁 **`runbooks/telemetry-retention-policy.md`**
-
-```markdown
-# Telemetry Retention Policy
+**Recorded January 2026; not revalidated after UDM recovery.** This file records
+the prior intended values, not a tested current apply procedure. Inspect actual
+Minas-Tirith config/disk and approve any change before applying it.
+See [observability gaps](../docs/observability.md).
 
 ## Scope
 

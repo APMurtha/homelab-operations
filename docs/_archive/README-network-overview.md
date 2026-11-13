@@ -1,3 +1,6 @@
+> **Historical pre-UDM snapshot.** This is not current topology, service exposure
+> or an execution procedure. Use [current architecture](../network.md).
+
 # Homelab Network Overview
 
 ## Goals

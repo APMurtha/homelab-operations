@@ -72,3 +72,15 @@ This separation ensures that:
 - and corrective actions
 
 are each documented clearly and without duplication.
+
+## Historical incident index
+
+- [2026-02-08 UniFi management-plane instability](2026-02-08-unifi-management-plane-instability.md)
+- [2026-01-24 AirVPN endpoint health checks](2026-01-24-AirVPN-WireGuard-Endpoint-Healthcheck-Failure.md)
+- [2026-01-18 Proxmox NIC/offload hang](2026-01-18-proxmox-nic-offload-crash.md)
+
+These records preserve their original observations. For today's UDM topology and
+management recovery, use [current architecture](../docs/network.md) and
+[current recovery](../runbooks/recover-unifi-management-plane.md). November's
+cutover failures/recovery receipts are in the [archived migration notes](../docs/_archive/udm-migration-working-notes-2026-11-04.md);
+its accepted outcome is in the [change record](../changelog/2026-11-04-complete-udm-service-recovery.md).

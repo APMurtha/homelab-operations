@@ -1,5 +1,12 @@
 # 2026-02-08 — UniFi Management Plane Instability During Switch Migration
 
+**Historical incident.** The topology-specific trunk/LAGG and untagged-management
+conclusions below describe the February recovery, not universal UniFi limits.
+The November UDM topology successfully uses a single trunk and tagged switch/AP
+management. Use [current architecture](../docs/network.md) and
+[current recovery](../runbooks/recover-unifi-management-plane.md); do not repeat
+factory resets or controller/LAGG reconstruction from this incident.
+
 ## Summary
 
 During migration from a TP-Link managed switch to a UniFi USW-24-G2, the network

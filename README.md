@@ -1,54 +1,60 @@
-# 🧙‍♂️ Homelab Operations
+# Homelab Operations
 
-This repository documents a **VLAN-segmented, security-focused homelab** designed to mirror small-enterprise Linux and network operations practices.
+Architecture, operating procedures and change history for Andrew's homelab.
+Current-state documentation was reconciled on **2026-11-04** against the completed
+UDM recovery, authenticated network observations and owner acceptance tests.
+Historical incidents and changelog entries describe their original dates.
 
-The environment emphasizes **intentional architecture, least-privilege networking, centralized DNS, observability, and disciplined documentation**.  
-While themed around *The Lord of the Rings* for memorability, the design principles are practical and professional.
+## Current environment
 
----
+| Role | System |
+| --- | --- |
+| Gateway and UniFi Network controller | **Anduin — UDM Pro Max** |
+| Comcast modem | Eärendil — UCI |
+| Switch / AP | Osgiliath — USW-24-G2 / Ithil — U7 Pro |
+| Virtualization | mordor — Orthanc, Cirith-Ungol, Dol-Guldur |
+| DNS | Palantir — Pi-hole + Unbound; resolver chain configuration review pending |
+| Media / reverse proxy | Rivendell / Elessar — NPM, Authentik, books-only DDNS |
+| Storage | Moria UNAS; distinct from Orthanc's local `moria` ZFS pool |
+| Observability | Minas-Tirith; Grafana responds, other telemetry paths need verification |
 
-## 📌 Overview
+OPNsense is disconnected. Lothlorien's former controller is decommissioned/off.
+The active gateway-to-switch path is one Cat6 1 Gbps link, with no active LAG.
+MGMT uses VLAN 10; switch/AP management is tagged, while infrastructure access
+ports use native MGMT. Default/VLAN 1 is `10.0.0.1/24`, with DHCP, internet access
+and mDNS disabled. The subnet still exists.
 
-The homelab is built to support:
+## Start here
 
-- Real-world Linux administration workflows
-- Network segmentation and firewall policy design
-- Centralized DNS enforcement and logging
-- Monitoring, telemetry, and troubleshooting
-- Safe experimentation via isolated lab networks
-- Resume-ready documentation and change tracking
+- [Current network architecture, addressing and policy](docs/network.md)
+- [Migration outcomes, evidence and remaining acceptance](docs/udm-pro-max-migration.md)
+- [Documentation review: fixed issues and unresolved gaps](docs/documentation-review-2026-11-04.md)
+- [Management recovery](runbooks/recover-unifi-management-plane.md)
+- [Naming and identity](docs/naming.md)
+- [Observability status](docs/observability.md)
+- [Reproducible Elessar DDNS configuration](configs/cloudflare-ddns/compose.yaml)
+- [Change history](changelog/README.md) / [historical incidents](incidents/README.md)
 
-Core technologies include **OPNsense**, **Proxmox VE**, **Pi-hole**, Docker, and open-source observability tools (Grafana, Loki, Netdata).
+## Verification boundary
 
----
+Core restored services and owner-tested IoT, Guest and Apple workflows are
+operational. VLAN membership is not proof of isolation: LAB hardening is
+**explicitly deferred**, and CLIENTS/SERVERS/MGMT have no custom source restrictions
+in the reviewed classic rules. Guest peer isolation and selected policy/recovery
+checks remain untested. Read the evidence/status in each document before acting.
 
-## 🗺️ Architecture at a Glance
-
-- **Firewall / Router:** `anduin` (OPNsense)
-- **Switch:** UniFi USW-24-G2 (Layer 2, VLAN-aware)
-- **Wireless AP:** `ithil` (UniFi U7 Pro, VLAN-aware access point)
-- **UniFi Controller:** `lothlorien`
-- **Hypervisor:** `orthanc` (Proxmox VE)
-- **DNS:** `palantir` (Pi-hole + Unbound)
-- **Media / Docker:** `rivendell`
-- **Observability:** `minas-tirith`
-- **Bastion Host:** `ithilien`
-- **Storage Pool:** `moria` (ZFS)
-- **Authentication:** `elessar` (Authentik + NPM)
-
-The network is fully segmented using VLANs:
-- MGMT, SERVERS, CLIENTS, LAB, IOT, APPLE_IOT, and GUEST
-- No flat network
-- Inter-VLAN traffic denied by default
-
----
-
-## 📂 Repository Structure
+## Repository layout
 
 ```text
-docs/        Architecture and design documentation
-diagrams/    Network and architecture diagrams
-runbooks/    Operational procedures and how-tos
-incidents/   Incident analysis and lessons learned
-changelog/   Chronological change history
-automation/  Scripts and configuration automation
+docs/        Current architecture, acceptance and review findings
+docs/_archive/ Historical snapshots and superseded working notes
+diagrams/    Current physical/logical Mermaid source diagrams
+runbooks/    Procedures with scope and verification limits
+incidents/   Dated incident evidence; not current recovery instructions
+changelog/   Dated architectural and operational changes
+configs/     Secret-free reproducible configuration
+```
+
+Credentials, MAC inventories, private API journals, exported backups and raw
+infrastructure state stay outside Git. Documentation changes do not authorize
+live network/service changes.
