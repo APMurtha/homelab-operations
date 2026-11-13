@@ -1,0 +1,9 @@
+%% Verified deployed single-uplink design, reconciled 2026-11-04; former proposal is historical.
+flowchart LR
+  uci["Comcast / Eärendil UCI"] -->|"2.5 Gbps - WAN 9"| udm["Anduin - UDM Pro Max"]
+  udm -->|"Anduin 7 to Osgiliath 1<br/>One Cat6 - 1 Gbps<br/>Native Default, tagged Allow All"| osg["Osgiliath - USW-24-G2<br/>Tagged MGMT override 10.10.10.10"]
+  udm -->|"Direct Anduin port 8 - 1 Gbps"| ap["Ithil - U7 Pro<br/>Tagged MGMT override 10.10.10.20"]
+  osg -->|"Native MGMT access ports"| mgmt["Proxmox .2/.3/.4 and NAS .8<br/>10.10.10.0/24"]
+  osg -->|"Native SERVERS / LAB bridge paths"| hosts["VLAN 20 services / VLAN 40 K3s"]
+  ap --> wifi["Calacirya 30 / Gondolin 50<br/>Bree 60 / Lorien 70"]
+  note["No LAG, no second gateway-to-switch link<br/>Keep device tagged MGMT and port native VLAN distinct"]

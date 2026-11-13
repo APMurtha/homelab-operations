@@ -1,0 +1,4 @@
+secrets/
+.env
+dns-before.json
+*journal.json

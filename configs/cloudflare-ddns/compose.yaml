@@ -1,0 +1,29 @@
+name: elessar-ddns
+services:
+  cloudflare-ddns:
+    image: favonia/cloudflare-ddns@sha256:345b41895a8846d74c62d30bd27e61101a754f8ab8da10c68115823883803afb
+    container_name: cloudflare-ddns
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      CLOUDFLARE_API_TOKEN_FILE: /run/secrets/cloudflare_api_token
+      IP4_DOMAINS: books.murtha.info
+      IP4_PROVIDER: cloudflare.trace
+      IP6_PROVIDER: none
+      UPDATE_CRON: "@every 5m"
+      UPDATE_ON_START: "true"
+      DELETE_ON_STOP: "false"
+      TZ: America/New_York
+    secrets:
+      - cloudflare_api_token
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+secrets:
+  cloudflare_api_token:
+    file: ./secrets/cloudflare_api_token.txt

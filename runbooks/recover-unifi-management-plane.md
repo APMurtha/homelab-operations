@@ -1,157 +1,74 @@
-# 🛠️ Recover UniFi Switch and APs After Management Plane Loss
+# Recover management access in the current UDM topology
 
-## Purpose
+**Scope: Anduin UDM Pro Max with adopted Osgiliath/Ithil, 2026-11-04.** The former
+February OPNsense/controller-isolation/factory-reset/LAGG procedure is historical
+and is preserved in the [incident](../incidents/2026-02-08-unifi-management-plane-instability.md).
+It is not today's default recovery. This runbook was reconciled against successful
+recovery observations; a complete offline recovery rehearsal remains untested.
 
-This runbook documents the **safe recovery procedure** for a UniFi switch and
-associated access points after loss of management-plane connectivity.
+## Preserve the surviving path
 
-It is intended to be used when:
-- the UniFi switch becomes unreachable by the controller
-- devices enter reprovision or adoption loops
-- management IP addressing becomes inconsistent or unexpected
+Identify what is actually unavailable: controller UI, adopted-device heartbeat,
+one client's path, DNS, or a host service. Use a surviving CLIENTS/MGMT session or
+trusted local console. Avoid resets, reboots, controller shutdown, old backup
+restores and simultaneous port/address changes. Operational writes still require
+an approved target/diff/recovery plan; inspect read-only first.
 
-This procedure is derived from a real incident and reflects a **known-good
-recovery path**.
+## Known current topology
 
----
+- Anduin administration: MGMT 10.10.10.1 and CLIENTS 10.10.30.1 verified.
+- Default is 10.0.0.1/24; DHCP and Internet Access are off. Old 192.168.1.1 is obsolete.
+- Anduin port 7↔Osgiliath port 1: one 1 Gbps Cat6 trunk, native Default/tagged Allow All.
+- Ithil connects directly to Anduin port 8; native/tagged uplink preserved.
+- Osgiliath 10.10.10.10 and Ithil 10.10.10.20 use tagged MGMT 10 overrides, static/24,
+  gateway 10.10.10.1, DNS 10.10.20.10. MGMT has no DHCP pool.
+- Moria 10.10.10.8 uses native MGMT on switch port 2; Proxmox .2/.3/.4 management paths
+  use native MGMT on switch ports 5/6/7. Never substitute the retired MGMT_UPLINK profile
+  that blocks tags or rebuild a LAG to match February's topology.
 
-## Scope
+## Diagnose without changing configuration
 
-Applies to environments where:
-- UniFi is used for switching and wireless only
-- OPNsense (or another firewall) provides routing, DHCP, and NAT
-- Management traffic is intentionally untagged
-- VLAN traffic is isolated to a dedicated trunk or LAGG
+1. Verify actual appliance/model/site before using administrative tools. The
+   hostname Anduin and 10.10.10.1 now identify the UDM, not old OPNsense.
+2. Confirm the test client's address/router/DNS and active SSID. Try the verified
+   numeric management endpoints to distinguish DNS failure from routing/UI loss.
+3. Read gateway WAN/LAN state and adopted switch/AP state. Provisioning may briefly
+   change online status; read again rather than replaying the last write.
+4. Reconcile each physical hop's peer port, native VLAN, tagged allowance and
+   device management override. A device tagged for MGMT must have a working tagged
+   VLAN 10 path; do not also change its attached native network to MGMT blindly.
+5. Compare endpoint addresses with live service probes and persistent config.
+   Stale controller client rows may retain old IP/network labels. Static MGMT
+   devices should not depend on a new dynamic pool.
+6. For lost Proxmox/NAS services, inspect their own address/default route and
+   cluster/mount state before attributing the problem to a new firewall rule.
 
----
+## Approved targeted recovery
 
-## Symptoms
+Review the exact change and inverse from current state, including complete port
+arrays and references. Capture private before-state. Change one affected device
+or access port at a time, then verify adoption, administration and required flows
+before continuing. Preserve all unrelated ports and radio settings. If reverting
+an approved change, preserve later owner edits; reconcile uncertain outcomes
+read-only before another write. Never replay an old private adapter blindly.
 
-Initiate this runbook if one or more of the following are observed:
+A direct laptop-to-UDM recovery path should be prepared separately: identify the
+actual port's native network and a verified-unused static address in that subnet,
+then verify local administrator login without relying on cloud access. Default
+has no DHCP; do not assume an automatic address. That offline procedure has not
+yet been exercised, so do not promise it will work during an outage.
 
-- UniFi switch appears offline in the controller
-- Switch or APs repeatedly reprovision
-- Devices fall back to default IP addressing
-- Controller loses visibility during provisioning
-- Network changes cause immediate loss of management access
+Use the fresh private post-recovery console export only after an explicitly
+approved restore plan. It is saved with a matching-digest copy, not restore-tested.
+Restoring October's Lothlorien Network backup could overwrite the working UDM
+configuration. Factory reset is a separate last-resort operation requiring a
+verified backup, physical recovery path and explicit approval, not an initial step.
 
----
+## Verify and record
 
-## Preconditions
-
-Before beginning recovery:
-
-- Physical access to the UniFi switch is available
-- Controller host (VM/LXC) access is available
-- Firewall configuration is reachable and stable
-- MGMT network is confirmed untagged on the firewall interface
-
----
-
-## Recovery Procedure
-
-### 1. Isolate the Controller
-
-- Disconnect the UniFi Network Controller host from the network **or**
-- Stop the UniFi Network Controller service
-
-This prevents incomplete or incorrect configurations from being re-applied
-during recovery.
-
----
-
-### 2. Factory Reset the UniFi Switch
-
-- Perform a full factory reset using the physical reset button
-- Wait for the switch to fully reboot
-
-Do **not** reconnect it to trunked or VLAN-carrying ports yet.
-
----
-
-### 3. Restore Minimal Connectivity
-
-- Connect the switch to the firewall **management uplink only**
-- Ensure this port:
-  - carries untagged MGMT
-  - blocks all tagged VLANs
-  - is not part of a LAGG
-
-Verify the switch receives a valid MGMT IP address.
-
----
-
-### 4. Start the Controller and Adopt the Switch
-
-- Start or reconnect the UniFi Network Controller
-- Adopt the switch
-- Wait for adoption to complete and status to stabilize
-
-Do **not** apply VLANs, trunks, or profiles yet.
-
----
-
-### 5. Apply Management-Safe Port Profile
-
-- Assign the dedicated MGMT uplink port profile to the firewall-facing port
-- Confirm no tagged VLANs are permitted on this link
-
-Reconfirm switch reachability after the change.
-
----
-
-### 6. Recreate the VLAN Trunk / LAGG
-
-- Configure the LAGG ports on the switch
-- Apply the VLAN trunk port profile
-- Verify LAGG status on both switch and firewall
-
-At this point, VLAN traffic may safely resume.
-
----
-
-### 7. Re-Adopt Access Points
-
-- Apply the AP trunk profile to AP-facing ports
-- Confirm:
-  - untagged MGMT is present
-  - only required VLANs are tagged
-- Re-adopt APs if necessary
-
-Wait for all APs to reach a stable, connected state.
-
----
-
-### 8. Final Validation
-
-Confirm the following before closing recovery:
-
-- Switch remains online and stable
-- APs remain adopted
-- Clients receive correct VLAN IPs
-- No reprovision loops are occurring
-- Management access persists across configuration changes
-
----
-
-## Post-Recovery Actions
-
-- Review recent configuration changes
-- Update documentation if behavior differed from expectations
-- Reference related incident and changelog entries
-- Avoid additional changes until stability is confirmed
-
----
-
-## Related Documentation
-
-- `docs/network.md` — Authoritative network architecture
-- `incidents/2026-02-08-unifi-management-plane-instability.md`
-- `changelog/2026-02-08-migrate-switch-tplink-to-unifi.md`
-
----
-
-## Status
-
-Validated. This procedure has successfully restored management-plane
-connectivity and stability.
+Confirm MGMT/CLIENTS administration, switch/AP adoption, correct DHCP/DNS, NAS
+reads, relevant cluster readiness and allowed/blocked client flows. Preserve
+old OPNsense disconnection and Lothlorien shutdown. Reverting to the old gateway
+is no longer a cable-only rollback: addresses, leases, adoption and modem/WAN
+have changed. See [acceptance](../docs/udm-pro-max-migration.md) and
+[review gaps](../docs/documentation-review-2026-11-04.md).

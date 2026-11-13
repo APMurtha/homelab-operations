@@ -1,4 +1,11 @@
 *.save
 *.swp
 .DS_Store
+*.unf
 
+
+# Protected infrastructure exports and local working state
+*.unifi
+.ai-local/
+backups/
+.env

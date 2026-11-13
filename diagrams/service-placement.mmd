@@ -1,66 +1,27 @@
+%% Logical service/network map, reconciled 2026-11-04; exact Proxmox guest placement is unverified.
 flowchart LR
-  subgraph vlan10["VLAN10 MGMT 10.10.10.0/24"]
-    opn[anduin - OPNsense<br/>Protectli FW4C]
-    sw[osgiliath - TP-Link TL-SG108E]
+  subgraph mgmt["MGMT 10 - 10.10.10.0/24"]
+    udm["Anduin .1<br/>Routing, DHCP, firewall, NAT, UniFi Network"]
+    pve["mordor: Orthanc .2 / Cirith-Ungol .3 / Dol-Guldur .4<br/>Quorum 3/3 owner-verified"]
+    nas["Moria NAS .8<br/>Media NFS exports"]
+    backup["Orthanc local moria ZFS<br/>Distinct NFS export at .2:/moria"]
   end
-
-  subgraph vlan20["VLAN20 SERVERS 10.10.20.0/24"]
-    pve[orthanc - Proxmox Host<br/>Netdata (host-level)]
-    pal[palantir - LXC<br/>Pi-hole + Unbound]
-    minas[minas-tirith - VM<br/>Grafana + Prometheus + Loki + Promtail + Uptime Kuma]
-    loth[lothlorien - LXC/VM<br/>UniFi Controller]
-    auth[elessar - VM/LXC<br/>Auth & Reverse Proxy]
-    riv[rivendell - VM<br/>Media Docker Host<br/>Netdata (workload-level)]
+  subgraph servers["SERVERS 20 - 10.10.20.0/24"]
+    dns["Palantir .10<br/>Pi-hole + Unbound<br/>Resolver chain review pending"]
+    riv["Rivendell .30<br/>Docker media / Audiobookshelf 13378"]
+    minas["Minas-Tirith .40<br/>Grafana responds<br/>Other telemetry needs inspection"]
+    auth["Elessar .50<br/>NPM / Authentik / books-only DDNS"]
+    bastion["Ithilien .70<br/>Access host"]
   end
-
-  subgraph vlan30["VLAN30 CLIENTS 10.10.30.0/24"]
-    clients[Workstations / Phones / iPad]
-  end
-
-  subgraph vlan50["VLAN50 IOT 10.10.50.0/24"]
-    iot[IoT Devices<br/>HomePods etc.]
-  end
-
-  opn --- sw
-  sw --- pve
-  pve --- pal
-  pve --- minas
-  pve --- loth
-  pve --- riv
-  pve --- auth
-
-  clients -->|DNS| pal
-  clients -->|Auth| auth
-  iot -->|DNS| pal
-
-  %% Media stack (rivendell)
-  riv -->|VPN overlay| gluetun[Gluetun - VPN client]
-  gluetun --> qb[qBittorrent]
-  gluetun --> arrs[*arr stack<br/>Prowlarr / Sonarr / Radarr etc.]
-  riv --> abs[Audiobookshelf]
-  riv --> jf[Jellyfin]
-
-  %% Telemetry flows (minas-tirith)
-  minas --> prom[(Prometheus)]
-  minas --> loki[(Loki)]
-  minas --> promtail[Promtail (local journald)]
-  promtail -->|ingest| loki
-  minas --> grafana[Grafana]
-  grafana -->|metrics| prom
-  grafana -->|logs| loki
-  minas --> kuma[Uptime Kuma]
-
-  %% Netdata scope (diagnostics)
-  pve -->|real-time host diagnostics| net_pve[Netdata UI<br/>orthanc:19999]
-  riv -->|real-time workload diagnostics| net_riv[Netdata UI<br/>rivendell:19999]
-
-  %% Future hook (disabled today)
-  riv -.->|future: ship logs to Loki| promtail_future[Promtail (rivendell)]
-
-  %% Legend
-  subgraph legend["Legend"]
-    lg_auth[Auth & Reverse Proxy<br/>SSO, identity-aware access to services]
-    lg_media[Media Services<br/>User-facing applications and content delivery]
-    lg_infra[Infrastructure Services<br/>Core network and management functions]
-    lg_obs[Observability<br/>Metrics, logs, uptime, and diagnostics]
-  end
+  clients["CLIENTS 30 / Calacirya"] -->|"DNS and murtha.info search suffix"| dns
+  wan["External books.murtha.info<br/>Cloudflare DDNS"] -->|"WAN TCP443 only"| udm
+  udm -->|"Forward to Elessar443"| auth
+  auth -->|"NPM books backend"| riv
+  riv -->|"Books and other media NFS"| nas
+  riv -.->|"Separate /mnt/moria path"| backup
+  lab["LAB 40<br/>K3s .102/.104/.103 Ready<br/>Hardening deferred"]
+  iot["IOT 50 / Gondolin"] -->|"DNS exception"| dns
+  guest["GUEST 60 / Bree"] -->|"DNS exception"| dns
+  apple["APPLE_IOT 70 / Lorien<br/>HomePods + Apple TV"] -->|"DNS exception"| dns
+  clients -.->|"Selected discovery and tested Apple control"| apple
+  retired["Lothlorien retired/off<br/>OPNsense disconnected<br/>No active cloudflared path for books"]
