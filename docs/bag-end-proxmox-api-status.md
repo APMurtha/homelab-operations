@@ -1,33 +1,63 @@
-# Bag-End read-only Proxmox API client: setup status
+# Bag-End read-only Proxmox API client: verified access and resource findings
 
-Date: 2026-11-16
+Report date: 2026-11-16
 
-## Purpose and current state
+## Current status
 
-Bag-End is designated as the primary read-only Proxmox API client. Setup is incomplete: authenticated API access and resource metrics have **not** been verified or collected.
+Bag-End is the primary read-only Proxmox API client. Authenticated read requests succeeded with **HTTP 200 on all three cluster nodes**, with certificate-chain and endpoint-identity verification enabled. The issuing cluster CA is scoped to this client; the global trust store was not changed.
 
-This status records the bounded discovery and preparation performed on Bag-End. It does not authorize changes to the Proxmox cluster, its guests, or application services.
+The effective grants checked were solely **Audit** permissions. The API denied access to the token's own exact expiry metadata with **HTTP 403**. Its expiry therefore remains unverified; no privileges were increased to obtain it.
 
-## Verified preparation
+The live credential and CA are retained locally in root-only storage. One-time transfer artifacts were removed after successful verification. Removal is not a claim of secure erasure. No secrets, token identities, encrypted transfer payloads, certificate fingerprints, or internal addresses are published here.
 
-- All three cluster nodes are reachable on TCP port 8006.
-- Default HTTPS certificate verification stops on all three nodes because the issuing cluster CA is not trusted by the client. Reachability is not successful TLS or API authentication.
-- `/etc/codex-proxmox` was created with `root:root` ownership and mode `0700`, then verified empty.
-- Python and OpenSSL are available. `curl` is absent; no package was installed.
-- No existing approved authenticated transfer path was available for the required trust material and token provisioning.
-- No credentials were read. No Proxmox, VM, or Dispatcharr configuration was changed.
+## Discovery and collection scope
 
-## Remaining steps
+Initial TCP reachability on port 8006 did not establish TLS or API authentication: default certificate verification initially stopped because the cluster CA was not trusted. That trust and credential setup is now complete for the bounded authenticated reads above.
 
-1. Obtain the **public cluster CA PEM** through an already trusted console or another approved out-of-band channel. Verify its fingerprint against that trusted source before using it. Do not bootstrap trust from an unverified HTTPS connection.
-2. Configure that CA only for the dedicated Proxmox client. Do not change the system-wide CA trust store or disable certificate validation.
-3. Provision the already-issued API token into a root-only local credential store with mode `0600`, using hidden terminal input. Keep the token identity and secret out of chat, documentation, command-line arguments, logs, and source control.
-4. Verify certificate chain and hostname validation for each node, then perform a bounded set of read-only API GET requests per node. Stop on any trust or authentication failure rather than bypassing it.
-5. Check the token's effective read-only permissions and expiry before relying on it for ongoing collection.
-6. Once authenticated reads are verified, collect node CPU information, allocation and resource details, including VM 130. Record verified findings separately; do not infer or claim metrics before collection succeeds.
+Python and OpenSSL were already available; `curl` was absent and no package was installed. Aside from this dedicated client setup, no Proxmox, VM, or Dispatcharr configuration was changed. No migration, CPU reallocation, or service restart was performed as part of this investigation.
 
-## Scope and disclosure boundary
+## Hardware and current running allocation
 
-This public document deliberately excludes internal addresses, certificate fingerprints, token identities, secrets, and private command output. The empty root-only directory is preparation only, not evidence that authentication is configured.
+All three nodes report an Intel Core i7-4790S with **4 physical cores / 8 logical threads** and approximately **31.25 GiB RAM** each.
+
+| Node / comparison | Current running CPU allocation | Current running memory allocation |
+| --- | --- | --- |
+| Orthanc | 12 VM vCPUs plus 1 container CPU | 20.5 GiB |
+| Comparison node A | 6 VM vCPUs | 12 GiB |
+| Comparison node B | 2 VM vCPUs | 4 GiB |
+
+These are current allocation snapshots, not proof of the allocations at every point in the historical incident window. Allocated vCPUs are not equivalent to measured CPU consumption.
+
+VM 130 is configured with **4 vCPUs and 8 GiB RAM**.
+
+## Incident-window telemetry
+
+The figures below are **60-second RRD AVERAGE** samples. Times are UTC.
+
+| Time | Orthanc CPU utilization |
+| --- | --- |
+| 20:40 | 92.17% |
+| 20:41–20:46 | 97.16–98.48% |
+| 20:47 | 94.85% |
+| 20:48 | 59.83% |
+
+Additional observations:
+
+- Orthanc load peaked at **10.674** on a host with 8 logical threads.
+- I/O wait was at most **0.262%** and swap remained stable across the examined window.
+- The other two nodes' incident-window CPU averages were approximately **2.24%** and **2.29%**.
+- VM 130 used **71.04–79.63% of its allocated CPU capacity** during 20:40–20:46, declining to **25.48%** by 20:48. These guest percentages are normalized to its allocation, not the whole host.
+
+## Interpretation and limits
+
+The near-saturated Orthanc CPU samples, elevated load, low I/O wait, stable swap, and lightly utilized peers provide **strong evidence of host CPU contention coinciding with the guest gate**. They do not establish which process or guest caused the contention, or prove that the current allocation caused the incident.
+
+One-minute averages cannot establish process-level attribution or resolve short spikes and ordering within a minute. No infrastructure change is recommended as an already-proven fix on this evidence alone. A next diagnostic pass should correlate the relevant guest/application logs with the same interval and verify the workload/allocation state before selecting a mitigation.
+
+## Remaining verification
+
+- Confirm exact credential expiry through an already authorized administrative view; the read-only token's metadata request returned 403. Do not broaden its permissions merely to resolve this documentation gap.
+- Keep future collection bounded and read-only, with chain and identity validation enabled.
+- Treat any capacity adjustment, guest migration, or application change as a separate decision requiring its own scope and validation.
 
 Related pinned documentation: [homelab-operations commit 268dedb](https://github.com/APMurtha/homelab-operations/commit/268dedbfc19080340971093fe0d4e8815b93c420).
