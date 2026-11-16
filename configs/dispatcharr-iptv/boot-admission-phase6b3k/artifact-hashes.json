@@ -1,0 +1,25 @@
+{
+  "base_stack_unit_sha256": "30e7f5e64b7a6ce3f8ec3cf80572d74bb2dd1ed67083929276cf55fbb65c357e",
+  "files": {
+    "20-resource-admission.conf": {
+      "sha256": "72643075862dfeb6ce968997edd19c9fbff30eea025d7ea74eb6691d372f8ceb",
+      "bytes": 656
+    },
+    "README.md": {
+      "sha256": "6335107da64e5f20ab47f79ab7cb91a31a3e432200aed9a90bc19621208f5029",
+      "bytes": 3455
+    },
+    "admit.py": {
+      "sha256": "649c5dcee6fff563bf7ee80d62d77d42e8c942e8a6a1205eeb4a2a570be2f917",
+      "bytes": 5766
+    },
+    "tests/test_admit.py": {
+      "sha256": "57fb8729441416e410d6ea970b3aa45860b6e53ed7613b3656722a0fff810eda",
+      "bytes": 13689
+    },
+    "tests/verify_units.py": {
+      "sha256": "d7edd1c532a044cfb0b182aa610ca0e9662055da8810304e8105258ca8ca1a1e",
+      "bytes": 2166
+    }
+  }
+}
