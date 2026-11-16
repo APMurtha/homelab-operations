@@ -57,3 +57,22 @@ automation/  Scripts and configuration automation
 ## Migration preparation
 
 The UDM Pro Max has arrived (owner report). Its [isolated initial setup checklist](runbooks/udm-isolated-initial-setup.md) keeps Anduin in production; the [migration plan](docs/udm-pro-max-migration.md) covers the later single-uplink cutover. The replacement cable modem remains a separate later stage.
+
+## Dispatcharr installation evidence — 2026-11-16
+
+The minimal persistence design is installed and enabled on Rivendell.
+Start with the [installation/acceptance report](docs/dispatcharr-minimal-persistence-installation-phase6b3g.md),
+[reviewed configuration](configs/dispatcharr-iptv/minimal-phase6b3d/README.md),
+and [storage/recovery reconciliation](docs/storage-source-of-truth-reconciliation.md).
+Phase [6B-3D](docs/dispatcharr-minimal-persistence-phase6b3d.md),
+[6B-3E](docs/dispatcharr-installation-preflight-phase6b3e.md) and
+[6B-3F](docs/dispatcharr-recovery-checkpoint-phase6b3f.md) retain preparation and
+recovery evidence. No backup contents, credentials or runtime snapshots are published.
+
+The current [storage inventory](docs/network.md#storage-source-of-truth) distinguishes
+Moria UNAS 10.10.10.8, Orthanc's remaining legacy export and Denethor's independent
+checkpoint disk. Older network sections retain their dated historical context.
+The three files under `persistence-phase6b3/` published with this evidence serve
+only as dependencies of the existing offline fixture tests; they are retired
+research, not the deployed controller. No enrollment or old controller units
+are part of the minimal installation.

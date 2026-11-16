@@ -1,0 +1,28 @@
+[Unit]
+Description=Dedicated Dispatcharr Compose project with scoped guard preflight
+Requires=docker.service dispatcharr-egress-guard.service
+After=docker.service dispatcharr-egress-guard.service
+BindsTo=docker.service dispatcharr-egress-guard.service
+PartOf=docker.service dispatcharr-egress-guard.service
+RequiresMountsFor=/docker/dispatcharr-iptv
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/docker/dispatcharr-iptv
+ExecStartPre=/usr/bin/python3 /docker/dispatcharr-iptv/minimal-phase6b3d/verify.py inputs
+# Reconcile only the accepted table after Docker startup, before any workload.
+ExecStartPre=/usr/bin/python3 /docker/dispatcharr-iptv/guard.py apply --policy /docker/dispatcharr-iptv/private/egress-policy.json
+ExecStartPre=/usr/bin/python3 /docker/dispatcharr-iptv/minimal-phase6b3d/verify.py prestart
+ExecStart=/usr/bin/docker compose --project-name rivendell-iptv --project-directory /docker/dispatcharr-iptv -f /docker/dispatcharr-iptv/compose.proposed.yaml -f /docker/dispatcharr-iptv/minimal-phase6b3d/compose.persistence.proposed.yaml up --detach --no-build --pull never --no-recreate --wait --wait-timeout 360 iptv-vpn dispatcharr gateway
+ExecStartPost=/usr/bin/python3 /docker/dispatcharr-iptv/minimal-phase6b3d/verify.py running
+# Runs even after partial startup failure. Failure is reported, not hidden.
+ExecStopPost=/usr/bin/docker compose --project-name rivendell-iptv --project-directory /docker/dispatcharr-iptv -f /docker/dispatcharr-iptv/compose.proposed.yaml -f /docker/dispatcharr-iptv/minimal-phase6b3d/compose.persistence.proposed.yaml stop --timeout 60 gateway dispatcharr iptv-vpn
+Restart=no
+TimeoutStartSec=540
+TimeoutStopSec=240
+UMask=0077
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

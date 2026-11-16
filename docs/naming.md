@@ -116,3 +116,15 @@ ___
   - Firewall aliases and rules
   - Monitoring labels and dashboards
 - The theme supports memorability; **the structure supports operations**.
+
+## Storage identity
+
+**Moria** names the UNAS Pro 8 at `10.10.10.8`. Orthanc also has a **local ZFS pool
+named `moria`**, exposed separately through `10.10.10.2`. Qualify NAS versus local
+pool in mounts, backups and recovery instructions; they are not interchangeable.
+
+Live reconciliation on 2026-11-16 confirms the UNAS is the primary media NFS
+server, while Orthanc still serves `/mnt/moria` and `/data/media` references.
+Denethor’s `/mnt/data` is a local NVMe volume, not either NAS/export. Container
+Dispatcharr `/data` also differs from Rivendell host `/data`. Use the current
+[storage inventory](network.md#storage-source-of-truth) before interpreting paths.

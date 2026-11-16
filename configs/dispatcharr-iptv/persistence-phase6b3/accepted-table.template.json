@@ -1,0 +1,750 @@
+{
+  "nftables": [
+    {
+      "table": {
+        "family": "inet",
+        "name": "rivendell_iptv"
+      }
+    },
+    {
+      "set": {
+        "family": "inet",
+        "name": "wg_peer4",
+        "table": "rivendell_iptv",
+        "type": [
+          "ipv4_addr",
+          "inet_service"
+        ],
+        "elem": [
+          {
+            "concat": [
+              "__WG_ENDPOINT__",
+              "__WG_PORT__"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "set": {
+        "family": "inet",
+        "name": "local_reply4",
+        "table": "rivendell_iptv",
+        "type": "ipv4_addr",
+        "flags": [
+          "interval"
+        ],
+        "elem": [
+          "10.10.20.30",
+          {
+            "prefix": {
+              "addr": "10.10.30.0",
+              "len": 24
+            }
+          },
+          {
+            "prefix": {
+              "addr": "172.20.0.0",
+              "len": 16
+            }
+          }
+        ]
+      }
+    },
+    {
+      "chain": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "name": "forward",
+        "type": "filter",
+        "hook": "forward",
+        "prio": -10,
+        "policy": "accept"
+      }
+    },
+    {
+      "chain": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "name": "input",
+        "type": "filter",
+        "hook": "input",
+        "prio": -10,
+        "policy": "accept"
+      }
+    },
+    {
+      "chain": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "name": "output",
+        "type": "filter",
+        "hook": "output",
+        "prio": -10,
+        "policy": "accept"
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "saddr"
+                }
+              },
+              "right": {
+                "prefix": {
+                  "addr": "172.16.70.0",
+                  "len": 24
+                }
+              }
+            }
+          },
+          {
+            "match": {
+              "op": "!=",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "nfproto"
+                }
+              },
+              "right": "ipv6"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "!=",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "saddr"
+                }
+              },
+              "right": "172.16.70.2"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "concat": [
+                  {
+                    "payload": {
+                      "protocol": "ip",
+                      "field": "daddr"
+                    }
+                  },
+                  {
+                    "payload": {
+                      "protocol": "udp",
+                      "field": "dport"
+                    }
+                  }
+                ]
+              },
+              "right": "@wg_peer4"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "daddr"
+                }
+              },
+              "right": "@local_reply4"
+            }
+          },
+          {
+            "match": {
+              "op": "in",
+              "left": {
+                "ct": {
+                  "key": "state"
+                }
+              },
+              "right": [
+                "established",
+                "related"
+              ]
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "oifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "nfproto"
+                }
+              },
+              "right": "ipv6"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "oifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "daddr"
+                }
+              },
+              "right": "172.16.70.2"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "saddr"
+                }
+              },
+              "right": "@local_reply4"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "dport"
+                }
+              },
+              "right": 9192
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "oifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "in",
+              "left": {
+                "ct": {
+                  "key": "state"
+                }
+              },
+              "right": [
+                "established",
+                "related"
+              ]
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "forward",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "oifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "input",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "saddr"
+                }
+              },
+              "right": {
+                "prefix": {
+                  "addr": "172.16.70.0",
+                  "len": 24
+                }
+              }
+            }
+          },
+          {
+            "match": {
+              "op": "!=",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "input",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "nfproto"
+                }
+              },
+              "right": "ipv6"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "input",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "match": {
+              "op": "in",
+              "left": {
+                "ct": {
+                  "key": "state"
+                }
+              },
+              "right": [
+                "established",
+                "related"
+              ]
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "input",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "meta": {
+                  "key": "iifname"
+                }
+              },
+              "right": "br-iptv-eg"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "output",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "daddr"
+                }
+              },
+              "right": "172.16.70.2"
+            }
+          },
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "tcp",
+                  "field": "dport"
+                }
+              },
+              "right": 9192
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "output",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "daddr"
+                }
+              },
+              "right": "172.16.70.2"
+            }
+          },
+          {
+            "match": {
+              "op": "in",
+              "left": {
+                "ct": {
+                  "key": "state"
+                }
+              },
+              "right": [
+                "established",
+                "related"
+              ]
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "accept": null
+          }
+        ]
+      }
+    },
+    {
+      "rule": {
+        "family": "inet",
+        "table": "rivendell_iptv",
+        "chain": "output",
+        "expr": [
+          {
+            "match": {
+              "op": "==",
+              "left": {
+                "payload": {
+                  "protocol": "ip",
+                  "field": "daddr"
+                }
+              },
+              "right": "172.16.70.2"
+            }
+          },
+          {
+            "counter": {}
+          },
+          {
+            "drop": null
+          }
+        ]
+      }
+    }
+  ]
+}

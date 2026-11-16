@@ -1,0 +1,19 @@
+[Unit]
+Description=Install and verify accepted scoped IPTV egress rules
+After=local-fs.target
+Before=docker.service
+RequiresMountsFor=/docker/dispatcharr-iptv
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/python3 /docker/dispatcharr-iptv/minimal-phase6b3d/verify.py inputs
+ExecStart=/usr/bin/python3 /docker/dispatcharr-iptv/guard.py apply --policy /docker/dispatcharr-iptv/private/egress-policy.json
+ExecStartPost=/usr/bin/python3 /docker/dispatcharr-iptv/minimal-phase6b3d/verify.py guard
+RemainAfterExit=yes
+TimeoutStartSec=60
+UMask=0077
+NoNewPrivileges=yes
+# Deliberately no ExecStop or global ruleset operation.
+
+[Install]
+WantedBy=multi-user.target

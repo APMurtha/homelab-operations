@@ -1,0 +1,6 @@
+private/
+data/
+gluetun/
+*.env
+__pycache__/
+export-policy.json

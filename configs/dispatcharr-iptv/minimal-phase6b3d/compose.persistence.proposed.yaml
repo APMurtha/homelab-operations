@@ -1,0 +1,9 @@
+# UNAPPLIED. Use ONLY with the accepted base Compose file.
+# systemd owns automatic startup. No cgroup override or image/network changes.
+services:
+  iptv-vpn:
+    restart: "no"
+  dispatcharr:
+    restart: "no"
+  gateway:
+    restart: "no"

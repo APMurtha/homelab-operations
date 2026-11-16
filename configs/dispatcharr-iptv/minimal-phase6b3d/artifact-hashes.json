@@ -1,0 +1,12 @@
+{
+  "README.md": "c2dc498655fa28bb72f0cb1c7c3ef2bc8af5ec204d17f44bff26e3bedfe1f76d",
+  "accepted-table.template.json": "90976136177701559e709ab612f6857499bfd2aea372a43c6ca9e538cd2156d5",
+  "compose.persistence.proposed.yaml": "60a41dd431bd1b986a9f432ffecdd039e80eae6aea630322dab163bee66a8c9a",
+  "contracts.py": "2ba2080ce45a2c72611f3c33c7341f921d44cdbc9d936ca9d1edd086622251dd",
+  "tests/test_minimal.py": "c7639bdd282ac5f4a7233dbb18eedc84b5c50e4cca39bb27654277f16920b997",
+  "units/dispatcharr-egress-guard.service": "bde5207014fa24781d8cd1275a54dac056684299e498f4773fca2ed2e98cc174",
+  "units/dispatcharr-stack.service": "30e7f5e64b7a6ce3f8ec3cf80572d74bb2dd1ed67083929276cf55fbb65c357e",
+  "units/docker.service.50-dispatcharr-order.conf": "c9beb54d2b2e6285013355f3a80dd6677ff7723d10e835f45c499f39fb9e581b",
+  "validation-results.json": "37b4561523b4c91f92a0872f4f2361e3aa8386b58c03c6c4deee83d30c3c2b0c",
+  "verify.py": "871bba35c84e1ecdc966d925a0718d281e559ce918420b41c26610eb4265be69"
+}

@@ -1,0 +1,2 @@
+# Block Docker's embedded resolver, including its DNATed alternate port.
+iptables -I OUTPUT 1 -d 127.0.0.11/32 -j REJECT

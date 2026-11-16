@@ -382,3 +382,40 @@ Incidents and recovery procedures are documented separately.
 ---
 
 *Historical post-recovery state: 2026-02. Migration review: 2026-11-02.*
+
+## Storage source of truth
+
+**Storage verified live 2026-11-16 UTC / Nov 15 Eastern.** This is the current
+inventory; [the reconciliation report](storage-source-of-truth-reconciliation.md)
+records evidence, historical distinctions and limitations. Other network facts
+retain their dated verification above.
+
+| Resource / client path | Verified backing and role |
+| --- | --- |
+| Moria NAS, `10.10.10.8` | UniFi OS public identity `Moria`, hardware `UNASPRO8`; primary media NAS |
+| Rivendell `/data/books`, `/data/downloads`, `/data/movies`, `/data/shows`, `/data/music`, `/data/podcasts` | Active NFSv3 mounts from `10.10.10.8`; actual container NFS backing also checked |
+| NAS export root | `/volume/e5ff6758-b2fb-4b57-9962-1562e37ccdf7/.srv/.unifi-drive/<share>/.data`; six mounted shares above plus advertised `data` export, all scoped to Rivendell |
+| NAS SMB `denethor_backup` | Configured Denethor Restic destination; share enumeration succeeds but share/repository access currently denies permission |
+| Orthanc `10.10.10.2:/moria` → Rivendell `/mnt/moria` | Separate active NFSv4.2 legacy export; existing old media-backup job still targets its `backups/rivendell` directory |
+| Rivendell `/data/media` | Still binds legacy Orthanc `/moria/media`; visible inside NZBGet, with other running containers binding parent `/data`; do not assume unused |
+| Rivendell `/data` itself | Local root ext4 directory containing the separate mounts; not one NAS filesystem |
+| Dispatcharr `/data` inside its container | Host `/docker/dispatcharr-iptv/data`, on Rivendell local root ext4; not host `/data` or NAS media |
+| Denethor `/mnt/data` | Local secondary NVMe Btrfs, **not Moria NAS**; existing independent Dispatcharr checkpoint lives here |
+
+NFS reports about 38.18 TiB total / 34.17 TiB available on the NAS volume; six
+share readings describe the same pool and must not be summed. RAID/disk health
+requires authenticated Drive/host evidence and is **unverified here**. HTTPS,
+SMB and NFS are reachable from Rivendell and Denethor. Do not diagnose the NAS as
+offline from a Restic wrapper HTTP 500: current direct SMB checks expose a
+permission denial, with exact ACL layer still unverified.
+
+Orthanc's same-named local ZFS pool was confirmed by the owner's Nov 15 console
+and reported degraded; that is **historical backend evidence**, not UNAS health.
+Current RPC/NFS inspection confirms its export remains active. No fresh Orthanc
+host authentication was available to recheck pool health or all host-side users.
+
+Before storage or recovery changes, compare fstab, live mountinfo, mount units,
+container mount namespaces and the actual backing filesystem of each path.
+Names and old scripts do not establish destination identity. Reconcile conflicts
+before any destructive/recovery operation. No migration or cleanup is implied by
+this inventory; both servers retain observed references.
