@@ -1,6 +1,6 @@
 # Mordor — Proxmox access plan
 
-2026-11-16. **Discovery/preparation incomplete: Bag-End-side evidence required.**
+2026-11-16. **Network discovery received; authenticated cluster access still unavailable.**
 No account, key, SSH service, package, API token, ACL or Proxmox configuration was
 created or changed. No hypervisor or guest lifecycle operation was performed.
 
@@ -37,10 +37,25 @@ person/system's credentials were not used. Denethor has a local Ed25519 key pair
 that does not establish Bag-End/node authorization. Its current sandbox could
 not connect to an SSH authentication agent. These are local observations only.
 
-Bag-End's keys/agent, node host-key pins, existing node accounts, sudo rights,
-API credentials and reachability are **unverified**. No guessed root/murth/codex
-node login was attempted. Current Proxmox versions, cluster membership and ACLs
-remain to be inspected through Bag-End using actual existing permissions.
+Owner-relayed collector output at **2026-11-16T21:22:46Z** identifies `bag-end`,
+account `murth`, ens18 `10.10.40.132/24` dynamic and a link-local IPv6 address.
+The collector reports no selected SSH files, public-key fingerprints or SSH
+configuration. `ssh-add -l` exits 1 with no fingerprints: no loaded identities
+were reported; this does not rule out credentials outside its inspected scope.
+
+| Bag-End TCP probe | 22 / SSH | 8006 / Proxmox HTTPS |
+|---|---|---|
+| Orthanc 10.10.10.2 | Connected | Connected |
+| Cirith-Ungol 10.10.10.3 | Connected | Connected |
+| Dol-Guldur 10.10.10.4 | Connected | Connected |
+
+Evidence provenance is supplied Bag-End collector output, not this Codex session
+independently logging in. No authentication was attempted. These observations
+establish TCP reachability, not node identity, TLS trust or permissions. Node
+host-key pins, accounts/ACLs, sudo rights and API access remain unverified.
+The owner subsequently reports that a new account must be created/authorized;
+no existing authenticated Proxmox browser path is available to this workflow.
+Current node versions and cluster membership still require authenticated reads.
 
 ## Read-only handoff for Bag-End
 
@@ -64,9 +79,9 @@ comments are omitted. Review output privately before sharing; internal addresses
 account names and public fingerprints are intended, secret values are not.
 
 Local validation: Python syntax compiled in memory; wrong-host execution on
-Denethor stopped before probes as intended. No successful Bag-End execution or
-live node result is claimed. Its bounded subprocess and socket timeouts do not
-constitute tested authentication or a new access mechanism.
+Denethor stopped before probes as intended. The owner subsequently supplied the
+successful Bag-End discovery result above. Authenticated node execution remains
+untested; subprocess/socket timeouts do not constitute an access mechanism.
 
 After that output, select the actual authorized node account and independently
 verify each node's host key from an existing trusted console/channel. Run one
@@ -106,6 +121,64 @@ Administrator, permit arbitrary root shell through sudo, or add a generic
 passwordless `pvesh`, Python or shell rule. If protected logs/process data require
 root, document exact missing reads and have the owner supply them through the
 existing trusted console until a narrow access change is approved.
+
+## Concrete first access change — proposal only
+
+The owner reports an account needs creating. The specific first change proposed
+for approval is **one cluster-local API identity `codex@pve`**, with
+**`PVEAuditor` at `/`** and a **privilege-separated `bag-end-audit` token** with
+**24-hour expiry**. This intentionally permits cluster-wide read-only metadata
+for the requested three-node comparison. It grants no VM power/configuration,
+account administration, SSH shell or sudo access. It is not a root@pam token.
+Keep the identity password unset for this API-only workflow.
+
+An existing authorized Proxmox administrator must bootstrap it through a trusted
+console or management session; none is currently available to Codex. Execute
+once on one healthy quorate cluster member, not once per node. Before writes:
+
+1. Inspect local `pveum help` for the commands and installed-version semantics.
+2. Verify node identity, quorum, the PVEAuditor definition and that `codex@pve`
+   does not exist. Stop on a name conflict; do not adopt or alter another identity.
+3. Record only relevant prechange ACL/user metadata, privately; establish verified
+   Proxmox HTTPS trust from Bag-End before transferring a token.
+
+Reviewable intended operations, **not executed**, following those checks:
+
+```sh
+pveum user add codex@pve -comment 'Bag-End read-only Mordor diagnostics'
+pveum acl modify / -user codex@pve -role PVEAuditor
+# Administrator creates bag-end-audit with privilege separation enabled,
+# an expiry exactly 24 hours after creation, and handles its secret privately.
+# The documented creation operation is:
+# pveum user token add codex@pve bag-end-audit -privsep 1 -expire EXPIRY_EPOCH
+pveum acl modify / -token 'codex@pve!bag-end-audit' -role PVEAuditor
+pveum user permissions codex@pve
+pveum user token permissions codex@pve bag-end-audit
+```
+
+`EXPIRY_EPOCH` is a required reviewed creation-time value, not a literal argument.
+Token creation returns a secret: do not run it through chat/recorded automation
+or paste its response into reports. The administrator must use a private local
+handoff to Bag-End's protected credential store. Do not commit it, put it in
+request argv, save it on Denethor, share root credentials or disable TLS checks.
+No token exists yet, and no credential transfer has occurred.
+
+Verify effective read-only permissions and authenticated GETs for version,
+cluster/nodes/resources, VM 130 filtered configuration/status and historical RRD.
+Do not test denial by attempting a destructive write. Record protected endpoints
+that remain inaccessible; the API may not expose host PSI or all process detail.
+Do not silently escalate to Administrator or create SSH accounts for those gaps.
+
+Rollback: revoke this newly created token first; remove only its new token ACL,
+then the new user ACL and identity if it was created by this operation and is
+otherwise unused. Re-read the ACL/user list to confirm unrelated identities and
+permissions were preserved. Exact rollback CLI options must match the installed
+`pveum help`; no broad ACL or account deletion is authorized by this proposal.
+If a partial creation outcome is uncertain, inspect before any retry.
+
+This is a concrete access-change proposal awaiting explicit approval of its
+identity, cluster-wide audit scope, token lifetime and private bootstrap method.
+No account, ACL, password, token or SSH service was changed by this task.
 
 ## Next Bag-End-side inspection
 

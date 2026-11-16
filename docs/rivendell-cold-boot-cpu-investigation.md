@@ -1,7 +1,7 @@
 # Rivendell cold-boot CPU investigation — Mordor
 
 2026-11-16. **Interim findings: guest evidence confirmed; current hypervisor
-attribution blocked pending Bag-End-side access discovery.** No cluster comparison
+attribution blocked pending authenticated Bag-End-to-node access.** No cluster comparison
 has been executed from Denethor, Ithilien or a hypervisor agent. No Dispatcharr
 recovery, VM operation, CPU change, package installation or reboot in this task.
 
@@ -130,8 +130,12 @@ policy without resolving its demonstrated resource condition.
 
 Bag-End address/account and local public fingerprint are owner-confirmed. The
 current Codex session has no Bag-End SSH endpoint or direct Samwise messaging
-connection. Samwise's existing Bag-End terminal can supply the collector output;
-node authentication/permissions must then be verified without guesses.
+connection. The owner has now supplied Bag-End collector output timestamped
+21:22:46 UTC: TCP 22 and 8006 connect on all three nodes; no selected SSH files
+or loaded agent identities are reported. No authentication was attempted.
+This removes a basic reachability concern but does not identify CPU causes.
+The owner reports a new account needs creating. The access plan now contains a
+reviewable API-only audit-account proposal; it has not been provisioned.
 
 Until that happens: current node versions, ACLs, cluster health, VM/LXC allocation,
 active tasks, CPU pressure and all three-node comparisons are **unverified**.
