@@ -1,16 +1,15 @@
 {
-  "mode": "offline metadata onboarding CLI; no production/provider requests",
-  "new_tests": 65,
-  "preserved_Dispatcharr_tests": 278,
-  "total": 343,
+  "mode": "offline native API implementation and simulation; live mutations disabled",
+  "original_provider_tests": 65,
+  "new_native_adapter_tests": 62,
+  "preserved_protected_tests": 278,
+  "baseline_retained": 343,
+  "total": 405,
   "failures": 0,
   "errors": 0,
   "skips": 0,
   "suites": {
-    "dispatcharr-provider-tests": [
-      65
-    ],
-    "dispatcharr-provider-existing-main": [
+    "main": [
       39,
       26,
       17,
@@ -22,17 +21,22 @@
       13,
       15
     ],
-    "dispatcharr-provider-existing-historical": [
+    "historical": [
       26
     ],
-    "dispatcharr-provider-existing-prior": [
+    "prior": [
       14
     ],
-    "dispatcharr-provider-existing-design": [
+    "design": [
       28
     ]
   },
   "Caddy_fixture_requests": 91,
-  "security_boundary": "all Dispatcharr mutations except account-token authentication are refused; --apply writes local drafts only",
-  "production_changes": false
+  "test_logs_sha256": {
+    "dispatcharr-native-tests": "603acc880d4684beabcbf9618d70c29d192bd665707ea11e56a419340d12c501",
+    "dispatcharr-native-existing-main": "f3d221412f7897228216aab98e48050d880280d6418bf68b2b9efa097d4fc465",
+    "dispatcharr-native-existing-historical": "22eeb3e96f08496a4fe33d29779a8c9bb32c8b2ec3c77c8f3a671cbd919a3911",
+    "dispatcharr-native-existing-prior": "d63558ce9d3fff393dab4b6fac42ed811791dd83827c22a118483f0d8f20c4f7",
+    "dispatcharr-native-existing-design": "10c56e7b9bd264b56e40de8dde10dbc2777570d99f03b965e2ff7b9693f5876f"
+  }
 }

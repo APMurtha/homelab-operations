@@ -24,14 +24,82 @@
     "apps/epg/signals.py": "541c1157f01b794d05cf74b58eeaab521fa161273ce3430bb705955b94153e7a",
     "apps/epg/api_views.py": "df6ebcd84afe9237cb8ca2989d572170a2c8a325b85f8781d1d8becb217e2e4f",
     "apps/epg/serializers.py": "0d84a6664f5cfa53fc44cb1ed32a8ca6994def5756105f6d65050e40afd446b4",
-    "apps/epg/api_urls.py": "1a9ee02a182a595b1864e857ff34d3d15458afde1930befc0d39782d6c13d422"
+    "apps/epg/api_urls.py": "1a9ee02a182a595b1864e857ff34d3d15458afde1930befc0d39782d6c13d422",
+    "apps/m3u/models.py": "f8e0cd0862d9c576cbd7ac6af71c195a1fde8eaa1b3ea5f225c3b8b56ead7219",
+    "apps/epg/tasks.py": "deb4792a39ed93c57da435ecc2a4fcdf5b4dad8f4e087d3afdb5d4f2b7932ff9",
+    "apps/channels/managers.py": "0b8e2854cd47edeb1d39d6b7f58dd6c03687c289240c1a528e710e4f4c4c7126",
+    "core/scheduling.py": "48ec9620fa122f56c589e295442c98efdd8fcb858528522329ae581ae907c489"
   },
   "source_base": "https://github.com/Dispatcharr/Dispatcharr/blob/2fa13a6707bdf0dae87e0c494bcd3ca282cdeb3e/",
-  "runtime_mutations": "NONE: only account-token POST and whitelisted inventory GETs; native CRUD/refresh refused",
+  "runtime_mutations": "Live native execution disabled before prompts/authentication; read-only legacy HTTP client unchanged. Injected synthetic API adapter implements journaled native CRUD/refresh/import without network.",
   "reasons_native_writes_blocked": [
     "XC account create invokes refresh_m3u_groups synchronously even when inactive",
     "non-XC account creation and active EPG source creation have signal-triggered refreshes",
     "account deletion cascades streams and auto-created channels; hidden/inactive stream inventory is incomplete for deletion proof",
     "new source formats require separately reviewed enforcement; existing HLS relay remains broadcaster-specific"
-  ]
+  ],
+  "native_adapter": {
+    "account_create": {
+      "method": "POST",
+      "path": "/api/m3u/accounts/",
+      "HTTP": 201,
+      "account_type": "XC",
+      "side_effects": [
+        "synchronous XC auth and category discovery even inactive",
+        "queued account profile refresh",
+        "global provider groups and account associations",
+        "default profile and disabled periodic task"
+      ]
+    },
+    "group_selection": {
+      "method": "PATCH",
+      "path": "/api/m3u/accounts/{id}/group-settings/",
+      "HTTP": 200,
+      "body": "group_settings; all native associations; enabled only selected stable xc_id; auto_channel_sync false; retain custom_properties"
+    },
+    "stream_refresh": {
+      "method": "POST",
+      "path": "/api/m3u/refresh/{id}/",
+      "HTTP": 202,
+      "completion": "account detail status success plus changed nonempty updated_at; active account required",
+      "side_effects": [
+        "full category rediscovery and profile queue",
+        "stream metadata for enabled categories; account-scoped stale cleanup",
+        "sync_auto_channels; flags verified false"
+      ]
+    },
+    "stream_resolution": "/api/channels/streams/: m3u_account + integer stream_id + native channel_group + exact tvg_id; inactive-account streams excluded by native queryset",
+    "channel_create": {
+      "method": "POST",
+      "path": "/api/channels/channels/",
+      "HTTP": 201,
+      "body": "actual streams IDs, channel_group_id, tvg_id, epg_data_id, stream_profile_id; hidden_from_output true; channel_profile_ids []",
+      "side_effects": [
+        "programme parse task for EPG mapping",
+        "group association to shared locked Custom account; recorded but not adopted"
+      ]
+    },
+    "EPG_create": {
+      "method": "POST",
+      "path": "/api/epg/sources/",
+      "HTTP": 201,
+      "source_type": "xmltv",
+      "is_active": false,
+      "side_effects": "disabled schedule; active creation would queue refresh and is not used"
+    },
+    "EPG_import": {
+      "method": "POST",
+      "path": "/api/epg/import/",
+      "HTTP": 202,
+      "body": {
+        "id": "explicit source ID",
+        "force": false
+      },
+      "completion": "active source required; source detail success plus changed nonempty updated_at"
+    },
+    "EPG_mapping": "/api/epg/epgdata/: exact owned epg_source + case-sensitive tvg_id -> actual native id; duplicate refused; missing null",
+    "ownership": "native-private ledger plus append-only intents, response IDs, exact readbacks, original PATCH values, resource relationships and recorded signal effects",
+    "removal": "disabled; native account deletion cascades streams and auto-created channels and cannot prove all shared/cascade relationships",
+    "live_gate": "unconditional; neither metadata approval, --apply nor an admin login enables native HTTP writes"
+  }
 }

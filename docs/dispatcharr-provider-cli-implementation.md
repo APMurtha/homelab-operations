@@ -1,5 +1,10 @@
 # Dispatcharr provider CLI — offline implementation review
 
+> Follow-up: the native API adapter is now implemented and tested against a
+> synthetic server, with live mutations still blocked. This document records the
+> original `7f6822a` draft implementation and its 343-test baseline. Current scope,
+> results and limitations are in [the native adapter review](dispatcharr-provider-native-adapter.md).
+
 2026-11-17. Repository `APMurtha/homelab-operations`, branch `docs/udm-pro-max-migration-prep`.
 
 **PASS for offline metadata onboarding preparation and private draft management. GO for code review; NO-GO for real provider registration/import/activation.** The utility is runnable and tested, but deliberately has **no production mutation adapter**. This limitation is explicit in CLI help, summaries and [usage documentation](dispatcharr-provider-cli.md). It must not be mistaken for a completed native provider registration tool.

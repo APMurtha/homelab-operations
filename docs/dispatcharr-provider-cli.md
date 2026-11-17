@@ -6,7 +6,7 @@ Run with Python 3.11+ on Linux; standard library only:
 python3 tools/dispatcharr-provider.py --help
 ```
 
-This release implements interactive metadata discovery, selective import **planning**, private provider drafts, read-only Dispatcharr inspection and conflict-checked draft maintenance. It does **not** register a native provider, import playable streams, activate destinations, or delete Dispatcharr resources. `--apply` always means a confirmed **local private draft transaction**, never a production API write. Every plan displays this boundary.
+This release retains interactive metadata discovery, selective import planning, private provider drafts and read-only Dispatcharr inspection. It also implements a pinned native account/channel/XMLTV adapter with an explicit **offline simulation** workflow. Live native mutations and native removal remain disabled. Without `--native`, `--apply` saves a confirmed local draft. With `--native --simulate-native`, it executes confirmed synthetic API operations. Neither mode activates playable destinations or changes production.
 
 The current broadcaster-specific HLS relay is not a general Xtream gateway. New providers need a separately reviewed metadata route and format-specific streaming/security contract. Saving credentials or a draft supplies neither authorization. No tool command changes firewall, VPN, Docker, systemd, relay, Jellyfin, or DW English resources.
 
@@ -74,9 +74,9 @@ The transport permits only authentication-token POST and release-specific invent
 
 Without `--remote`, a synthetic/private `--dispatcharr-snapshot` may be supplied. If neither is supplied, the plan explicitly says remote duplicates were **not checked**. Such a draft is never presented as ready to register. Snapshot keys are `accounts`, `channels`, optional `groups`, `epg_sources`, `epgdata`; no existing record is overwritten.
 
-## Supported native operations and why execution is blocked
+## Original draft-mode native contract (live execution remains blocked)
 
-The reviewed contract is pinned to Dispatcharr commit `2fa13a6707bdf0dae87e0c494bcd3ca282cdeb3e` and accepted image `14c83733…cad21`. Exact source hashes are in `tools/dispatcharr_provider/api-contract.json`; production pins/manifests were not changed.
+This table describes the unchanged original draft mode; see the native extension below for the implemented synthetic API workflow. The reviewed contract is pinned to Dispatcharr commit `2fa13a6707bdf0dae87e0c494bcd3ca282cdeb3e` and accepted image `14c83733…cad21`. Exact source hashes are in `tools/dispatcharr_provider/api-contract.json`; production pins/manifests were not changed.
 
 | Native operation | Verified source/API | This CLI |
 |---|---|---|
@@ -118,3 +118,66 @@ python3 -B -m unittest discover -s tools/tests -v
 ```
 
 Tests use synthetic credentials, mocked provider/Dispatcharr APIs, fake TLS transports and temporary private state. Existing protected-stack regressions are documented in the implementation report. No test needs real credentials, a production connection, media, or container operations.
+
+## Native adapter extension (this release)
+
+The original draft commands above are unchanged. A separate native API algorithm
+now exists in `tools/dispatcharr_provider/native.py`. It performs real-contract
+account/group/stream/channel/XMLTV operations against an injected **synthetic API**,
+with durable native ownership and write-ahead journals. This supersedes the older
+statement that no adapter exists; **no live mutation transport is enabled**.
+See [native adapter review](dispatcharr-provider-native-adapter.md) for the exact
+contract, side effects, recovery limits and live-test prerequisites.
+
+Use synthetic credentials only in these demonstrations:
+
+```sh
+python3 tools/dispatcharr-provider.py --state-dir /PRIVATE/STATE \
+  add --native --simulate-native \
+  --fixture tools/examples/provider-catalogue.example.json
+```
+
+Default is a dry-run. Add `--apply` to execute the entire synthetic native
+registration after typing `SIMULATE ADD <key-prefix>`. This creates a simulated
+native account, selected hidden channels and exact guide mappings. It is **not**
+a local draft save and **not** a production import. Group and channel selections
+use the displayed stable provider IDs. No fixture URL is contacted.
+
+```sh
+python3 tools/dispatcharr-provider.py --state-dir /PRIVATE/STATE list --native
+python3 tools/dispatcharr-provider.py --state-dir /PRIVATE/STATE inspect --native
+python3 tools/dispatcharr-provider.py --state-dir /PRIVATE/STATE \
+  refresh EXACT_KEY --native --simulate-native \
+  --fixture tools/examples/provider-catalogue.example.json --apply
+python3 tools/dispatcharr-provider.py --state-dir /PRIVATE/STATE \
+  reconcile --native --simulate-native --key EXACT_KEY \
+  --fixture tools/examples/provider-catalogue.example.json --apply
+```
+
+`refresh` reuses only the owned selection and refuses changed native IDs or guide
+mappings; it never creates more channels. Confirm with `SIMULATE REFRESH <prefix>`.
+Reconciliation uses `SIMULATE RECONCILE <prefix>` and only verifies a pending
+known-ID write by GET; it never resumes an interrupted registration or requeues an
+import. A lost create response, uncertain queue request, or nonterminal task needs
+manual review. Preserve all receipts; do not erase state to retry.
+
+Native `list`/`inspect` read local ledgers only, clearly marked simulations. Use the
+original `inspect --remote` command **without `--native`** for supported read-only
+Dispatcharr inventory in a separately approved execution context. Native mode
+rejects remote inventory flags rather than implying a live check occurred.
+
+`remove KEY --native` always refuses. The existing `remove KEY` command still
+archives only a private local draft. Neither deletes a remote record.
+
+Native files live beneath the private state directory's `native/` subdirectory:
+`native-KEY.json` holds the ownership ledger and operation receipts;
+`synthetic-KEY.json` holds the simulated server state. Files are 0600, the directory
+is 0700, and one exclusive lock covers both. These files contain synthetic private
+inputs and must never be committed. The legacy draft store remains separate.
+
+Omitting `--simulate-native` refuses native execution before credentials, state
+creation or network access. `--apply`, a metadata approval or an administrative
+login cannot unlock it. Native creation itself fetches provider data even when
+inactive; its server-side redirect/retry/logging behavior needs separate approval
+and controls. No new provider is routed through the DW English relay or exported
+to Jellyfin. No media URL or format has been tested by this development work.

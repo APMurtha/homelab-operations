@@ -1,4 +1,4 @@
-"""Interactive metadata preparation. --apply commits private local drafts only."""
+"""Private draft preparation and explicitly offline native API simulation."""
 import argparse
 import contextlib
 import getpass
@@ -86,6 +86,9 @@ def show_rows(rows, redactor, label):
 
 
 def run(args):
+    if getattr(args,'native',False):
+        from .native_cli import run as native_run
+        return native_run(args)
     if args.command in ('list','inspect'):
         rows = store_read(args.state_dir); red = Redactor()
         for b in rows: red.collect(b['provider'])
@@ -168,8 +171,13 @@ def parser():
     sub=p.add_subparsers(dest='command',required=True,parser_class=Parser)
     for command in ['add','refresh','inspect','list','remove','reconcile']:
         s=sub.add_parser(command)
+        s.add_argument('--native',action='store_true',help='Pinned native adapter; live execution blocked')
+        s.add_argument('--simulate-native',action='store_true',help='Only synthetic APIs; requires --native; never production')
         if command in ['refresh','remove']:s.add_argument('key',help='Exact managed provider key; not a credential')
-        if command in ['add','refresh','remove','reconcile']:s.add_argument('--apply',action='store_true',help='Confirm a PRIVATE LOCAL draft transaction only; no production writes')
+        if command in ['add','refresh','remove','reconcile']:s.add_argument('--apply',action='store_true',help='Confirm a local draft or explicit native simulation; never live writes')
+        if command == 'reconcile':
+            s.add_argument('--key',help='Native owned key, required with --native')
+            s.add_argument('--fixture',help='Synthetic catalogue for native reconciliation')
         if command in ['add','refresh']:
             source=s.add_mutually_exclusive_group(required=True)
             source.add_argument('--fixture',help='Synthetic metadata JSON; no network')
@@ -184,7 +192,9 @@ def parser():
 
 def main(argv=None):
     try:
-        args=parser().parse_args(argv);run(args);return 0
+        args=parser().parse_args(argv)
+        if args.simulate_native and not args.native: raise Refused('simulation_requires_native_mode')
+        run(args);return 0
     except (EOFError,KeyboardInterrupt):
         print('Cancelled; no automatic retry.',file=sys.stderr);return 130
     except Refused as e:
