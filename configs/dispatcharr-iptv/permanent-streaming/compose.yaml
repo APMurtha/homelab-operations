@@ -225,8 +225,8 @@ services:
       bind:
         create_host_path: false
     - type: bind
-      source: /run/dispatcharr-guard
-      target: /guard
+      source: /run/dispatcharr-guard-status
+      target: /guard-status
       read_only: true
       bind:
         create_host_path: false

@@ -19,3 +19,10 @@ Retain accepted guard.py/security.py, startup gates, Gluetun kill switch, Docker
 namespace/network contract, Caddy configuration and HLS enforcement artifacts.
 The new runtime uses only two systemd oneshot units, the existing Compose CLI,
 restart=no and a read-only one-shot verifier. No continuous controller is planned.
+
+## Offline trusted-guard candidate (not installed)
+
+The repository prepares a coordinated guard/verifier/20/new guard-unit drop-in
+transition. Production remains on the last accepted three-service baseline; no
+installation or live health check is implied. See the trusted-guard implementation
+report for exact pins, private-schema migration and whole-baseline rollback.

@@ -77,6 +77,6 @@ class Tests(unittest.TestCase):
             with self.assertRaises(c.Refusal):v.guard(POLICY,'expected')
     def test_no_active_security_policy_changes(self):
         self.assertEqual((HERE/'accepted-table.template.json').read_bytes(),(HERE.parent/'persistence-phase6b3/accepted-table.template.json').read_bytes())
-        self.assertEqual(v.PINS['guard.py'],'df53629a537e66fcbdf664076b9fa58de47d590e4a0f0d0128fd15f46f3088bd')
+        self.assertEqual(v.PINS['guard.py'],'d25808d50ff14dd1f195397d34b1ead33c3ed8fa5b6aebc5a6c4bf2c120e91b0')
 
 if __name__=='__main__':unittest.main()

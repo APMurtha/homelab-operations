@@ -9,6 +9,7 @@ python3 -B -m unittest discover -s "$candidate/tests" -p test_provenance.py
 python3 -B -m unittest discover -s "$candidate/../minimal-phase6b3d/tests"
 python3 -B -m unittest discover -s "$candidate/../boot-admission-phase6b3k/tests"
 python3 -B "$candidate/tests/verify_units.py"
+sh "$candidate/../trusted-guard-tests/run-offline.sh"
 # Pass the existing SHA-verified binary; this runner never fetches/builds images.
 : "${CADDY_TEST_BINARY:?Path to previously verified Caddy executable required}"
 export CADDY_TEST_BINARY

@@ -3,10 +3,10 @@
   "title": "Private relay input; create locally only during authorized installation",
   "type": "object",
   "additionalProperties": false,
-  "required": ["source", "ready_file", "ready_hash", "manifest_deadline_seconds", "segment_deadline_seconds"],
+  "required": ["source", "guard_status_dir", "ready_hash", "manifest_deadline_seconds", "segment_deadline_seconds"],
   "properties": {
     "source": {"type": "string", "description": "The existing owner-selected private manifest reference; runtime enforces its exact approved HTTPS destination."},
-    "ready_file": {"const": "/guard/ready"},
+    "guard_status_dir": {"const": "/guard-status"},
     "ready_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "manifest_deadline_seconds": {"const": 12},
     "segment_deadline_seconds": {"const": 12}

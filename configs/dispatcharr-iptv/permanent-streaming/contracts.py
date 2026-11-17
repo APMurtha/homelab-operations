@@ -76,7 +76,7 @@ def topology(state, require_running=False):
     required_mounts = {'dispatcharr': {'/etc/resolv.conf': str(ROOT / 'resolv.vpn.conf'), '/opt/permanent': str(ROOT / 'permanent-streaming'), '/run/credentials/registration.json': str(ROOT / 'private/permanent-registration.json'), '/opt/dispatcharr-vpn-startup-gate.py': str(ROOT / 'vpn-startup-gate.py'), '/opt/egress-policy.json': str(ROOT / 'private/egress-policy.json'), '/guard': '/run/dispatcharr-guard'},
                        'iptv-vpn': {'/guard': '/run/dispatcharr-guard', '/opt/egress-policy.json': str(ROOT / 'private/egress-policy.json'), '/opt/vpn-owner-gate.sh': str(ROOT / 'vpn-owner-gate.sh'), '/gluetun/wireguard/wg0.conf': str(ROOT / 'private/wg0.conf'), '/iptables/post-rules.txt': str(ROOT / 'vpn-post-rules.txt')},
                        'gateway': {'/etc/caddy/Caddyfile': str(ROOT / 'permanent-streaming/Caddyfile')},
-                       'relay': {'/opt/permanent': str(ROOT / 'permanent-streaming'), '/etc/resolv.conf': str(ROOT / 'resolv.vpn.conf'), '/guard': '/run/dispatcharr-guard', '/run/credentials/relay.json': str(ROOT / 'private/permanent-relay.json')}}
+                       'relay': {'/opt/permanent': str(ROOT / 'permanent-streaming'), '/etc/resolv.conf': str(ROOT / 'resolv.vpn.conf'), '/guard-status': '/run/dispatcharr-guard-status', '/run/credentials/relay.json': str(ROOT / 'private/permanent-relay.json')}}
     for service, mounts in required_mounts.items():
         actual = mount_index(containers[service])
         for target, source in mounts.items():

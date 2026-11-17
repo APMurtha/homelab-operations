@@ -39,7 +39,10 @@ class Contracts(unittest.TestCase):
     def test_actual_stopped_mount_projection_passes(self):
         fixture=json.loads((HERE/'tests/fixtures/relay-stopped-18bdf54.json').read_text())
         s=state(False);r=s['containers']['relay']
-        r['Mounts']=fixture['Mounts'];r['HostConfig']['Tmpfs']=fixture['HostConfig']['Tmpfs']
+        r['Mounts']=copy.deepcopy(fixture['Mounts'])
+        for mount in r['Mounts']:
+            if mount['Destination']=='/guard':mount.update(Destination='/guard-status',Source='/run/dispatcharr-guard-status')
+        r['HostConfig']['Tmpfs']=fixture['HostConfig']['Tmpfs']
         self.assertNotIn('/tmp', [m['Destination'] for m in r['Mounts']])
         verify.workload(s)
     def test_stopped_container_may_retain_valid_tmpfs_entry(self):
@@ -113,7 +116,7 @@ class Contracts(unittest.TestCase):
             s=state();mutate(s['containers']['relay'])
             with self.assertRaises(contracts.Refusal):verify.workload(s,True)
     def test_relay_readonly_sources_and_extra_mounts_rejected(self):
-        for target in ['/opt/permanent','/etc/resolv.conf','/run/credentials/relay.json','/guard']:
+        for target in ['/opt/permanent','/etc/resolv.conf','/run/credentials/relay.json','/guard-status']:
             s=state();next(m for m in s['containers']['relay']['Mounts'] if m['Destination']==target)['RW']=True
             with self.assertRaises(contracts.Refusal):verify.workload(s)
         s=state();s['containers']['relay']['Mounts'].append({'Destination':'/host','Type':'bind','Source':'/','RW':True})

@@ -17,6 +17,10 @@ def main():
         root = Path(directory)
         for name in ["dispatcharr-stack.service", "dispatcharr-egress-guard.service"]:
             (root / name).write_bytes((BASE / name).read_bytes())
+        guard_dropins = root / "dispatcharr-egress-guard.service.d"
+        guard_dropins.mkdir()
+        (guard_dropins / "20-trusted-readiness.conf").write_bytes(
+            (BASE / "dispatcharr-egress-guard.service.d/20-trusted-readiness.conf").read_bytes())
         dropins = root / "dispatcharr-stack.service.d"
         dropins.mkdir()
         (dropins / "20-resource-admission.conf").write_bytes(

@@ -1,4 +1,4 @@
-# Permanent DW English candidate — NOT INSTALLED
+# Permanent DW English candidate — matched trusted-guard transition, NOT INSTALLED
 
 See [implementation report](../../../docs/dispatcharr-permanent-streaming-implementation.md)
 and [artifact review](../../../docs/dispatcharr-permanent-streaming-artifact-review.md).
@@ -94,92 +94,76 @@ Rollback refuses concurrent unrelated edits. No library, user, playback-default
 or DVR API is called. Live normalized responses still require installation
 acceptance; a mismatch retains the receipt and fails closed.
 
-## Future installation plan — requires separate authorization
+## Coordinated installation — separate authorization required
 
-1. Clear playback/recording activity and conflicting administrative work. Record
-   current container/image/configuration, network, API/data and Live TV identities
-   and matched rollback inputs. Revalidate the existing recovery reference in the
-   authorized window; this candidate does not create or restore backups.
-2. Verify all source hashes against this commit and the manifest. Verify the exact
-   patched image is retained locally. Stop if an accepted base pin has drifted;
-   do not regenerate a manifest to bless an unexplained change.
-3. Install the candidate directory under
-   `/docker/dispatcharr-iptv/permanent-streaming`, root:root, directories 0755 and
-   files 0644. Leave original base Compose, Caddyfile, guard, minimal verifier,
-   base unit and admission files untouched. The guard unit still verifies those
-   original inputs before Docker; the new stack verifier additionally validates
-   this candidate, its installed drop-in and the four-service contract.
-4. Privately create `private/permanent-relay.json` and
-   `private/permanent-registration.json` per the schemas: UID/GID 1000, mode 0400,
-   beneath the existing root-private directory. Use the retained privately
-   selected manifest, current guard digest, and current accepted-AIO credentials.
-   Do not copy trial credentials or put source/credentials in command arguments.
-   The registration ACL digest is SHA-256 of canonical sorted compact JSON for
-   the reviewed `network_access.value`. STREAMS must be exactly loopback,
-   Rivendell, bridge-gateway and observed Jellyfin peer /32s; M3U_EPG/XC_API remain
-   loopback-only. If the current ACL does not satisfy this, obtain approval for
-   that scoped application change; the registrar will not silently widen it.
-5. Prepare only the new runtime/export directories (no recursive permission
-   changes): `/run/dispatcharr-permanent/relay` mode 0700 UID/GID 1000, under a
-   root-private parent, and `/docker/jellyfin/config/iptv/permanent-dw` mode 0750
-   UID/GID 1000. Verify the existing Jellyfin bind can read those files. A different
-   actual UID/GID is a reviewed compatibility change, not a reason to chmod broadly.
-6. In the authorized window stop the existing protected systemd unit. Preserve the
-   exact VPN owner. Using the candidate Compose project/file, stage **only** AIO,
-   relay and gateway stopped with `up --no-start --no-deps --no-build --pull never
-   --force-recreate dispatcharr relay gateway`. Verify CLI flags and all stopped
-   identities before proceeding. Never use a direct start to bypass admission.
-   The mount verifier validates the exact `/tmp` options through
-   `HostConfig.Tmpfs`, separately from the six relay bind mounts. A newly created
-   stopped relay omits `/tmp` from `Mounts`; a running relay must enumerate its
-   safe tmpfs there. A stopped relay may retain that entry after a prior run.
-   Duplicate, extra, missing or unsafe mount targets are refused in either state.
+This candidate now requires the matched trusted guard baseline. Follow
+[the implementation report](../../../docs/dispatcharr-trusted-guard-implementation.md)
+for the complete ordered file/pin transition and rollback. Do not install only
+this directory over the accepted production guard or follow the old candidate’s
+independent-install instructions.
 
-   For each deployment diagnostic snapshot comparison use
-   `python3 -B diagnostic_inventory.py BEFORE.json AFTER.json` with the private
-   baseline schema (`containers` records: `name`, `id`, `image`, `started`,
-   `running`, `health`, `restart`, `restart_count`, `host_config_sha256`;
-   top-level `network_ids`, `docker_process`, `dedicated_network`). Capture fresh
-   snapshots read-only as in the prior deployment. This helper only reads JSON;
-   it never contacts Docker or services, and prints no record values. It excludes
-   exactly the four names in `contracts.NAMES`, including `rivendell-iptv-relay`,
-   and strictly compares all listed fields of every genuinely unrelated service,
-   plus Docker and network identities. Do not reuse the historical three-name
-   diagnostic exclusion list or change the installed three-service verifier.
-7. Install only `30-permanent-streaming.conf` into the existing stack unit's drop-in
-   directory, after the unchanged `20-resource-admission.conf`; daemon-reload,
-   inspect the effective order, and issue the separately authorized managed start.
-   Original Type=oneshot, restart=no, 540/240-second unit timeouts and admission
-   thresholds remain inherited. Failure invokes four-service scoped cleanup.
-8. After backend/VPN/relay/gateway/security acceptance, separately authorize the
-   Jellyfin helper with a fresh owner session and root-private receipt path. Verify
-   channel/guide discovery, native renewal schedule, rollback, and owner playback.
-   No playback or Jellyfin write is part of this implementation task.
+1. Verify exclusive idle state, original nine hashes, source/image/private-input
+   identities, exact ACL/group/profile/Jellyfin peer and existing matched recovery
+   references. Compare the retained inactive `776f984` staged tree before editing.
+2. Stage the entire reviewed release privately. Stop only the protected stack
+   through its currently accepted unit before replacing protected runtime files.
+3. Install the matched guard, minimal verifier/cleanup, guard-unit drop-in,
+   resource-admission 20 drop-in and complete candidate. Preserve original base
+   units, nftables template, policy, WireGuard, DNS, images, Docker and unrelated
+   services. Verify every expected SHA; do not regenerate approvals on host.
+4. Migrate private relay JSON `ready_file` to `guard_status_dir=/guard-status`;
+   remove the obsolete key. Preserve source, ready_hash, 12-second deadlines and
+   UID/GID 1000 mode 0400. Registration configuration and secrets do not change.
+5. Before Docker creates stopped containers, prepare the new EMPTY public status
+   directory root:root 0755 if absent. Refuse symlinks, an unexpected existing
+   inode/metadata or any unexplained populated directory; never chmod the private
+   guard. This staging directory authorizes nothing; the managed publisher alone
+   initializes its anchor and records. Preserve the VPN owner/network; stage only
+   AIO/relay/gateway stopped without
+   build/pull/dependencies, then verify exact mounts/resources and source pins.
+   The relay mounts only `/run/dispatcharr-guard-status` at `/guard-status`, read-only.
+6. Install reviewed 30; native unit verification and effective-order/pin checks;
+   daemon-reload and separately authorized single managed start. New guard apply
+   creates/validates the stable empty status anchor if needed, never adopts a
+   populated/unexplained directory. Guard service does not need a separate restart
+   solely to create it. Future restarts preserve that inode with the new drop-in.
+7. Start order is early withdrawal → inputs → unchanged admission → guard apply
+   and semantic verification → stopped-owner capture → VPN-only start/verification
+   → namespace grant → AIO+relay → backend/registration/exports → gateway → running
+   security acceptance. No standalone publisher mutation or manual container start.
+8. Only after backend acceptance may a separate future task modify Jellyfin or
+   authorize broadcaster playback; neither is part of this release installation.
 
-## Future rollback
+Use `diagnostic_inventory.py BEFORE.json AFTER.json` with the existing private
+snapshot schema; it excludes exactly four dedicated services and preserves strict
+identity/configuration comparisons for every genuinely unrelated container.
 
-Preserve an uncertain journal; never repeatedly start, delete it to proceed, or
-import the historical trial DB. Under explicit rollback authorization and no
-active playback, restore Jellyfin's captured tuner/provider state with the helper.
-While the AIO is still ready, `lifecycle.py rollback-integration` stops only
-candidate gateway+relay and runs API-owned-record rollback. It refuses shared or
-edited records and retains a private receipt. Stop the protected systemd unit,
-remove only the stopped candidate relay, remove only the new 30 drop-in, and
-stage AIO/gateway stopped using the original base+minimal Compose files and
-original immutable image. Retain the VPN owner, all data, original guard/gates and
-unrelated services. Daemon-reload and start through the original resource gate
-only under the rollback authorization. Verify the original three-service contract.
+## Scoped rollback — restore the complete accepted baseline
 
-Do not run `down -v`, prune images/volumes, flush rules, restore all of Jellyfin,
-reset Redis/DB, or relax thresholds. Unexpected schema migration stops image-only
-rollback and requires matched recovery authorization. Reinstallation after a
-completed rollback requires explicit reconciliation of its private state; the
-registrar does not auto-recreate removed integration records.
+Preserve pending API/guard transaction records. Unknown writes or conflicting
+owned data block automatic rollback. When safe and separately authorized, use
+existing owned-record rollback while the backend is ready, stop only the protected
+stack and confirm public withdrawal through the OLD bound anchor. Remove only the
+stopped relay; restore original AIO/gateway stopped from original immutable
+base+minimal Compose inputs, preserving owner/network/data.
+
+Restore accepted original guard AND verifier AND original 20 pin set, remove only
+new 30 and guard-unit drop-ins, and restore original private schema as appropriate.
+Native verify and daemon-reload only in that approved window, then one original
+managed start through unchanged admission. Recreate legacy readiness only through
+successful original guard apply. Never copy a prior marker, clear a latch to retry,
+reset Redis/DB, delete volumes, flush firewall rules, restart Docker or modify
+unrelated services. Retain failed private metadata for review; inactive new files
+are not an authorization to run them.
+
+An interrupted `applying`/`publishing`/`granting` transaction latches blocked=true
+on withdrawal and refuses later apply. No automatic latch-reset command is shipped;
+reconciliation or complete safe baseline rollback requires explicit review.
 
 ## Offline validation
 
 Use `sh tests/run-offline.sh` with `CADDY_TEST_BINARY` pointing to the previously
-SHA-verified Caddy executable (`a563843e…60cdf`). The runner does not download,
+SHA-verified Caddy executable (`a563843e…60cdf`). The runner also invokes the actual trusted-guard regression suite in isolated mapped UID/mount/network namespaces. It does not download,
 build, pull or start containers. Network fixtures require unprivileged user/network
 namespaces; they create only lo and a synthetic public address, with no external
 interface/default route. Certificates, HTTP responses, API models, media packets

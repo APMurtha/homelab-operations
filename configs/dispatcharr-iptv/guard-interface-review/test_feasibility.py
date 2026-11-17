@@ -20,12 +20,19 @@ from unittest import mock
 BASE = Path(__file__).resolve().parents[1]
 CANDIDATE = BASE / 'permanent-streaming'
 sys.path.insert(0, str(BASE))
-spec = importlib.util.spec_from_file_location('accepted_guard', BASE / 'guard.py')
+spec = importlib.util.spec_from_file_location('accepted_guard', BASE / 'guard-interface-review/reference/guard_accepted.py')
 guard = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(guard)
 sys.path.insert(0, str(CANDIDATE))
-import hls_relay
+spec_relay=importlib.util.spec_from_file_location('historical_relay',BASE/'guard-interface-review/reference/relay_776f984.py')
+hls_relay=importlib.util.module_from_spec(spec_relay);spec_relay.loader.exec_module(hls_relay)
 import relay_main
+# The assessment intentionally exercises the original candidate, not the new publisher.
+import types
+legacy_main=types.ModuleType('legacy_main')
+legacy_main.__file__=str(CANDIDATE/'relay_main.py')
+exec((BASE/'guard-interface-review/reference/relay_main_776f984.py').read_bytes(),legacy_main.__dict__)
+legacy_main.Relay=hls_relay.Relay;legacy_main.server=hls_relay.server;relay_main=legacy_main
 # This module is imported lazily by server(). Preload before dropping UID:
 # the private checkout ancestor is not the production read-only /opt mount.
 import bounded_server

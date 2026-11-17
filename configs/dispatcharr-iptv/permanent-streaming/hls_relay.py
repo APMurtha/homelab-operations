@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_runtime import Budget, DNS, FetchFailure, FetchTimeout, Cancelled, DNSFailure, HTTPFailure
 from telemetry import Telemetry
 from rate_budget import RollingBudget
+from guard_readiness import Readiness
 from manifest_telemetry import ManifestTelemetry
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, urljoin, unquote
@@ -41,8 +42,7 @@ class Relay:
     def __init__(self, config, *, resolver=None, context=None, dns=None, telemetry=None):
         self.source = config['source']
         self.parent = urlsplit(self.source).path.rsplit('/', 1)[0] + '/'
-        self.ready = Path(config['ready_file'])
-        self.ready_hash = config['ready_hash']
+        self.guard = Readiness(config['guard_status_dir'], config['ready_hash'])
         self.expires = float('inf')
         self.rate = RollingBudget()
         self.resolver = resolver
@@ -79,9 +79,8 @@ class Relay:
         if time.monotonic() >= self.expires:
             raise SecurityRejected('expired')
         try:
-            if self.ready.read_text().strip() != self.ready_hash:
-                raise SecurityRejected('guard_hash_mismatch')
-        except OSError:
+            self.guard.check()
+        except (OSError, ValueError, TypeError, KeyError):
             raise SecurityRejected('guard_not_ready') from None
 
     def scope(self, url, manifest=False):
@@ -308,7 +307,7 @@ class Relay:
 
     def snapshot(self):
         with self.lock:
-            return {'counts':dict(self.stats),'peer_IPs':sorted(self.peers),'fatal':self.fatal,'remaining_seconds':None, 'telemetry':self.telemetry.snapshot(), 'active_DNS_workers':len(self.dns.active)}
+            return {'guard_generation':self.guard.expected['generation'],'counts':dict(self.stats),'peer_IPs':sorted(self.peers),'fatal':self.fatal,'remaining_seconds':None, 'telemetry':self.telemetry.snapshot(), 'active_DNS_workers':len(self.dns.active)}
 
 
 def server(relay, port=PORT):

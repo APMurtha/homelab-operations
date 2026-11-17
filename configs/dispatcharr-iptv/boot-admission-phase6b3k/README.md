@@ -62,3 +62,11 @@ socket restrictions may require permission to run this offline verifier outside
 the sandbox. No new daemon, Docker instance or VM is needed. These tests do not
 prove boot-time behavior on Rivendell. Do not execute an installation or restart
 as part of this phase.
+
+## Coordinated trusted readiness update
+
+The current 20 drop-in adds fixed-path withdrawal BEFORE input verification and
+admission, and invokes the matched scoped cleanup helper after withdrawal. CPU
+thresholds, admit.py, base unit bytes and timeouts are unchanged. Earlier command-
+list-only descriptions above document the original baseline. Use the complete
+trusted-guard implementation transition; do not install this drop-in alone.

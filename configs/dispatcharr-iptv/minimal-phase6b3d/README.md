@@ -39,3 +39,11 @@ docker compose -f configs/dispatcharr-iptv/compose.proposed.yaml \
 These parse/model checks do not start Docker workloads or prove live boot/restart
 behavior. Proposed unit syntax and static combined ordering graph were verified
 with systemd-analyze; none was installed or enabled.
+
+## Trusted guard baseline transition
+
+The coordinated implementation changes guard.py, this verifier and the effective
+20 drop-in, adds cleanup.py and the exact guard-unit 20-trusted-readiness.conf.
+Base units, Compose, image identities and nftables semantics remain unchanged.
+See docs/dispatcharr-trusted-guard-implementation.md; do not independently install
+this directory or silently update installed hashes. Retired controller pins stay old.

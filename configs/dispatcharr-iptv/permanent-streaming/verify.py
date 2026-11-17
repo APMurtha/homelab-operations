@@ -42,8 +42,10 @@ def inputs():
     for f, expected in [('/etc/systemd/system/dispatcharr-stack.service','30e7f5e64b7a6ce3f8ec3cf80572d74bb2dd1ed67083929276cf55fbb65c357e'),
         ('/etc/systemd/system/dispatcharr-egress-guard.service','bde5207014fa24781d8cd1275a54dac056684299e498f4773fca2ed2e98cc174'),
         ('/etc/systemd/system/docker.service.d/50-dispatcharr-order.conf','c9beb54d2b2e6285013355f3a80dd6677ff7723d10e835f45c499f39fb9e581b'),
-        ('/etc/systemd/system/dispatcharr-stack.service.d/20-resource-admission.conf','72643075862dfeb6ce968997edd19c9fbff30eea025d7ea74eb6691d372f8ceb')]:
+        ('/etc/systemd/system/dispatcharr-stack.service.d/20-resource-admission.conf','578e03101e64c14da217e3d77f5bed9e0dbfbab9dad24b3f077c6b3891aed023')]:
         file_pin(Path(f), expected)
+    # TRUSTED-GUARD-DROPIN
+    file_pin(Path('/etc/systemd/system/dispatcharr-egress-guard.service.d/20-trusted-readiness.conf'), '392994ee3a0eec4b87127b13aa1efb51ce058fd135fbbed52f17d30fde2dbefc')
     file_pin(Path('/etc/systemd/system/dispatcharr-stack.service.d/30-permanent-streaming.conf'),
              json.loads((HERE/'manifest.json').read_text())['files']['30-permanent-streaming.conf'])
     # Existing base guard still verifies original files. The candidate lives beside
@@ -57,13 +59,13 @@ def inputs():
         if path.lstat().st_uid != 1000 or stat.S_IMODE(path.lstat().st_mode) != 0o400:
             raise Refusal('private_input_permissions')
     relay = private_json(ROOT/'private/permanent-relay.json')
-    if set(relay) != {'source','ready_file','ready_hash','manifest_deadline_seconds','segment_deadline_seconds'}:
+    if set(relay) != {'source','guard_status_dir','ready_hash','manifest_deadline_seconds','segment_deadline_seconds'}:
         raise Refusal('relay_configuration_fields')
     from hls_relay import HOST
     u=urlsplit(relay['source'])
     if u.scheme!='https' or u.netloc!=HOST or u.query or u.fragment or not u.path.endswith('.m3u8') or '%' in u.path or '\\' in u.path or '//' in u.path or any(p in ['.','..'] for p in u.path.split('/')):
         raise Refusal('relay_source_scope')
-    if relay['ready_file']!='/guard/ready' or relay['ready_hash']!=digest or relay['manifest_deadline_seconds']!=12 or relay['segment_deadline_seconds']!=12:
+    if relay['guard_status_dir']!='/guard-status' or relay['ready_hash']!=digest or relay['manifest_deadline_seconds']!=12 or relay['segment_deadline_seconds']!=12:
         raise Refusal('relay_policy_changed')
     registration=private_json(ROOT/'private/permanent-registration.json')
     if set(registration) != {'username','password','expected_network_access_sha256','jellyfin_peer_ipv4'}:
@@ -79,7 +81,8 @@ def inputs():
 
 def guard(policy,digest):
     verify_table(json.loads(command(['nft','-j','list','table','inet','rivendell_iptv'])),policy)
-    if Path('/run/dispatcharr-guard/ready').read_text().strip()!=digest:raise Refusal('ready_marker_mismatch')
+    sys.path.insert(0,str(ROOT));import guard as trusted_guard
+    return trusted_guard.Publisher().coherence(ROOT/'private/egress-policy.json')
 
 
 def workload(state,running=False):
@@ -119,6 +122,17 @@ if __name__=='__main__':
         if a.mode!='inputs':guard(policy,digest);workload(snapshot(),a.mode=='running')
         if a.mode=='running':
             vpn_running()
+            snap=snapshot();owner=snap['containers']['iptv-vpn']
+            # Host reader runs in the host namespace; inspect grant against the actual owner instead.
+            sys.path.insert(0,str(ROOT));import guard as trusted_guard
+            publisher=trusted_guard.Publisher();record=publisher.coherence(ROOT/'private/egress-policy.json')
+            grant=trusted_guard.checked_json(Path('/run/dispatcharr-guard-status/grant.json'),0o644,2048)
+            if set(grant)!=trusted_guard.N_FIELDS or any(grant[k]!=record[k] for k in trusted_guard.G_FIELDS):raise Refusal('grant_generation_mismatch')
+            ns=Path('/proc/'+str(owner['State']['Pid'])+'/ns/net').stat()
+            if (grant['netns_dev'],grant['netns_ino'])!=(ns.st_dev,ns.st_ino):raise Refusal('grant_owner_namespace_mismatch')
+            from files import read_json
+            stats=read_json('/run/dispatcharr-permanent/relay/stats.json')
+            if stats.get('guard_generation')!=record['generation']:raise Refusal('relay_guard_generation_mismatch')
             command(['docker','exec','--user','1000:1000','dispatcharr','python','-B','/opt/permanent/verify_binding.py'])
         print(json.dumps({'check':a.mode,'result':'pass','mutations':0}))
     except Exception:raise SystemExit('Permanent IPTV verification refused; values withheld.')

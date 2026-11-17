@@ -53,7 +53,11 @@ class RelayTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
         self.ready=self.root/'ready';self.ready.write_text('approved')
-        self.r=relay.Relay({'source':SOURCE,'ready_file':str(self.ready),'ready_hash':'approved'})
+        self.guard_patch=patch.object(relay,'Readiness',return_value=__import__('unittest.mock',fromlist=['Mock']).Mock(expected={'generation':'a'*64}));self.guard_patch.start();self.addCleanup(self.guard_patch.stop)
+        def checked():
+            if self.ready.read_text()!='approved':raise ValueError('fixture_guard_invalid')
+        relay.Readiness.return_value.check.side_effect=checked
+        self.r=relay.Relay({'source':SOURCE,'guard_status_dir':str(self.ready.parent),'ready_hash':'approved'})
     def tearDown(self):self.r.close();self.temp.cleanup()
     def test_destination_matrix(self):
         for url in ['http://'+relay.HOST+'/synthetic/a.ts','https://127.0.0.1/a.ts','https://other.invalid/a.ts',
@@ -72,7 +76,7 @@ class RelayTests(unittest.TestCase):
         for i in range(4200):self.r.rewrite(PLAY.replace(b'part.ts',str(i).encode()+b'.ts'))
         self.assertEqual(len(self.r.resources),4096);self.assertLessEqual(len(self.r.manifest_telemetry.links),4096)
     def test_fresh_identity_and_stale_path(self):
-        other=relay.Relay({'source':SOURCE,'ready_file':str(self.ready),'ready_hash':'approved'})
+        other=relay.Relay({'source':SOURCE,'guard_status_dir':str(self.ready.parent),'ready_hash':'approved'})
         try:
             self.assertNotEqual(other.session,self.r.session)
             with self.assertRaises(relay.SecurityRejected):other.resource('/s/'+self.r.session+'/live.m3u8')
@@ -84,7 +88,7 @@ class RelayTests(unittest.TestCase):
         with self.assertRaises(relay.SecurityRejected):self.r.check()
     def test_insecure_TLS_context_refused(self):
         with self.assertRaises(relay.SecurityRejected):
-            relay.Relay({'source':SOURCE,'ready_file':str(self.ready),'ready_hash':'approved'},context=ssl._create_unverified_context())
+            relay.Relay({'source':SOURCE,'guard_status_dir':str(self.ready.parent),'ready_hash':'approved'},context=ssl._create_unverified_context())
     def test_bad_segments_and_sizes(self):
         for data in [b'',b'bad'*188,b'G'+bytes(187)]:
             with self.assertRaises(relay.SecurityRejected):self.r.validate_segment(data)
@@ -281,7 +285,7 @@ class JellyfinTests(unittest.TestCase):
 class LifecycleTests(unittest.TestCase):
     def test_registration_and_exports_precede_gateway(self):
         events=[]
-        with patch.object(lifecycle,'execute',side_effect=lambda a,*_:events.append(a)),patch.object(lifecycle,'inside',side_effect=lambda *a,**k:events.append(list(a))):lifecycle.start()
+        with patch.object(lifecycle,'execute',side_effect=lambda a,*_:events.append(a)),patch.object(lifecycle,'inside',side_effect=lambda *a,**k:events.append(list(a))),patch.object(lifecycle,'trusted'):lifecycle.start()
         registration=next(i for i,e in enumerate(events) if e[0]=='register.py')
         gateway=next(i for i,e in enumerate(events) if e[-1]=='gateway')
         self.assertLess(registration,gateway);self.assertIn('--no-deps',events[gateway])
@@ -289,11 +293,11 @@ class LifecycleTests(unittest.TestCase):
         calls=[]
         def inside(script,*args,**kw):
             if script=='register.py':raise ValueError('fixture')
-        with patch.object(lifecycle,'execute',side_effect=lambda a,*_:calls.append(a)),patch.object(lifecycle,'inside',side_effect=inside):
+        with patch.object(lifecycle,'execute',side_effect=lambda a,*_:calls.append(a)),patch.object(lifecycle,'inside',side_effect=inside),patch.object(lifecycle,'trusted'):
             with self.assertRaises(ValueError):lifecycle.start()
         self.assertFalse(any(c[-1]=='gateway' for c in calls))
     def test_scoped_cleanup_only_four_services(self):
-        with patch.object(lifecycle,'execute') as execute:lifecycle.stop()
-        a=execute.call_args.args[0];self.assertEqual(a[-4:],['gateway','relay','dispatcharr','iptv-vpn']);self.assertNotIn('down',a)
+        with patch.object(lifecycle,'execute') as execute,patch.object(lifecycle,'trusted'):lifecycle.stop()
+        a=next(c.args[0] for c in execute.call_args_list if 'compose' in c.args[0]);self.assertEqual(a[-4:],['gateway','relay','dispatcharr','iptv-vpn']);self.assertNotIn('down',a)
 
 if __name__=='__main__':unittest.main()

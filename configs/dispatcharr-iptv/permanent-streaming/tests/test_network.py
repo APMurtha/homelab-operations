@@ -57,12 +57,18 @@ class NetworkTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):cls.up.shutdown();cls.up.server_close();cls.tmp.cleanup()
     def setUp(self):
-        self.tmpcase=tempfile.TemporaryDirectory();self.ready=Path(self.tmpcase.name)/'ready';self.ready.write_text('ok')
+        self.tmpcase=tempfile.TemporaryDirectory();self.status=Path(self.tmpcase.name)/'status';self.status.mkdir(mode=0o755)
+        from guard_readiness import namespace,boot_identity
+        record={'schema':1,'generation':'a'*64,'policy_sha256':'b'*64,'boot_id':boot_identity()}
+        dev,ino=namespace()
+        for name,value in [('guard.json',record),('grant.json',dict(record,netns_dev=dev,netns_ino=ino))]:
+            (self.status/name).write_text(json.dumps(value));(self.status/name).chmod(0o644)
+        self.ready=self.status/'guard.json'
         self.context=ssl.create_default_context(cafile=str(self.root/'cert'))
         self.r=self.make()
         Upstream.status=200;Upstream.body=PLAY;Upstream.typ='application/vnd.apple.mpegurl';Upstream.extra=[];Upstream.delay=0
     def make(self,context=None,resolver=None):
-        return relay.Relay({'source':SOURCE,'ready_file':str(self.ready),'ready_hash':'ok'},
+        return relay.Relay({'source':SOURCE,'guard_status_dir':str(self.status),'ready_hash':'b'*64},
           context=context or self.context,resolver=resolver or (lambda *a:[(socket.AF_INET,socket.SOCK_STREAM,6,'',('93.184.216.34',443))]))
     def tearDown(self):self.r.close();self.tmpcase.cleanup()
     def test_native_TLS_manifest_and_segment(self):
@@ -142,11 +148,24 @@ class NetworkTests(unittest.TestCase):
         self.assertFalse(thread.is_alive());self.assertFalse(r.dns.active)
         self.assertEqual(errors[0].category,'cancelled')
 
+    def test_revocation_during_active_synthetic_fetch_returns_no_media(self):
+        errors=[];Upstream.delay=.5
+        def fetch():
+            try:self.r.fetch(SOURCE,True,validator=self.r.rewrite)
+            except Exception as e:errors.append(e)
+        worker=threading.Thread(target=fetch);worker.start();time.sleep(.15)
+        self.ready.unlink();worker.join(3)
+        self.assertFalse(worker.is_alive());self.assertEqual(len(errors),1)
+        self.assertIsInstance(errors[0],relay.SecurityRejected)
+    def test_generation_change_does_not_rebind_running_relay(self):
+        record=json.loads(self.ready.read_text());record['generation']='c'*64
+        self.ready.write_text(json.dumps(record))
+        with self.assertRaises(relay.SecurityRejected):self.r.check()
     def test_managed_process_startup_SIGTERM_and_stale_health(self):
         # Wrapper imports are real; config paths are injected by a private fixture runner.
         runtime=Path(self.tmpcase.name)/'runtime';runtime.mkdir();exports=Path(self.tmpcase.name)/'exports';exports.mkdir()
         runner=Path(self.tmpcase.name)/'runner.py'
-        config={'source':SOURCE,'ready_file':str(self.ready),'ready_hash':'ok','manifest_deadline_seconds':12,'segment_deadline_seconds':12}
+        config={'source':SOURCE,'guard_status_dir':str(self.status),'ready_hash':'b'*64,'manifest_deadline_seconds':12,'segment_deadline_seconds':12}
         runner.write_text('import sys\nsys.path.insert(0,'+repr(str(HERE))+')\nfrom relay_main import run\nfrom pathlib import Path\nraise SystemExit(run('+repr(config)+',Path('+repr(str(runtime))+'),Path('+repr(str(exports))+')))\n')
         proc=subprocess.Popen([sys.executable,'-B',str(runner)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         try:

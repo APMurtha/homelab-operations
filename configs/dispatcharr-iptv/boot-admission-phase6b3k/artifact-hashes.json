@@ -2,24 +2,24 @@
   "base_stack_unit_sha256": "30e7f5e64b7a6ce3f8ec3cf80572d74bb2dd1ed67083929276cf55fbb65c357e",
   "files": {
     "20-resource-admission.conf": {
-      "sha256": "72643075862dfeb6ce968997edd19c9fbff30eea025d7ea74eb6691d372f8ceb",
-      "bytes": 656
+      "sha256": "578e03101e64c14da217e3d77f5bed9e0dbfbab9dad24b3f077c6b3891aed023",
+      "bytes": 1098
     },
     "README.md": {
-      "sha256": "6335107da64e5f20ab47f79ab7cb91a31a3e432200aed9a90bc19621208f5029",
-      "bytes": 3455
+      "sha256": "9f3297e932bd70f172bc510f9365a559f717015cbb850014d6a240d3baef9f33",
+      "bytes": 3893
     },
     "admit.py": {
       "sha256": "649c5dcee6fff563bf7ee80d62d77d42e8c942e8a6a1205eeb4a2a570be2f917",
       "bytes": 5766
     },
     "tests/test_admit.py": {
-      "sha256": "57fb8729441416e410d6ea970b3aa45860b6e53ed7613b3656722a0fff810eda",
-      "bytes": 13689
+      "sha256": "8eddc5fa13ce65bc15fb009bb43303924921e8c6000995e1268f943f2ef0d165",
+      "bytes": 13785
     },
     "tests/verify_units.py": {
-      "sha256": "d7edd1c532a044cfb0b182aa610ca0e9662055da8810304e8105258ca8ca1a1e",
-      "bytes": 2166
+      "sha256": "b53509af6c446d1525fa46613336944be9a89ae6de41314f6067c04d7c715d3c",
+      "bytes": 2429
     }
   }
 }

@@ -20,7 +20,7 @@ def run(config, runtime=Path('/runtime'), export_root=Path('/exports')):
         p = runtime / name
         if p.is_symlink(): raise ValueError('unsafe_runtime_file')
         p.unlink(missing_ok=True)
-    if set(config) != {'source', 'ready_file', 'ready_hash', 'manifest_deadline_seconds', 'segment_deadline_seconds'}:
+    if set(config) != {'source', 'guard_status_dir', 'ready_hash', 'manifest_deadline_seconds', 'segment_deadline_seconds'}:
         raise ValueError('unexpected_configuration')
     if config['manifest_deadline_seconds'] != 12 or config['segment_deadline_seconds'] != 12:
         raise ValueError('deadline_contract_changed')

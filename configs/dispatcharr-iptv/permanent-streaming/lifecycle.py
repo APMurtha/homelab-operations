@@ -1,5 +1,7 @@
 """Future systemd entrypoint; exact project only. Never call during offline tests."""
 import argparse
+import importlib.util
+import sys
 import os
 from pathlib import Path
 import stat
@@ -10,6 +12,13 @@ ROOT = Path('/docker/dispatcharr-iptv')
 HERE = ROOT / 'permanent-streaming'
 COMPOSE = ['docker','compose','--project-name','rivendell-iptv','--project-directory',str(ROOT),'-f',str(HERE/'compose.yaml')]
 UP = ['up','--detach','--no-build','--pull','never','--no-recreate','--wait','--wait-timeout','360']
+
+
+def trusted():
+    sys.path.insert(0,str(ROOT))
+    spec=importlib.util.spec_from_file_location('trusted_lifecycle_guard',ROOT/'guard.py')
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.Publisher()
 
 
 def execute(args, timeout=380):
@@ -33,10 +42,15 @@ def prepare():
     if child.is_symlink(): raise ValueError('unsafe_runtime')
     child.mkdir(mode=0o700, exist_ok=True)
     os.chmod(child, 0o700); os.chown(child, 1000, 1000)
+    import verify
+    snapshot=verify.snapshot();verify.workload(snapshot,False)
+    trusted().remember_owner(snapshot['containers']['iptv-vpn'],snapshot['network'],ROOT/'private/egress-policy.json')
 
 
 def start():
-    execute(COMPOSE + UP + ['iptv-vpn','dispatcharr','relay'])
+    execute(COMPOSE + UP + ['iptv-vpn'])
+    trusted().grant(ROOT/'private/egress-policy.json')
+    execute(COMPOSE + UP + ['--no-deps','dispatcharr','relay'])
     inside('backend.py', environment=True)
     inside('register.py','--config','/run/credentials/registration.json')
     # The relay's existing state writer generates exports on binding, then hourly.
@@ -55,7 +69,15 @@ def rollback_integration():
 
 
 def stop():
-    execute(COMPOSE + ['stop','--timeout','60','gateway','relay','dispatcharr','iptv-vpn'], 230)
+    errors=[]
+    try:trusted().revoke(False)
+    except Exception:errors.append('withdrawal_failed')
+    try:execute(COMPOSE + ['stop','--timeout','60','gateway','relay','dispatcharr','iptv-vpn'], 210)
+    except Exception:errors.append('scoped_stop_failed')
+    try:
+        execute(['/usr/bin/python3','-B',str(ROOT/'guard.py'),'assert-revoked'],10)
+    except Exception:errors.append('withdrawal_not_verified')
+    if errors:raise ValueError('scoped_cleanup_incomplete')
 
 
 if __name__ == '__main__':

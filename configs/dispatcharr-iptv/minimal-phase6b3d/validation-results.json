@@ -10,5 +10,12 @@
   "packet_tests_this_phase": false,
   "live_boot_restart_tests": false,
   "new_VM_Docker_daemon_or_controller": false,
-  "decision": "GO for simplified plan; installation requires approval and recovery prerequisites; live acceptance not yet proven"
+  "decision": "GO for simplified plan; installation requires approval and recovery prerequisites; live acceptance not yet proven",
+  "trusted_guard_transition": {
+    "installed": false,
+    "original_minimal_tests": 12,
+    "actual_permission_crash_cleanup_tests": 50,
+    "native_guard_dropin_fixture": "pass; no service executed",
+    "base_units_policy_and_admission_helper": "unchanged"
+  }
 }

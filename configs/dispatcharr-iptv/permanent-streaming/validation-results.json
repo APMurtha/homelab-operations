@@ -1,5 +1,5 @@
 {
-  "mode": "offline corrected candidate validation; no production contact or mutations",
+  "mode": "coordinated trusted-guard offline implementation; not installed",
   "host_python": "3.14",
   "development_PyYAML": "6.0.3",
   "suites": {
@@ -8,12 +8,15 @@
     "provenance_and_manifest": 3,
     "existing_minimal_persistence": 12,
     "existing_boot_admission": 28,
-    "isolated_TLS_DNS_lifecycle_resources": 11,
+    "isolated_TLS_DNS_lifecycle_resources": 13,
     "pinned_Caddy_groups": 15,
     "deployment_diagnostic_inventory": 7,
-    "historical_persistence_controller": 26
+    "historical_persistence_controller": 26,
+    "actual_trusted_guard_permission_crash_unit_cleanup": 50,
+    "prior_guard_interface_counterexamples": 14,
+    "approved_trusted_guard_design_models": 28
   },
-  "total_tests": 157,
+  "total_tests": 251,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
@@ -35,5 +38,10 @@
   "reproduce": "CADDY_TEST_BINARY=/path/to/verified/caddy sh configs/dispatcharr-iptv/permanent-streaming/tests/run-offline.sh",
   "correction_regression_baseline": "18bdf54 section 12 sanitized stopped mount projection; original verifier refusal reproduced offline",
   "reproduce_historical_persistence": "python3 -B -m unittest discover -s configs/dispatcharr-iptv/persistence-phase6b3/tests",
-  "production_contact": "none; original running stack not contacted or changed"
+  "production_contact": "none; production source, units, containers and configurations untouched",
+  "preserved_baseline_tests": 199,
+  "new_regressions": 52,
+  "reproduce_actual": "sh configs/dispatcharr-iptv/trusted-guard-tests/run-offline.sh",
+  "reproduce_prior_guard": "sh configs/dispatcharr-iptv/guard-interface-review/run-offline.sh",
+  "reproduce_design": "sh configs/dispatcharr-iptv/trusted-guard-design/run-offline.sh"
 }

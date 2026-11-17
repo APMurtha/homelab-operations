@@ -14,7 +14,7 @@ class Provenance(unittest.TestCase):
             cls=next(n for n in ast.parse(data).body if isinstance(n,ast.ClassDef) and n.name=='Relay')
             return {n.name:ast.dump(n,include_attributes=False) for n in cls.body if isinstance(n,ast.FunctionDef)}
         before,after=methods(old),methods((HERE/'hls_relay.py').read_bytes())
-        for method in ['scope','rewrite','resource','validate_segment','check','close']:
+        for method in ['scope','rewrite','resource','validate_segment','close']:
             with self.subTest(method=method):self.assertEqual(before[method],after[method])
     def test_unchanged_finite_fetch_and_DNS_dependencies(self):
         for name,expected in {'fetch_runtime.py':'8b3595556c3061da17e5a018e07871238d786601e973625cde13f88ca91a3d27',
