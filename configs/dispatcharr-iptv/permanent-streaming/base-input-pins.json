@@ -1,0 +1,15 @@
+{
+  "guard.py": "df53629a537e66fcbdf664076b9fa58de47d590e4a0f0d0128fd15f46f3088bd",
+  "security.py": "e7a92e7753e666a6f8cafd1b0292cec5e65f1431b09fc92ba10678c26e5ef8e2",
+  "vpn-owner-gate.sh": "e343e41632ece47165ecc6f2ae1f00779e92d77dd552329ef628807bab7ba523",
+  "vpn-startup-gate.py": "766879e875aa801c376adc44a65f02301dfd2c225acd29909c34da823b847ee7",
+  "Caddyfile": "bf5e40d2ccba8799f4b38f15336399fea7068f676150c2f7b18a1e07dc081a98",
+  "resolv.vpn.conf": "847d06f745d54e604791fa452b44a992026df81ba0dbdf58d81a8d02dd9d7ce2",
+  "vpn-post-rules.txt": "d48815495401014e7fcd43848af20259a13f1a59c3ac7882795c9fecace6ade4",
+  "minimal-phase6b3d/verify.py": "871bba35c84e1ecdc966d925a0718d281e559ce918420b41c26610eb4265be69",
+  "minimal-phase6b3d/contracts.py": "2ba2080ce45a2c72611f3c33c7341f921d44cdbc9d936ca9d1edd086622251dd",
+  "minimal-phase6b3d/accepted-table.template.json": "90976136177701559e709ab612f6857499bfd2aea372a43c6ca9e538cd2156d5",
+  "minimal-phase6b3d/compose.persistence.proposed.yaml": "60a41dd431bd1b986a9f432ffecdd039e80eae6aea630322dab163bee66a8c9a",
+  "compose.proposed.yaml": "08585e417a257c22f7a207c8440c82bc009edc48ab641b097ce733cde553915d",
+  "boot-admission-phase6b3k/admit.py": "649c5dcee6fff563bf7ee80d62d77d42e8c942e8a6a1205eeb4a2a570be2f917"
+}

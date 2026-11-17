@@ -1,0 +1,20 @@
+{
+  "commit": "2fa13a6707bdf0dae87e0c494bcd3ca282cdeb3e",
+  "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+  "files": {
+    "dispatcharr/urls.py": "98266b2fc6ce2e495dfc6840589691b1ab67015d49c3596c6ddb764ec593429f",
+    "core/serializers.py": "8f5c68238e2757f34fde5e0548ff5ca86a4e97fadae71ed694507e29c6db5688",
+    "core/api_views.py": "2600b850ae65f6e160951024a777e51ae6f05ab8573eae23b4109d941989fbb8",
+    "core/api_urls.py": "aa780f16f02f7bcffe5fdf26aa3f658a0e91190e84377540c75ec73b1dbce81e",
+    "apps/accounts/api_urls.py": "aa2ddbb0a87e5d68e89d674dd144cf753798115f1c89a6ade15eb4baa3ca8523",
+    "apps/api/urls.py": "ee72fb6d564ac86a5a9fcea794a8039bdbc2b4d3d5cf7035dd084500e3d039c6",
+    "apps/m3u/serializers.py": "4ef8f623a187fe411674b4ab41338dfd41c20f66cd6b8b1c5279109a33fe5821",
+    "apps/m3u/api_views.py": "1299f6d86af5bd86ca04087f3ca70120ee1b04686c182ea0682560f0b7165d63",
+    "apps/m3u/api_urls.py": "492bbd9c4c8127a55cde251c00bb565aa5c8ef2d6a26999b2e70059781cdc81a",
+    "apps/channels/signals.py": "06485b52efcc01864d67ff422dcff28f5937791e822e0061b883baf049a4b8cf",
+    "apps/channels/models.py": "f76cd4a71a2997b04ce836fc3191d56755c26b88fcdfb9caec85b3c67d119f04",
+    "apps/channels/api_views.py": "0d211a4287943b47999f642fdaaec1e368ad331943901e2237c60b09474c38fa",
+    "apps/channels/api_urls.py": "51ed630131a4bcc1c88188f181af33945948beb8a4363676b293d654fd9b1dc4",
+    "apps/channels/serializers.py": "c5f0e2e6ea45c3f8f9839fd178aa6bea4e0c781af931be41e13c1cd4d7bb9e53"
+  }
+}

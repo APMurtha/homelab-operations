@@ -1,0 +1,106 @@
+{
+	admin off
+	auto_https off
+	# This plain HTTP gateway uses HTTP/1 response framing; no h2c upgrade.
+	servers {
+		protocols h1
+	}
+}
+
+# Successful TS responses expose only fixed media metadata and a parsed length.
+(safe_mpegts_response) {
+	header {
+		Content-Type video/mp2t
+		Cache-Control no-store
+	}
+	copy_response_headers {
+		include Content-Length
+	}
+	copy_response
+}
+
+# Public host 9191 maps only to this 9192 listener; raw AIO 9191 is isolated.
+http://:9192 {
+	header {
+		# Prevent response trailers from becoming a second unfiltered header channel.
+		-Trailer
+		>Transfer-Encoding identity
+		>Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		>X-DNS-Prefetch-Control "off"
+		>Referrer-Policy "no-referrer"
+	}
+	route {
+		respond /healthz "ok" 200
+		# Reject every media query modifier, including token-based preview modes.
+		@stream {
+			path_regexp ts ^/proxy/ts/stream/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+			method GET HEAD
+			query ""
+		}
+		handle @stream {
+			reverse_proxy 127.0.0.1:9191 {
+				# copy_response finalizes the original response; filter that map too.
+				header_down -*
+				header_up -X-Real-IP
+				header_up X-Forwarded-For {http.request.remote.host}
+				header_up X-Forwarded-Host {http.request.hostport}
+				header_up X-Forwarded-Proto http
+				header_up X-Forwarded-Port 9191
+				header_up Accept-Encoding identity
+				flush_interval -1
+				transport http {
+					dial_timeout 5s
+					response_header_timeout 120s
+				}
+				# Live TS is identity encoded; never mislabel compressed bytes.
+				@identity_mpegts {
+					status 200
+					header Content-Type video/mp2t*
+					header Content-Encoding identity
+				}
+				handle_response @identity_mpegts {
+					import safe_mpegts_response
+				}
+				@encoded header Content-Encoding *
+				handle_response @encoded {
+					respond "Encoded IPTV response rejected." 502
+				}
+				@mpegts {
+					status 200
+					header Content-Type video/mp2t*
+				}
+				handle_response @mpegts {
+					import safe_mpegts_response
+				}
+				handle_response {
+					respond "IPTV stream rejected: expected non-redirecting MPEG-TS." 502
+				}
+			}
+		}
+		# All other stream formats/XC/VOD/catchup routes fail before reaching AIO.
+		@other_media path /proxy /proxy/* /streaming/* /live/* /movie/* /series/* /get.php /player_api.php /xmltv.php
+		respond @other_media "Only the reviewed MPEG-TS path is enabled." 403
+		@direct query direct=*
+		respond @direct "Direct-provider output is disabled." 403
+		# Admin/API/export access; no upstream redirect is ever handed downstream.
+		reverse_proxy 127.0.0.1:9191 {
+			# Separate allowlist for local application assets/API/authentication.
+			header_down -*
+			header_up -X-Real-IP
+			header_up X-Forwarded-For {http.request.remote.host}
+			header_up X-Forwarded-Host {http.request.hostport}
+			header_up X-Forwarded-Proto http
+			header_up X-Forwarded-Port 9191
+			@redirect status 301 302 303 307 308
+			handle_response @redirect {
+				respond "Upstream redirect blocked; use its canonical local path." 502
+			}
+			handle_response {
+				copy_response_headers {
+					include Content-Type Content-Length Content-Encoding Cache-Control Etag Last-Modified Vary Allow Set-Cookie
+				}
+				copy_response
+			}
+		}
+	}
+}
