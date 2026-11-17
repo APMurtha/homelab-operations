@@ -1,13 +1,14 @@
-# Dispatcharr permanent streaming deployment — staging failed; rollback verified
+# Dispatcharr permanent streaming deployment — relay startup failed; rollback verified
 
 2026-11-17 UTC (2026-11-16 US/Eastern). Andrew's Rivendell, 10.10.20.30.
-Approved candidate: `f7115a8339685ba3e5314d8e54a40f239c5e3723` on `docs/udm-pro-max-migration-prep`.
+Approved candidate for latest attempt: `776f9843228148fe3d1fd744089f97fb0c82601e` on `docs/udm-pro-max-migration-prep`.
+Original attempt: `f7115a8339685ba3e5314d8e54a40f239c5e3723`.
 
-**Latest status — 02:33 UTC: permanent deployment FAIL; scoped rollback PASS.** The approved candidate failed its real stopped-container mount contract before any candidate container started. The original three-service deployment was restored through the unchanged systemd/admission path and is healthy. No registration, new lifecycle drop-in, Jellyfin configuration change or broadcaster playback occurred.
+**Latest status — 03:11 UTC: corrected permanent deployment FAIL; scoped rollback PASS.** Approved corrected candidate `776f9843228148fe3d1fd744089f97fb0c82601e` passed staged-source, stopped-container and systemd verification. Its managed relay then refused startup. A read-only UID/GID 1000 probe confirms the unchanged root:root 0700 guard directory prevents that unprivileged relay from reading the readiness marker. The managed failure cleanup completed; registration never began. The original three-service deployment is restored and healthy, with the exact guard preserved.
 
-**NO-GO for deploying candidate `f7115a8` or proceeding to Jellyfin integration/playback.** Its verifier needs a reviewed correction for Docker's stopped-container tmpfs representation and a new real-metadata regression before another deployment is authorized.
+**NO-GO for permanent deployment, Jellyfin integration or playback.** Another candidate review must resolve guard-read compatibility without weakening the existing host guard, namespace, privileges or firewall. No candidate retry or unreviewed fix was attempted.
 
-Sections 1–11 retain the earlier preflight/prerequisite history. Section 12 records the resumed deployment, precise failure, authorized rollback and final state. The prerequisites remain corrected; the new blocker is in the candidate contract.
+Sections 1–12 retain prior preflight, prerequisite and original failed-attempt history. **Section 13 is the current corrected deployment/rollback result.** The Default Group and ACL corrections remain in place.
 
 **Historical deployment attempt — stopped before installation or disruption.** Two mandatory prerequisites fail: no existing Default Group and an application network ACL incompatible with the approved registrar. The original healthy three-container stack remains running. No stop/start authorization was consumed and no rollback was needed.
 
@@ -270,3 +271,152 @@ The staged approved source directory and private configuration remain **inactive
 **Deployment FAIL; authorized rollback PASS. NO-GO for Jellyfin integration or playback.** Before another deployment, prepare and review a corrected candidate that validates the exact tmpfs specification from `HostConfig.Tmpfs` in the stopped state, distinguishes running mount enumeration appropriately, and still rejects missing/extra/unsafe mounts. Add a regression fixture based on this real stopped metadata, then obtain authorization for the new candidate and another bounded deployment. Do not simply remove the tmpfs security requirement or retry `f7115a8` unchanged.
 
 Stop here with the original protected three-service stack healthy and running.
+
+
+## 13. Corrected candidate deployment — FAIL; original stack restored
+
+### Approval, preflight and staged-source reconciliation
+
+The owner authorized one controlled candidate attempt at `776f9843228148fe3d1fd744089f97fb0c82601e` and a conditional scoped rollback, then explicitly confirmed exclusive administration before the stop. Reviewed the corrected [verifier report](dispatcharr-permanent-streaming-verifier-fix.md), implementation report, prior failure history and candidate README.
+
+Fresh live preflight at **02:51:09–02:51:29 UTC** passed the original three healthy services, idle Redis/media processes, zero recordings/channels/streams, original accepted image/security/namespace contracts, all nine installed persistence/admission hashes and root:root 0644 modes, current admin authentication (level 10), exactly one **Default Group ID 2**, unique locked streamcopy/MPEG-TS **profile ID 1**, exact approved ACL and Jellyfin peer **172.20.0.2**. The canonical ACL digest remains `cede3b0a514ef30c4d77fbcd09c0e079d9369afc7dcd82dfe9771acaaec60a3e`. Original application/gateway returned HTTP 200. Original systemd 20 drop-in and nine-minute start timeout were unchanged; 30 was absent.
+
+The locally retained patched image remains `sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21`. No pull/build occurred. Rivendell rollback references under `/root/dispatcharr-minimal-recovery-20261116T051539Z` remain readable with recorded hashes. The **independent checkpoint is on Denethor**, at `/mnt/data/Backups/Rivendell/dispatcharr-checkpoints/20261116T043321Z`; all three archive hashes were reverified locally. An initial read mistakenly looked for that path inside Rivendell and found it absent; the documented independent copy was then verified at its actual Denethor location. No recovery archive was created, copied, restored or published.
+
+At **02:53:16–02:53:17 UTC**, the complete old staged tree was checked against `f7115a8`: exactly 41 files, no unreviewed additions or drift, expected ownership/modes. Only nine reviewed files were replaced or added to obtain the corrected **44-file** tree. All 42 manifest entries plus manifest/validation receipt match the approved correction commit byte-for-byte. Quiet Compose validation passed. Original base inputs remained untouched.
+
+Retained private relay/registrar configuration was verified against current schema fields, authorized source equality, current guard digest, 12-second deadlines, current owner credentials, approved ACL digest and exact Jellyfin peer. Both files retain UID/GID 1000, mode 0400. Runtime child/export directories had reviewed ownership and modes, empty contents and no symlinks. No credentials/private source values were rewritten or published. The export directory remains only a prepared empty directory; Jellyfin settings were not touched.
+
+After exclusive-administration confirmation, health/source/unrelated identity and Redis/media idle checks were repeated immediately before the sole stop at **03:05:16 UTC**. No active consumer was disrupted.
+
+### Controlled timeline and stopped-container acceptance
+
+| UTC | Result |
+|---|---|
+| 03:05:16–03:05:20 | One `systemctl stop dispatcharr-stack.service`; only original three dedicated containers stopped. |
+| 03:05:30–03:05:31 | Patched AIO, managed relay and gateway staged stopped using reviewed Compose flags: no pull/build/dependencies; VPN owner retained. |
+| 03:05:31 | **Corrected stopped contract PASS**: exact `HostConfig.Tmpfs`, six exact relay bind mounts, immutable image references, privileges/resources and shared namespace. Guard and corrected unrelated comparator pass. |
+| 03:05:47 | Reviewed 30 drop-in installed root:root 0644; native systemd verification, candidate/private input verification, daemon-reload and effective order pass. |
+| 03:06:08 | One candidate start submitted through systemd. |
+| 03:06:09–03:06:24 | Unchanged resource admission passes in **15.003 s**; all prestart commands exit 0. |
+| 03:06:24 | Managed lifecycle start begins after guard reapplication, runtime preparation and stopped contract. |
+| 03:06:30.862–03:06:31.299 | Relay starts, prints its generic refusal and exits 1; no OOM or engine error. |
+| 03:06:31.028 | Patched AIO starts briefly; gateway remains created/stopped. |
+| 03:06:31–03:06:32 | Lifecycle fails while waiting for first service group; existing scoped `ExecStopPost` completes successfully. All four dedicated containers stopped. |
+| 03:08:58–03:09:01 | Rollback preconditions verified; stopped relay removed without volume deletion; original AIO/gateway staged stopped, 30 removed, native original-unit verification and daemon-reload pass. |
+| 03:09:23 | One authorized rollback start submitted for the original stack. No candidate retry. |
+| 03:09:38 | Original admission passes in **15.002 s**. |
+| 03:09:39 / 03:09:45 / 03:10:09 | Original VPN / original-image AIO / original gateway start. |
+| 03:10:40 | Original unit active/exited, Result=success. Stopped-to-restored-active interval: **5 minutes 20 seconds**. |
+| 03:11:11 | Fresh supported API verification confirms prerequisites retained and no integration records. |
+| 03:11:22 | Final backend/security/unrelated-service rollback acceptance PASS. |
+
+Native unit/effective-order verification retained inputs → original admission helper → guard apply → runtime preparation → corrected stopped verification → lifecycle start → running verification. Base Type=oneshot, restart=no, original 540/240-second timeouts and admission thresholds were preserved. Candidate `ExecStartPost` running verification was **not reached**, and is not claimed as a pass.
+
+Admission samples:
+
+| Purpose / elapsed | Idle | Steal | Load1 | Streak |
+|---|---:|---:|---:|---:|
+| Candidate / 5.002 s | 97.784% | 0.000% | 0.51 | 1 |
+| Candidate / 10.003 s | 96.777% | 0.050% | 0.47 | 2 |
+| Candidate / 15.003 s | 86.737% | 0.101% | 0.43 | 3 |
+| Rollback / 5.001 s | 96.933% | 0.000% | 0.15 | 1 |
+| Rollback / 10.002 s | 96.472% | 0.000% | 0.14 | 2 |
+| Rollback / 15.002 s | 96.828% | 0.050% | 0.13 | 3 |
+
+### Relay startup failure and security incompatibility
+
+The corrected stopped tmpfs verification succeeded on actual Docker metadata; the earlier mount-enumeration defect did not recur. All candidate source and private-file checks, admission and prestart checks passed.
+
+The managed relay runs as **UID/GID 1000**, with all capabilities dropped. The unchanged accepted `/run/dispatcharr-guard` directory is **root:root 0700**, while its `ready` file is root:root 0644. The candidate bind-mounts that directory read-only at `/guard` and calls `Relay.check()` to read `/guard/ready` before publishing its endpoint. Directory mode 0700 denies traversal to UID 1000 regardless of the file’s 0644 mode. A bounded host-side read-only probe using UID/GID 1000 and no supplementary groups confirmed **PermissionError**; no container was launched for diagnosis.
+
+This is a confirmed blocking compatibility gap between the unprivileged candidate and the existing guard interface. The relay log deliberately reports only `Relay refused; private details withheld.` and provides no traceback; its exact caught exception is not recoverable from that message alone. The confirmed guard-read failure and source startup order explain a concrete refusal path without claiming an unrecorded traceback or excluding every possible earlier exception.
+
+No guard permission, ACL, policy, private configuration, privilege or timeout was relaxed. No running metadata acceptance, rolling-budget runtime acceptance, endpoint registration/export acceptance or four-service application acceptance is claimed. The reviewed rolling-budget/resource source and image identities remained unchanged, but the service did not become healthy.
+
+### Registration outcome and safe scoped rollback
+
+The first Compose wait failed before `backend.py` and `register.py` could be invoked by the lifecycle. `/docker/dispatcharr-iptv/data/permanent-streaming` remained absent: no ownership ledger, write-ahead API journal, commit marker or uncertain registration write. The gateway never started. No opaque endpoint was registered and no exports were generated. Candidate AIO logs showed no migration application/start marker or traceback; the subsequent restored DB verification confirmed the original 184-row migration fingerprint exactly.
+
+Rollback was limited to the approved procedure after verifying all dedicated components stopped, no control process remained, registration never began, original nine files were intact, the 30 drop-in matched its reviewed hash, exact guard was present, VPN owner retained, and unrelated comparator passed. Only the stopped new relay was removed, without `-v`. Only original-image AIO/gateway were recreated stopped against original base+minimal Compose inputs. Only the new 30 drop-in was removed. Native unit verification and daemon-reload restored the original lifecycle; one systemd start restored the original three-service stack through unchanged admission/guard checks.
+
+No Redis/DB reset, data/volume deletion, archive restore, image pull/build, direct protected-container start, candidate retry, Docker-wide restart, host/VM operation, firewall/VPN change, Jellyfin mutation or playback occurred.
+
+### Final verified protected state
+
+- Original VPN, original-image AIO and original gateway are healthy, restart=no and RestartCount 0; stack and guard units active/exited with Result=success.
+- PostgreSQL/migration checks and authenticated Redis PING pass. Both uWSGI workers have fresh Redis-backed heartbeats (ages **0.310 / 0.014 s**, TTL 30), with the same web-worker master. Default and DVR Celery respond. Migration inventory remains **184**, fingerprint `b00f51e91c5b882cd84d3b2579d074ca`.
+- Application and gateway HTTP **200/200**. No observed media processes, startup traceback, migration failure or recurring Redis-reference error. Provider audit remains one built-in account/profile, zero unexpected accounts/profiles and zero EPG sources.
+- Supported fresh API reads confirm group **2**, locked profile **1**, current admin access and exact ACL digest unchanged. Streams/channels/recordings remain **0/0/0**. No stale binding or duplicate record exists.
+- Exact nftables/ready-marker and original running-contract verification pass. tun0 default routing, OUTPUT DROP, embedded-DNS rejection, loopback resolver and disabled IPv6 pass. No new externally published port or Docker network remains.
+- The **corrected four-service diagnostic comparator** confirms all genuinely unrelated container IDs, images, HostConfig hashes, start times, running/health states, restart policies/counts, Docker process and network identities unchanged. Existing unrelated stopped/unhealthy workloads remain in their preflight states; no repair was attempted. Jellyfin remains healthy, peer **172.20.0.2**, Live TV configuration hash unchanged.
+- Original VPN owner identity and HostConfig hash retained. AIO/gateway identities changed because of scoped recreation; their original image pins, data and accepted three-service contract are restored. No claim of original AIO container-ID/HostConfig byte identity is made.
+
+Final running identities:
+
+| Service | Container ID | Image ID |
+|---|---|---|
+| rivendell-iptv-vpn | `1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e` | `sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209` |
+| dispatcharr | `3b5e61e63bd738548bfc222c7d61ded655ffb5d7de391cde636b1ecc54b9d18c` | `sha256:96bc548978c68e684677da7895692eeeefb7f0b2edfa38311dac2b702c61d236` |
+| rivendell-iptv-gateway | `6213d7ec435595be58b980935e639f5835225817cdb986c5d445d37005afebba` | `sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9` |
+
+### Exact verified installed candidate inventory
+
+The following inactive source files were verified both during reconciliation and final rollback acceptance. Paths are relative to `/docker/dispatcharr-iptv/permanent-streaming/`; they remain root:root 0644 under 0755 directories. Original nine persistence/admission hashes remain exactly as recorded in section 2. The immutable candidate image references remain those in the correction report; patched AIO and relay were staged from the same retained `14c837…cad21` image, while VPN/Caddy pins were unchanged.
+
+| Candidate file | SHA-256 |
+|---|---|
+| `.gitignore` | `6feaded4e28ea86e001a6751b4e3d960e8b7c31b9616ff9936b79297086e809b` |
+| `30-permanent-streaming.conf` | `3be80cb6197f1fa756aa9c7c477dc8064cb4fd0d6a6ec59ef5eb18bf7817cb70` |
+| `Caddyfile` | `8b7b661f80ab157957480b330d96861d3980370fd1830d0cb36df93b79a08ba6` |
+| `README.md` | `f3bbfb404331c95af9a7e5be9c3e1a75d24ea9c0c00caa689af84675fb42f779` |
+| `accepted-table.template.json` | `90976136177701559e709ab612f6857499bfd2aea372a43c6ca9e538cd2156d5` |
+| `api-source-pins.json` | `036dd097e03ef536f3f0e1de53f3707c5ab5177fc2244dc71dce91400f637cdc` |
+| `api.py` | `aabd860d76651e021ca5b61677c8c02b554f3ae5901f41072c9518434b1fca15` |
+| `backend.py` | `651c7f5952667ac0bda3e21e1e1edb73963aea16b38c9ceca8501182ae774dbf` |
+| `base-input-pins.json` | `83395e6599724e46dee03bdcd791bf7a178355229cf001b5aae98a124f19fe08` |
+| `bounded_server.py` | `ec8e615f721ee1b047b51a80537c39f1247b136503c5236ef5d975f4fc9c020d` |
+| `compose.yaml` | `7587c2badc7c06b2bac59408964216d00f366b17109a6417caa38ba64399e51c` |
+| `contracts.py` | `71da7561a97b279a058f1fe65477ab76864307cc4327ad487d061367ae9fc038` |
+| `diagnostic_inventory.py` | `2e83b5e7a11f247ed7d8e382c64f62375aa4086ce517629c052be8b08ff16126` |
+| `dns_worker.py` | `df7e483eaad95749fe5cc0ae97dd0d259c6e86b7896edca3cac9d62728870596` |
+| `exports.py` | `460291da7961b9463420cec14c19648f4e33ad21eef82af271d3d1d830bb9c44` |
+| `fetch_runtime.py` | `8b3595556c3061da17e5a018e07871238d786601e973625cde13f88ca91a3d27` |
+| `files.py` | `314e4c70f7daf02bd6d1ce8a5bb8cc60690365d4507c3f99915ae2c5cf79723a` |
+| `health.py` | `f4da54dece514ea24df5a6561ce52b883a1737213634b95bb1eab94a1b4ec6db` |
+| `hls_relay.py` | `5eb958dbcf1ef6d2b92fa47ba4fb737511042486601969b955f7940241fb4b36` |
+| `jellyfin.py` | `f328d3c5e26ca3465717b17376e6cc3a04f858595b08514e449064c68ade950f` |
+| `lifecycle.py` | `2e2c7664cf7ea9fc6d2d547f1b8248b3a6734f32a332c12fcf7f9af4e2e6a7ed` |
+| `manifest_telemetry.py` | `179a364baaf3a7fbde6c09082db0fc9df65639812a86e7139bc0c1ec32df5784` |
+| `rate_budget.py` | `86b11daec92b621d2bb4d9288da78ea909976f5483c5aab4417a29961b22bd56` |
+| `reference/Caddyfile.accepted` | `bf5e40d2ccba8799f4b38f15336399fea7068f676150c2f7b18a1e07dc081a98` |
+| `reference/trial_hls_relay.py` | `15c7ab3d87cbeb6e23419ce08536d6882d2721a3c9339b6bb24673387de6fb75` |
+| `refresh_manifest.py` | `438fe72028cec2703111a109b8217fc01e8c3b8757d380c9b0af5cbb6f2c0a8d` |
+| `register.py` | `20f0ed9ed1c44be718dbc2e1c8bb2147cde0d818152f984d2080d2cb3bc03652` |
+| `registration-config.schema.json` | `7edb2204f1be1380dd9c2168c2d6021da8882c69b2abf89b401aecdfa8ed413b` |
+| `relay-config.schema.json` | `2adf89698e2b9038e97a69279715d1a62dc1d7367d7ffcb2c926dc3a6e898d62` |
+| `relay_main.py` | `b273dd21d1ea8a89010a7304138046d7426c61a98d8aaeb0be3188cd38e69473` |
+| `telemetry.py` | `d5ab9d69bd66b364b0cdc2c0b61af225e75998cbc587bac2b61fdb16823c5ffa` |
+| `tests/fixtures/relay-stopped-18bdf54.json` | `cbd455cfa1797347362e0a96244886398ea3388e59a013cd7a315bf59cbd884c` |
+| `tests/run-offline.sh` | `369749fc567eb1545729a56d8a39ca11f33d92ebfb14dab336020cdd9efdd9b5` |
+| `tests/test_candidate.py` | `8142e68571d5549ce62c4e6d5cb20aeb42f7cb2c85122a951100591ad4117b28` |
+| `tests/test_contract.py` | `1a1fa266cce482175113ff8ce35fd9cccc92a4f2e56bc923c9522347dad35a9f` |
+| `tests/test_gateway_native.py` | `6d5b298927c27315f057182507098aac4af4b7d59cf8cb0d37a4a3d25e456dee` |
+| `tests/test_inventory.py` | `535c0427773fa268aa26a6ef5d35d7e02ecfeb1bff6fbaf10c5cbbd4ac2caf79` |
+| `tests/test_network.py` | `6079fe5c8a6c08b6c0bbb2eb6d21651ec84c8a410dc78b5f25c01ce884acd133` |
+| `tests/test_provenance.py` | `d70a03f532ba59b1047eb962b539accc3d78cecf942c8ddc371d5ddfd1ff337c` |
+| `tests/verify_units.py` | `54321e61b45dd632642ab60eb6070959e065fb7aed1c3cfc212777553f40086e` |
+| `verify.py` | `af6657dee883b297f281e0997e254886df2d5f28ec76955293c45b7e1d72ebb2` |
+| `verify_binding.py` | `cf9d079d720c952c7a2368a568d9d73595f12cd05889aac33775ef0cacc1c4f8` |
+| `manifest.json` | `3d5ae000603fc8d3bf7796deb996c39f863ab877f45160edd22ebf9a65648ae4` |
+| `validation-results.json` | `70bebbb697b3804c238cd45f0309ddd5a0ff518b3e2a3c3fa124afebc011f5a5` |
+
+### Retained evidence, blockers and decision
+
+Root-private intent/command, source hash, stopped-contract, installed-unit, failure-log/inspect, rollback-precondition, backend and final-verification receipts are retained under `/docker/dispatcharr-iptv/private/permanent-deployment-776f984-20261117/` (0700 directory, 0600 files). Supported API prerequisite/rollback receipts remain under the existing root-private prerequisite directory. Raw credentials, private broadcaster references, tokens, endpoint values, database contents and recovery archives are excluded from publication.
+
+The corrected 44-file candidate and private configuration remain **staged but inactive**. The 30 drop-in and relay container are absent, runtime directory was removed by normal systemd failure cleanup, registration state is absent and the export directory remains empty. No candidate source change was made during this deployment task.
+
+**Permanent deployment FAIL; documented rollback PASS. NO-GO for Jellyfin integration or playback.** A separately reviewed correction must make the unprivileged relay’s guard-read interface compatible with the accepted protection, with permission-faithful startup tests, before a new candidate or deployment can be authorized. Preserve the exact host guard and existing security restrictions; do not chmod the guard or grant capabilities merely to bypass this failure. A future attempt requires fresh preflight and reconciliation of the retained inactive candidate.
+
+Stop with the original protected three-service stack healthy and running. No further attempt is authorized by this result.
