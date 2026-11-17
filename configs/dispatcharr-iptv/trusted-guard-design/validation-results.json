@@ -1,0 +1,24 @@
+{
+  "mode": "isolated design feasibility only; not production implementation",
+  "new_design_tests": 28,
+  "preserved_baseline_tests": 171,
+  "total_tests": 199,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "native_existing_unit_fixture": "pass; no services executed",
+  "native_Caddy_synthetic_requests": 91,
+  "production_contact": false,
+  "protected_or_candidate_source_changes": false,
+  "model_boundaries": [
+    "kernel and owner verification are synthetic inputs",
+    "manager cleanup is explicitly modeled, not a live systemd action",
+    "crash before first withdrawal retains readiness until cleanup",
+    "total revocation failure requires process-stop compensation",
+    "unsafe privileged directory rename violates protocol and remains undetectable to old bind",
+    "check-to-use race is demonstrated; no continuous kernel/owner proof"
+  ],
+  "namespace_boundary": "fresh user/mount/network namespaces; private tmpfs/read-only directory bind; UID/GID 1000 with no supplementary groups or effective capabilities",
+  "crashes": "real SIGKILL of synthetic publisher at six explicit phases",
+  "new_daemons_or_network_services": 0
+}
