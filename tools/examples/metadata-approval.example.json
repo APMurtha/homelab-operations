@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "purpose": "IPTV_METADATA_ONLY",
+  "review_reference": "REPLACE_WITH_SEPARATELY_APPROVED_NETWORK_REVIEW",
+  "policy_review_sha256": "REPLACE_WITH_REVIEWED_POLICY_DIGEST",
+  "boot_id": "REPLACE_WITH_CURRENT_HOST_BOOT_UUID",
+  "netns": [0, 0],
+  "host_netns": [0, 0],
+  "vpn_interface": "tun0",
+  "expires_epoch": 0,
+  "endpoints": [
+    {"host": "provider.example.invalid", "path": "/player_api.php", "ipv4": ["REPLACE_WITH_REVIEWED_PUBLIC_IPV4"]},
+    {"host": "provider.example.invalid", "path": "/xmltv.php", "ipv4": ["REPLACE_WITH_REVIEWED_PUBLIC_IPV4"]}
+  ]
+}

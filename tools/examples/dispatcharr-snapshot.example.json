@@ -1,0 +1,6 @@
+{
+  "accounts": [{"id": 1, "name": "custom", "account_type": "M3U", "locked": true}],
+  "channels": [{"id": 3, "name": "DW English", "tvg_id": "dw-english-permanent", "hidden_from_output": true, "streams": [3]}],
+  "epg_sources": [],
+  "epgdata": []
+}

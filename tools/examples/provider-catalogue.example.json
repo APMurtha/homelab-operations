@@ -1,0 +1,11 @@
+{
+  "groups": [
+    {"category_id": "1", "category_name": "Fixture News"},
+    {"category_id": "2", "category_name": "Fixture Culture"}
+  ],
+  "channels": [
+    {"stream_id": 101, "category_id": "1", "name": "Fixture News", "epg_channel_id": "fixture.news", "container_extension": "ts"},
+    {"stream_id": 202, "category_id": "2", "name": "Fixture Culture", "epg_channel_id": "fixture.culture", "container_extension": "m3u8"}
+  ],
+  "epg_ids": ["fixture.news", "fixture.culture"]
+}

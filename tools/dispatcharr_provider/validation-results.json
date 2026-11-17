@@ -1,0 +1,38 @@
+{
+  "mode": "offline metadata onboarding CLI; no production/provider requests",
+  "new_tests": 65,
+  "preserved_Dispatcharr_tests": 278,
+  "total": 343,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "suites": {
+    "dispatcharr-provider-tests": [
+      65
+    ],
+    "dispatcharr-provider-existing-main": [
+      39,
+      26,
+      17,
+      7,
+      3,
+      12,
+      28,
+      50,
+      13,
+      15
+    ],
+    "dispatcharr-provider-existing-historical": [
+      26
+    ],
+    "dispatcharr-provider-existing-prior": [
+      14
+    ],
+    "dispatcharr-provider-existing-design": [
+      28
+    ]
+  },
+  "Caddy_fixture_requests": 91,
+  "security_boundary": "all Dispatcharr mutations except account-token authentication are refused; --apply writes local drafts only",
+  "production_changes": false
+}
