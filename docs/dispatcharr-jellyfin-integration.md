@@ -1,5 +1,7 @@
 # Dispatcharr → Jellyfin integration — partial success; playback not verified
 
+**Later verification:** the owner subsequently confirmed successful interactive picture/audio, fast startup and no buffering. Legacy Jellyfin xTeVe references were then removed after fresh checks; persistence was retained under the explicit ownership-inventory exception. See [final verification and retirement](dispatcharr-xteve-retirement.md). The dated API-client test and its limitations below remain historical evidence.
+
 2026-11-17 UTC. Rivendell `10.10.20.30`, Andrew's selected access. Protected running release `227122dcbe9ebc76be46b8a91231350d6c93bdb4`; prior deployment report `779b8388882c0e581ab7bdbc9b1228ca11983bc1`.
 
 **Integration PASS; bounded playback test FAIL; overall acceptance FAIL. NO-GO for xTeVe retirement.** DW English is configured and discovered in Jellyfin with its explicitly labeled placeholder guide. The one authorized live attempt stopped at the API client's capability-negotiation gate, before requesting/decoding client media. It was closed without retry. The permanent four-service stack remains healthy; working integration configuration is preserved. This result does not establish that Jellyfin's interactive web player would fail.
