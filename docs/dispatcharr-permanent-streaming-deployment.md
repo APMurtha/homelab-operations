@@ -1,13 +1,13 @@
-# Dispatcharr permanent streaming deployment — prerequisites resolved; deployment pending
+# Dispatcharr permanent streaming deployment — staging failed; rollback verified
 
 2026-11-17 UTC (2026-11-16 US/Eastern). Andrew's Rivendell, 10.10.20.30.
 Approved candidate: `f7115a8339685ba3e5314d8e54a40f239c5e3723` on `docs/udm-pro-max-migration-prep`.
 
-**Latest status — 02:15 UTC: prerequisite correction PASS.** Exactly one `Default Group` exists (ID **2**), the exact authorized network ACL is committed and verified, and the repeated non-disruptive deployment preflight passes. The existing three-container stack remains healthy and running. The approved candidate is unchanged and **not installed**. Deployment, Jellyfin modification and playback were not resumed or authorized by this prerequisite task.
+**Latest status — 02:33 UTC: permanent deployment FAIL; scoped rollback PASS.** The approved candidate failed its real stopped-container mount contract before any candidate container started. The original three-service deployment was restored through the unchanged systemd/admission path and is healthy. No registration, new lifecycle drop-in, Jellyfin configuration change or broadcaster playback occurred.
 
-**GO for a separately authorized permanent-deployment window**, subject to its normal fresh preflight and stage-specific checks. This is not permanent streaming, Jellyfin or playback acceptance.
+**NO-GO for deploying candidate `f7115a8` or proceeding to Jellyfin integration/playback.** Its verifier needs a reviewed correction for Docker's stopped-container tmpfs representation and a new real-metadata regression before another deployment is authorized.
 
-Sections 1–10 retain the earlier blocked deployment attempt as historical evidence; section 11 records the subsequent authorized prerequisite correction and current result.
+Sections 1–11 retain the earlier preflight/prerequisite history. Section 12 records the resumed deployment, precise failure, authorized rollback and final state. The prerequisites remain corrected; the new blocker is in the candidate contract.
 
 **Historical deployment attempt — stopped before installation or disruption.** Two mandatory prerequisites fail: no existing Default Group and an application network ACL incompatible with the approved registrar. The original healthy three-container stack remains running. No stop/start authorization was consumed and no rollback was needed.
 
@@ -184,3 +184,89 @@ There was **one group-creation attempt and one ACL-patch attempt**, both with kn
 This task did **not** install candidate files or the 30 drop-in, prepare the four-service runtime, start a relay, register a channel/stream, generate exports, restart/recreate any container, run daemon-reload, invoke the admission gate or modify Docker/firewall/VPN policies. No stop/start cycle was used. No Jellyfin modification or broadcaster playback occurred. The original protected three-container stack remains running and healthy.
 
 **Stop after this correction and verification. Do not automatically resume deployment.**
+
+## 12. Resumed deployment — staging FAIL, rollback PASS
+
+### Fresh preflight and authorized staging
+
+The resumed deployment retained scope: only the protected Dispatcharr project and initial backend acceptance; no Jellyfin configuration or live playback. Fresh checks at **02:20:43–02:20:46 UTC** passed: original three containers healthy, idle Redis/media state, zero recordings/channels/streams, exact group **2**, admin level 10, profile **1**, exact approved ACL/digest, Jellyfin peer **172.20.0.2**, all nine installed persistence/admission hashes, current guard/namespace protections, retained patched image, and accessible recovery references. All candidate source bytes still match approved commit `f7115a8339685ba3e5314d8e54a40f239c5e3723`.
+
+At **02:22:58 UTC**, exactly **41** approved source/manifest/validation files were staged under `/docker/dispatcharr-iptv/permanent-streaming/`, root:root directories 0755/files 0644. Private relay/registration JSON was prepared with current authorized values, UID/GID 1000 and mode 0400 beneath the root-private directory. No secret values are included here. Dedicated runtime and empty export directories were prepared with reviewed ownership; the quiet Compose config check passed. No running container changed during source staging.
+
+### Timeline
+
+| UTC | Action/result |
+|---|---|
+| 02:23:56 | Issued `systemctl stop dispatcharr-stack.service` once. |
+| 02:24:01 | Original three containers stopped; VPN-owner identity, guard, Docker/networks and unrelated services retained. |
+| 02:25:30 | Created only patched AIO, relay and gateway **stopped**, with no build/pull/dependency recreation. |
+| 02:25:31 | Approved stopped-contract verification failed: `contracts.Refusal: unexpected_relay_mount`. |
+| 02:28:06–02:28:08 | After read-only diagnosis, performed authorized rollback staging: removed only the stopped new relay, recreated original-image AIO/gateway stopped from original base+minimal files. Original prestart passes. |
+| 02:29:12 | Submitted the single managed start, used for restoring the original deployment. No candidate startup retry. |
+| 02:29:27 | Original admission helper exits successfully after 15.002 seconds; guard/prestart pass; original VPN starts. |
+| 02:29:33 | Original-image Dispatcharr starts. |
+| 02:29:56 | Original gateway starts after application health. |
+| 02:30:27 | Original systemd unit active/exited, Result=success. |
+| 02:31:52 | Fresh API confirms group/ACL/profile retained and zero streams/channels/recordings. |
+| 02:33:23 | Final original-stack, protection and unrelated-identity verification PASS. |
+
+The observed stopped-to-active interval was approximately **6 minutes 26 seconds**. There were no active consumers at preflight.
+
+### Precise candidate failure
+
+The relay's stopped Docker metadata correctly contains:
+
+```json
+{"HostConfig.Tmpfs":{"/tmp":"rw,nosuid,nodev,noexec,size=16m,uid=1000,gid=1000,mode=0700"}}
+```
+
+At this stopped lifecycle stage, Docker's `Mounts` list contains the six bind targets `/exports`, `/guard`, `/runtime`, `/etc/resolv.conf`, `/opt/permanent` and `/run/credentials/relay.json`. It does **not** yet enumerate `/tmp` there. The approved `contracts.py` builds its allowed set with those targets **plus `/tmp`**, then demands exact equality with the `Mounts` targets for both stopped and running checks. Therefore it rejects the correctly configured stopped tmpfs representation before startup.
+
+This is a candidate validation defect, not a missing tmpfs configuration or a reason to weaken its security requirements. The offline four-service fixture modeled a `/tmp` mount as already present; it did not reproduce this actual stopped Docker representation. The implementation missed that distinction. The actual staging check caught the defect before a candidate process could run.
+
+No candidate verifier was edited or bypassed. No candidate container started; their initial StartedAt fields confirmed this. The registrar never ran, `/data/permanent-streaming` was never created, and there was no uncertain channel/stream API outcome. The reviewed **30** drop-in was **not installed**; native verification of a newly installed unit and daemon-reload were not reached. The original **20** drop-in and base unit remained unchanged throughout.
+
+A surrounding diagnostic comparison also initially counted the newly created dedicated relay as an unrelated container because it reused the three-service exclusion list. A subsequent **read-only** comparison excluding all four intended dedicated names confirmed every genuinely unrelated container and Docker/network identity unchanged. This bookkeeping issue did not alter the approved verifier or the mount-failure result.
+
+### Safe rollback and resource admission
+
+Rollback preconditions were verified: all dedicated containers stopped, candidate AIO/relay/gateway never started, no registration state or uncertain API write, original unit/drop-in/base inputs intact, data untouched and exact guard present. Only the stopped new relay was removed, **without a volume-removal flag**. Original AIO/gateway were recreated stopped against unchanged original base+minimal Compose files; the VPN-owner container was preserved.
+
+The only start request in this resumed task restored the original three-service deployment through systemd. The unchanged resource gate admitted:
+
+| Helper elapsed | Idle | Steal | Load1 | Streak |
+|---:|---:|---:|---:|---:|
+| 5.001 s | 97.583% | 0.000% | 0.11 | 1 |
+| 10.001 s | 98.140% | 0.050% | 0.10 | 2 |
+| 15.002 s | 96.581% | 0.000% | 0.10 | 3 |
+
+Native execution metadata confirms successful input verification, admission exit 0, original accepted guard reapplication and original prestart exit 0. These are **rollback admission results**, not successful admission of the four-service candidate. No threshold/timeout adjustment, manual protected-container start or repeated start was used.
+
+### Final acceptance of restored state
+
+- Original VPN, original-image Dispatcharr and original gateway healthy, restart=no, RestartCount 0. Stack and guard units active/exited, successful.
+- All nine installed persistence/admission hashes remain exactly as listed in section 2; original accepted guard and running-contract checks pass.
+- PostgreSQL/authenticated Redis pass. Both uWSGI workers have fresh Redis-backed heartbeats (0.778/0.922 seconds, TTL 29 each); default and DVR Celery respond. Migration check passes; 184-row fingerprint remains unchanged. No inspected startup traceback, migration failure or recurring Redis-reference exception.
+- Application and gateway HTTP **200**. Group **2**, profile **1** and ACL digest `cede3b0a514ef30c4d77fbcd09c0e079d9369afc7dcd82dfe9771acaaec60a3e` remain verified. Streams/channels/recordings remain **zero**.
+- Dedicated tun0 default route, OUTPUT DROP, embedded-DNS rejection, nameserver 127.0.0.1 and disabled IPv6 pass. No new published port/network or firewall/VPN policy change occurred.
+- All unrelated IDs/images/HostConfig fingerprints/start times/health/restart counts and Docker/network identities match preflight. Jellyfin's Live TV file hash remains unchanged; no Jellyfin action or playback occurred.
+
+Final running identities:
+
+| Service | Container ID | Image |
+|---|---|---|
+| VPN owner | `1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e` | `sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209` |
+| Dispatcharr | `0c40d2a193994cb2b66a176fd51167562b7c75d7231ee56c7882d0872ccbd2bd` | `sha256:96bc548978c68e684677da7895692eeeefb7f0b2edfa38311dac2b702c61d236` |
+| Gateway | `035022b00d4e669760f8716287e9c90303a8ed3731e2262642f39d54764b3aeb` | `sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9` |
+
+AIO/gateway IDs and Docker HostConfig fingerprints changed because they were recreated from the original accepted Compose inputs during rollback; byte-identical old container configuration is not claimed. Their original image pins, data and required three-service security contract are restored. The original VPN ID and HostConfig fingerprint are retained.
+
+### Retained artifacts and current decision
+
+Root-private deployment intent, command, stopped-contract, rollback and final-verification receipts are retained under `/docker/dispatcharr-iptv/private/permanent-deployment-20261117/`. Raw logs/configuration, credentials, private source references and recovery data are excluded from Git/chat publication.
+
+The staged approved source directory and private configuration remain **inactive** for diagnosis, with restrictive permissions. The new drop-in is absent, no relay container or registration state remains, and the prepared export directory is empty. Those files are not evidence of an installed/running permanent integration. The patched image remains locally retained; it was used only for stopped staging, never for a running producer. No volume/data deletion, Redis/DB reset, image pull/build, host/VM operation or Docker-wide restart occurred.
+
+**Deployment FAIL; authorized rollback PASS. NO-GO for Jellyfin integration or playback.** Before another deployment, prepare and review a corrected candidate that validates the exact tmpfs specification from `HostConfig.Tmpfs` in the stopped state, distinguishes running mount enumeration appropriately, and still rejects missing/extra/unsafe mounts. Add a regression fixture based on this real stopped metadata, then obtain authorization for the new candidate and another bounded deployment. Do not simply remove the tmpfs security requirement or retry `f7115a8` unchanged.
+
+Stop here with the original protected three-service stack healthy and running.
