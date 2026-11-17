@@ -7,6 +7,7 @@ import urllib.request
 
 class Rejected(RuntimeError): pass
 class Uncertain(RuntimeError): pass
+class NotFound(Rejected): pass
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -24,6 +25,8 @@ class API:
 
     def request(self, method, path, body=None):
         allowed = re.fullmatch(r'/api/(?:accounts/token/|core/(?:streamprofiles|settings)/(?:[0-9]+/)?|channels/(?:streams|channels|groups)/(?:[0-9]+/)?)(?:\?page=[0-9]+)?', path)
+        if not allowed and re.fullmatch(r'/api/channels/channels/\?visibility_filter=all&page=[0-9]+', path):
+            allowed = True
         if not allowed or method not in {'GET', 'POST', 'PATCH', 'DELETE'}:
             raise Rejected('API_scope_refused')
         if method != 'GET' and path != '/api/accounts/token/' and not re.fullmatch(r'/api/channels/(streams|channels)/(?:[0-9]+/)?', path):
@@ -34,10 +37,15 @@ class API:
         request = urllib.request.Request('http://127.0.0.1:9191' + path, data=data, headers=headers, method=method)
         try:
             with self.opener.open(request, timeout=8) as response:
+                if method == 'DELETE' and response.status != 204:
+                    raise Uncertain('delete_response_not_204')
                 raw = response.read(2097153)
                 if len(raw) > 2097152: raise Uncertain('API_response_limit')
                 return json.loads(raw) if raw else None
         except urllib.error.HTTPError as exc:
+            exc.close()
+            if exc.code == 404 and method == 'GET' and re.fullmatch(r'/api/channels/(?:channels|streams)/[0-9]+/', path):
+                raise NotFound('owned_detail_not_found') from None
             if 400 <= exc.code < 500: raise Rejected('API_rejected') from None
             raise Uncertain('API_outcome_uncertain') from None
         except (urllib.error.URLError, TimeoutError, OSError, ValueError):
@@ -46,7 +54,8 @@ class API:
     def rows(self, collection):
         rows = []
         for page in range(1, 65):
-            result = self.request('GET', collection + '?page=' + str(page))
+            query = '?visibility_filter=all&page=' if collection == '/api/channels/channels/' else '?page='
+            result = self.request('GET', collection + query + str(page))
             if isinstance(result, list):
                 if len(result)>10000: raise Rejected('inventory_limit')
                 return result

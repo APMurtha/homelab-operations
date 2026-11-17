@@ -1,0 +1,59 @@
+{
+  "provenance": "c611253 section 14: actual failed running-contract container inspect, captured after automatic cleanup at 2026-11-17T04:55:28Z; captured State.Running=false. Tests exercise these captured mount fields under synthetic stopped and running states; no pre-cleanup full running inspect was retained.",
+  "capture_running": false,
+  "HostConfig": {
+    "Tmpfs": {
+      "/tmp": "rw,nosuid,nodev,noexec,size=16m,uid=1000,gid=1000,mode=0700"
+    }
+  },
+  "Mounts": [
+    {
+      "Destination": "/exports",
+      "Source": "/docker/jellyfin/config/iptv/permanent-dw",
+      "Type": "bind",
+      "RW": true,
+      "Mode": "",
+      "Propagation": "rprivate"
+    },
+    {
+      "Destination": "/guard-status",
+      "Source": "/run/dispatcharr-guard-status",
+      "Type": "bind",
+      "RW": false,
+      "Mode": "",
+      "Propagation": "rprivate"
+    },
+    {
+      "Destination": "/runtime",
+      "Source": "/run/dispatcharr-permanent/relay",
+      "Type": "bind",
+      "RW": true,
+      "Mode": "",
+      "Propagation": "rprivate"
+    },
+    {
+      "Destination": "/etc/resolv.conf",
+      "Source": "/docker/dispatcharr-iptv/resolv.vpn.conf",
+      "Type": "bind",
+      "RW": false,
+      "Mode": "",
+      "Propagation": "rprivate"
+    },
+    {
+      "Destination": "/opt/permanent",
+      "Source": "/docker/dispatcharr-iptv/permanent-streaming",
+      "Type": "bind",
+      "RW": false,
+      "Mode": "",
+      "Propagation": "rprivate"
+    },
+    {
+      "Destination": "/run/credentials/relay.json",
+      "Source": "/docker/dispatcharr-iptv/private/permanent-relay.json",
+      "Type": "bind",
+      "RW": false,
+      "Mode": "",
+      "Propagation": "rprivate"
+    }
+  ]
+}

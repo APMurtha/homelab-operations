@@ -3,6 +3,7 @@
 set -eu
 candidate=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 python3 -B -m unittest discover -s "$candidate/tests" -p test_candidate.py
+python3 -B -m unittest discover -s "$candidate/tests" -p test_rollback.py
 python3 -B -m unittest discover -s "$candidate/tests" -p test_contract.py
 python3 -B -m unittest discover -s "$candidate/tests" -p test_inventory.py
 python3 -B -m unittest discover -s "$candidate/tests" -p test_provenance.py

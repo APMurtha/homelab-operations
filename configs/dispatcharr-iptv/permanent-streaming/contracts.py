@@ -123,19 +123,14 @@ def topology(state, require_running=False):
         if actual.get(target, {}).get('Source') != source or actual[target].get('Type') != 'bind' or actual[target].get('RW') is not True:
             raise Refusal('relay_runtime_mount_changed')
     binds = set(required_mounts['relay']) | set(expected_mounts)
-    # Newly created stopped containers omit tmpfs from Mounts. HostConfig.Tmpfs
-    # remains authoritative for its exact options in every lifecycle state.
-    # Running containers must additionally expose the live tmpfs mount. A stopped
-    # container may retain that entry after it has previously run.
+    # HostConfig.Tmpfs is authoritative in both states. Docker may omit /tmp
+    # from Mounts even while running; validate it strictly whenever represented.
     if set(actual) - {'/tmp'} != binds:
         raise Refusal('unexpected_relay_mount')
     if any(actual[target].get('Propagation', 'rprivate') != 'rprivate' for target in binds):
         raise Refusal('unsafe_relay_bind_propagation')
     tmp = actual.get('/tmp')
-    if tmp is None:
-        if r['State']['Running']:
-            raise Refusal('running_relay_tmpfs_missing')
-    elif (tmp.get('Type') != 'tmpfs' or tmp.get('RW') is not True
+    if tmp is not None and (tmp.get('Type') != 'tmpfs' or tmp.get('RW') is not True
           or tmp.get('Source') not in ('', None)
           or tmp.get('Mode', '') != '' or tmp.get('Propagation', '') != ''):
         raise Refusal('unsafe_relay_tmpfs_mount')

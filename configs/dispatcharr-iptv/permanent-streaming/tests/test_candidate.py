@@ -18,7 +18,7 @@ HERE=Path(__file__).resolve().parents[1];sys.path.insert(0,str(HERE))
 import hls_relay as relay
 import health
 import register as reg
-from api import Rejected, Uncertain, API
+from api import Rejected, Uncertain, API, NotFound
 from files import read_json, write_json
 from rate_budget import RollingBudget
 from exports import documents, publish
@@ -135,7 +135,9 @@ class FakeAPI:
     def request(self,method,path,body=None):
         collection=next(k for k in self.tables if path.startswith(k));suffix=path[len(collection):]
         row=next((r for r in self.tables[collection] if str(r['id'])+'/'==suffix),None)
-        if method=='GET':return copy.deepcopy(row)
+        if method=='GET':
+            if row is None:raise NotFound('fixture_404')
+            return copy.deepcopy(row)
         if self.fail==(method,collection):raise Rejected('fixture')
         self.writes.append((method,path,copy.deepcopy(body)))
         if method=='POST':

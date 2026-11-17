@@ -45,6 +45,14 @@ class Contracts(unittest.TestCase):
         r['HostConfig']['Tmpfs']=fixture['HostConfig']['Tmpfs']
         self.assertNotIn('/tmp', [m['Destination'] for m in r['Mounts']])
         verify.workload(s)
+    def test_actual_failed_running_inspect_projection_passes_both_states(self):
+        fixture=json.loads((HERE/'tests/fixtures/relay-inspect-c611253.json').read_text())
+        self.assertNotIn('/tmp',[m['Destination'] for m in fixture['Mounts']])
+        for running in (False,True):
+            s=state(running);r=s['containers']['relay']
+            r['Mounts']=copy.deepcopy(fixture['Mounts']);r['HostConfig']['Tmpfs']=fixture['HostConfig']['Tmpfs']
+            verify.workload(s,running)
+
     def test_stopped_container_may_retain_valid_tmpfs_entry(self):
         s=state(False);s['containers']['relay']['Mounts'].append({'Destination':'/tmp','Type':'tmpfs','Source':'','Mode':'','Propagation':'','RW':True})
         verify.workload(s)
@@ -61,9 +69,9 @@ class Contracts(unittest.TestCase):
                     with self.assertRaises(contracts.Refusal):verify.workload(s,running)
             s=state(running);del s['containers']['relay']['HostConfig']['Tmpfs']
             with self.assertRaises(contracts.Refusal):verify.workload(s,running)
-    def test_running_tmpfs_mount_required_and_unsafe_representations_refused(self):
+    def test_running_tmpfs_mount_optional_but_unsafe_representations_refused(self):
         s=state();r=s['containers']['relay'];r['Mounts']=[m for m in r['Mounts'] if m['Destination']!='/tmp']
-        with self.assertRaises(contracts.Refusal):verify.workload(s)
+        verify.workload(s,True)
         for running in (False,True):
             for changes in ({'Type':'bind','Source':'/tmp'},{'Type':'volume'}, {'RW':False},
                             {'Source':'/host'}, {'Mode':'exec'}, {'Propagation':'shared'}):
@@ -76,7 +84,9 @@ class Contracts(unittest.TestCase):
             original=state(running)['containers']['relay']['Mounts']
             for mount in original:
                 s=state(running);s['containers']['relay']['Mounts'].remove(mount)
-                with self.subTest(missing=mount['Destination'],running=running),self.assertRaises(contracts.Refusal):verify.workload(s,running)
+                if mount['Destination']=='/tmp':verify.workload(s,running)
+                else:
+                    with self.subTest(missing=mount['Destination'],running=running),self.assertRaises(contracts.Refusal):verify.workload(s,running)
                 s=state(running);s['containers']['relay']['Mounts'].append(copy.deepcopy(mount))
                 with self.subTest(duplicate=mount['Destination'],running=running),self.assertRaises(contracts.Refusal):verify.workload(s,running)
             for mount in ({'Destination':'/host','Type':'bind','Source':'/','RW':False},

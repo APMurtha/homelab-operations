@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 import shlex
 import uuid
-from api import API, Rejected, Uncertain
+from api import API, Rejected, Uncertain, NotFound
 from files import private_json, read_json, write_json, private_directory
 from health import current
 
@@ -23,6 +23,28 @@ CNAME = 'DW English'
 
 def matches(row, values):
     return all(row.get(k) == v for k, v in values.items())
+
+
+def owned_detail(api, collection, fields):
+    """Only authenticated detail GET 404 means absence; list omission never does."""
+    try:
+        row = api.request('GET', collection + str(identifier(fields)) + '/')
+    except NotFound:
+        return None
+    if not isinstance(row, dict) or identifier(row) != fields['id']:
+        raise Rejected('owned_detail_invalid')
+    return row
+
+
+def unshared(api, stream_id, except_channel=None):
+    # API.rows requests visibility_filter=all on the pinned admin channel API.
+    for channel in api.rows(CHANNELS):
+        identifier(channel)
+        refs = channel.get('streams')
+        if not isinstance(refs, list) or any(type(x) is not int for x in refs):
+            raise Rejected('channel_reference_inventory_invalid')
+        if stream_id in refs and channel['id'] != except_channel:
+            raise Rejected('owned_stream_shared')
 
 
 def identifier(row):
@@ -96,14 +118,18 @@ class Transaction:
         for op in reversed(self.ops):
             collection = op['collection']
             if collection not in [STREAMS, CHANNELS]: raise Rejected('journal_scope_invalid')
-            candidates = [r for r in self.api.rows(collection)
-                          if (r.get('id') == op['id'] if op['id'] else
-                              r.get('name') == op['after']['name'] and r.get('tvg_id') == TVG)]
+            if op['id']:
+                row = owned_detail(self.api, collection, {'id': op['id']})
+                candidates = [row] if row is not None else []
+            else:
+                candidates = [r for r in self.api.rows(collection)
+                              if r.get('name') == op['after']['name'] and r.get('tvg_id') == TVG]
             if not candidates:
                 if op['before']: raise Rejected('rollback_record_missing')
                 continue
             if len(candidates) != 1: raise Rejected('rollback_ambiguous')
             row = candidates[0]
+            if op.get('rollback_delete_pending'): raise Uncertain('unresolved_delete_requires_operator_reconciliation')
             if op['before'] and matches(row, {k: v for k, v in op['before'].items() if k != 'id'}):
                 continue  # previous interrupted rollback already restored this row
             if not matches(row, op['after']): raise Rejected('rollback_conflict')
@@ -114,10 +140,10 @@ class Transaction:
                 if not matches(self.api.request('GET', path), body): raise Rejected('rollback_not_verified')
             else:
                 # A created stream may not be deleted if another channel adopted it.
-                if collection == STREAMS and any(row['id'] in c.get('streams', []) for c in self.api.rows(CHANNELS)):
-                    raise Rejected('stream_adopted_elsewhere')
+                if collection == STREAMS: unshared(self.api, row['id'])
+                op['id'] = identifier(row); op['rollback_delete_pending'] = True; self.save()
                 self.api.request('DELETE', path)
-                if any(r.get('id') == row['id'] for r in self.api.rows(collection)):
+                if owned_detail(self.api, collection, {'id': row['id']}) is not None:
                     raise Rejected('rollback_not_verified')
         self.ops = []; self.path.unlink(missing_ok=True)
 
@@ -150,13 +176,12 @@ def reconcile(api, runtime, state, config):
     streams, channels = api.rows(STREAMS), api.rows(CHANNELS)
     if owned:
         found = []
-        for collection, saved, rows in [(STREAMS, owned['stream'], streams), (CHANNELS, owned['channel'], channels)]:
-            candidates = [r for r in rows if r.get('id') == saved['id']]
-            if len(candidates) != 1 or not matches(candidates[0], saved): raise Rejected('owned_record_conflict')
-            found.append(candidates[0])
+        for collection, saved in [(STREAMS, owned['stream']), (CHANNELS, owned['channel'])]:
+            row = owned_detail(api, collection, saved)
+            if row is None or not matches(row, saved): raise Rejected('owned_record_conflict')
+            found.append(row)
         stream, channel = found
-        if any(stream['id'] in c.get('streams', []) and c['id'] != channel['id'] for c in channels):
-            raise Rejected('owned_stream_shared')
+        unshared(api, stream['id'], channel['id'])
     else:
         if any(r.get('tvg_id') == TVG or r.get('name') == SNAME for r in streams) or any(
             r.get('tvg_id') == TVG or r.get('name') == CNAME or r.get('channel_number') == 9001 for r in channels):
@@ -195,26 +220,80 @@ def reconcile(api, runtime, state, config):
 
 
 def rollback_owned(api, runtime, state):
-    """Explicit future rollback only, after gateway/relay stop and playback clearance."""
-    state=Path(state); ledger=state/'owned.json'; receipt=state/'rollback-owned.json'
+    """Explicit operator action, under exclusive administration and idle clearance.
+
+    Write-ahead DELETE intents survive crashes. A missing detail reconciles an
+    interrupted deletion; a still-present row after an unresolved intent blocks
+    any repeat DELETE. There is no server CAS: external concurrency remains a
+    documented check-to-use limitation.
+    """
+    state = Path(state); ledger = state/'owned.json'; receipt = state/'rollback-owned.json'
     if (state/'journal.json').exists() or (state/'commit.json').exists():
         raise Rejected('reconcile_pending_registration_first')
     if not ledger.exists(): return
-    owned=read_json(ledger)
-    if receipt.exists() and read_json(receipt)['owned']!=owned:raise Rejected('rollback_ledger_conflict')
-    write_json(receipt,{'owned':owned,'state':'intent'})
-    # Refuse deletion if another channel has adopted this stream.
-    if any(owned['stream']['id'] in c.get('streams',[]) and c['id']!=owned['channel']['id'] for c in api.rows(CHANNELS)):
-        raise Rejected('owned_stream_shared')
-    for collection,fields in [(CHANNELS,owned['channel']),(STREAMS,owned['stream'])]:
-        rows=[r for r in api.rows(collection) if r.get('id')==fields['id']]
-        if not rows: continue
-        if len(rows)!=1 or not matches(rows[0],fields):raise Rejected('rollback_record_conflict')
-        api.request('DELETE',collection+str(fields['id'])+'/')
-        if any(r.get('id')==fields['id'] for r in api.rows(collection)):raise Rejected('rollback_not_verified')
-    ledger.unlink();(Path(runtime)/'binding.json').unlink(missing_ok=True)
+    owned = read_json(ledger)
+    stream_fields = {'id','is_custom','m3u_account','name','url','tvg_id','stream_profile_id',
+                     'logo_url','is_adult','is_catchup','is_radio'}
+    channel_fields = {'id','uuid','name','channel_number','tvg_id','streams','stream_profile_id',
+                      'channel_group_id','hidden_from_output','is_adult','is_catchup','is_radio'}
+    if (set(owned) != {'channel','stream'} or set(owned['stream']) != stream_fields
+            or set(owned['channel']) != channel_fields):
+        raise Rejected('owned_ledger_schema_invalid')
+    stream, channel = owned['stream'], owned['channel']
+    if (stream['name'] != SNAME or channel['name'] != CNAME
+            or stream['tvg_id'] != TVG or channel['tvg_id'] != TVG
+            or stream['is_custom'] is not True or channel['hidden_from_output'] is not True
+            or channel['channel_number'] != 9001 or channel['streams'] != [identifier(stream)]
+            or channel['stream_profile_id'] != stream['stream_profile_id']):
+        raise Rejected('owned_ledger_scope_invalid')
+    identifier(channel)
+    progress = {'owned': owned, 'state': 'intent', 'deletes': {}}
+    if receipt.exists():
+        progress = read_json(receipt)
+        if progress.get('owned') != owned: raise Rejected('rollback_ledger_conflict')
+        if set(progress) != {'owned', 'state', 'deletes'} or progress['state'] not in ('intent', 'complete'):
+            raise Rejected('rollback_receipt_review_required')
+        if not isinstance(progress['deletes'], dict) or set(progress['deletes']) - {'channel', 'stream'}:
+            raise Rejected('rollback_receipt_invalid')
+        if any(v not in ('pending', 'absent') for v in progress['deletes'].values()):
+            raise Rejected('rollback_receipt_invalid')
+        if ('stream' in progress['deletes'] and progress['deletes'].get('channel') != 'absent'
+                or progress['state'] == 'complete' and progress['deletes'] != {'channel':'absent','stream':'absent'}):
+            raise Rejected('rollback_receipt_order_invalid')
+    # Validate both records before *any* destructive change.
+    rows = {}
+    for key, collection in [('channel', CHANNELS), ('stream', STREAMS)]:
+        row = owned_detail(api, collection, owned[key]); rows[key] = row
+        if row is not None and not matches(row, owned[key]):
+            raise Rejected('rollback_record_conflict')
+        if row is not None and key in progress['deletes']:
+            raise Uncertain('unresolved_delete_requires_operator_reconciliation')
+    if rows['channel'] is not None and rows['stream'] is None:
+        raise Rejected('owned_channel_references_missing_stream')
+    unshared(api, owned['stream']['id'], owned['channel']['id'])
+    write_json(receipt, progress)
+    for key, collection in [('channel', CHANNELS), ('stream', STREAMS)]:
+        fields = owned[key]
+        if key == 'stream':
+            if owned_detail(api, CHANNELS, owned['channel']) is not None:
+                raise Rejected('channel_deletion_not_verified')
+            unshared(api, fields['id'])
+        row = owned_detail(api, collection, fields)
+        if row is not None:
+            if not matches(row, fields): raise Rejected('rollback_record_conflict')
+            progress['deletes'][key] = 'pending'; write_json(receipt, progress)
+            # No retry, including DELETE 404 or a transport error. Keep intent.
+            api.request('DELETE', collection + str(fields['id']) + '/')
+            if owned_detail(api, collection, fields) is not None:
+                raise Uncertain('rollback_deletion_not_verified')
+        progress['deletes'][key] = 'absent'; write_json(receipt, progress)
+    # A final authoritative absence check precedes retiring ownership evidence.
+    for key, collection in [('channel', CHANNELS), ('stream', STREAMS)]:
+        if owned_detail(api, collection, owned[key]) is not None:
+            raise Rejected('rollback_record_reappeared')
+    progress['state'] = 'complete'; write_json(receipt, progress)
+    ledger.unlink(); (Path(runtime)/'binding.json').unlink(missing_ok=True)
     (Path(runtime)/'export-state.json').unlink(missing_ok=True)
-    write_json(receipt,{'owned':owned,'state':'complete'})
 
 
 def main():

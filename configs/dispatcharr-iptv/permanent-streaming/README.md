@@ -70,6 +70,32 @@ journal and conditionally reverses matching effects; conflicts refuse. This is
 not a startup retry. `--rollback-owned` is a separate destructive, scoped removal
 for installation rollback. Its receipt blocks accidental recreation afterward.
 
+### Hidden-channel rollback correction (offline candidate)
+
+Known owned IDs are resolved through authenticated detail GET, including hidden
+channels. Channel inventory uses the pinned admin API's
+`visibility_filter=all&page=N` to detect hidden shared-stream references and
+collisions. Collection omission never establishes deletion. Only a detail GET
+404 establishes absence; 401/403, malformed responses and transport/server
+failures refuse or remain uncertain. This relies on current verified level-10
+credentials and the pinned API source; a restricted user's 404 is insufficient.
+
+Explicit owned rollback compares both records against the full ownership ledger,
+then durably records each DELETE intent. Channel deletion must return 204 and be
+confirmed absent by detail GET before any stream DELETE. An unresolved DELETE
+with a still-present record blocks a repeated DELETE; do not clear its receipt
+or retry blindly. A later explicitly authorized invocation may reconcile an
+already-absent record through GET and continue with the next owned record.
+Pending registration/commit journals, changed fields, hidden sharing or invalid
+receipts refuse. The completed receipt is durable before ownership retirement,
+and continues to block automatic recreation. This changes candidate source only;
+existing retained production records must not be removed without separate approval.
+
+The exact `/tmp` specification remains mandatory in `HostConfig.Tmpfs` in stopped
+and running contracts. Docker may omit `/tmp` from `Mounts` in either state;
+when present its tmpfs type/access/source/options representation is also checked.
+Six exact bind mounts and all namespace/resource restrictions remain mandatory.
+
 ## Exports and Jellyfin
 
 `relay_main.py` sees the committed binding and publishes one generation containing

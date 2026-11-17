@@ -23,23 +23,23 @@
     "configs/dispatcharr-iptv/minimal-phase6b3d/validation-results.json": "b5bd3619e53bdb2afb642834e0a6b98e9b45136663e4844fc629ef57eb71bdca",
     "configs/dispatcharr-iptv/minimal-phase6b3d/verify.py": "a809936e8b31c265c00738d60d24064578b32c255759f16151a048cb95408de7",
     "configs/dispatcharr-iptv/permanent-streaming/30-permanent-streaming.conf": "55ed3a21aec684c70b0599be358a915d2b91ffdfe088bee7a338e1774ce1a1c9",
-    "configs/dispatcharr-iptv/permanent-streaming/README.md": "cee2b638b746340f45fea72fdfc1c52700f645341bee6eb42b72767d7d9203e0",
+    "configs/dispatcharr-iptv/permanent-streaming/README.md": "8d47edb478a1e2845f358b75f6e374076e3fdee0b0d423752e108c800d532312",
     "configs/dispatcharr-iptv/permanent-streaming/base-input-pins.json": "425ebd00cbae9c21180037d404cf38a1bba2c419145d77beafda4029bdf48227",
     "configs/dispatcharr-iptv/permanent-streaming/compose.yaml": "3f1993c109a9e9e18a0da04616e3a09dd3a132c478f57af15cd99cceef2c27de",
-    "configs/dispatcharr-iptv/permanent-streaming/contracts.py": "2cfd3e900d5f91b00e95e3e576142ea15d46af56f4acd11f0ebb714dc032249e",
+    "configs/dispatcharr-iptv/permanent-streaming/contracts.py": "2faddb7e2d33a2d1a841abd36244770101c294a69df6cb527dae773eef90fe20",
     "configs/dispatcharr-iptv/permanent-streaming/guard_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
     "configs/dispatcharr-iptv/permanent-streaming/hls_relay.py": "171461eb4bb83170a83d4b52aeca90d3f7ebc5d8486b615cdf654b7fc98078f5",
     "configs/dispatcharr-iptv/permanent-streaming/lifecycle.py": "9dbe2ec2cfb41b847cffc5cff487e558c16f56d5d992474670989c387d286779",
-    "configs/dispatcharr-iptv/permanent-streaming/manifest.json": "797dcdd7230efb89c2d133443c6d6e4371700e567299744f54d4245fc7d42a69",
+    "configs/dispatcharr-iptv/permanent-streaming/manifest.json": "9014af51977ae95a33ea5a380480196da8352af6043bde6126c9b39a4c8f781c",
     "configs/dispatcharr-iptv/permanent-streaming/relay-config.schema.json": "94cf3990b3e8f3d6237f7ef09f832b01b12f3fe8c8d529c44662e4b12076cf8b",
     "configs/dispatcharr-iptv/permanent-streaming/relay_main.py": "830c87685643af37b9f008640b457d1a4e77bdf1fdef554f36fd82cec589f356",
-    "configs/dispatcharr-iptv/permanent-streaming/tests/run-offline.sh": "238ed027c00afe6c52e0c42294e305259f42dba5fc2ff2335ef5222f9101823d",
-    "configs/dispatcharr-iptv/permanent-streaming/tests/test_candidate.py": "45e13af50ad9e76abd6f52cbd940ce6033831aa0622089851b09ad944441fdba",
-    "configs/dispatcharr-iptv/permanent-streaming/tests/test_contract.py": "1cfcaed0882b06dae1ce7f2f48f8b8ca7ab64c277a8f694c289ef5b840ba2082",
+    "configs/dispatcharr-iptv/permanent-streaming/tests/run-offline.sh": "978694b1160ebdd0fe3e7fba861964188b690305976052759961927419e90790",
+    "configs/dispatcharr-iptv/permanent-streaming/tests/test_candidate.py": "afa66139f415e6aabc0d305c71fd4f171c0fa7e693a217dcabaa0ae432d0d66f",
+    "configs/dispatcharr-iptv/permanent-streaming/tests/test_contract.py": "3f2545316b816314a6a540eab643bf37493b33ea1181cfce67a5b2840c7e6e52",
     "configs/dispatcharr-iptv/permanent-streaming/tests/test_network.py": "952f1673076daae67f6c6e6ec413bafd9ec636c8f7327bf6828dbb0026bc666f",
     "configs/dispatcharr-iptv/permanent-streaming/tests/test_provenance.py": "dee3b3a5360497574668d5eb9ad710c67f4e85ad7f2013357314cdbf4c194cfd",
     "configs/dispatcharr-iptv/permanent-streaming/tests/verify_units.py": "ef4d2b9c51c2c0f30ee913324185803e4a24206ea74face082ac5fdd45036524",
-    "configs/dispatcharr-iptv/permanent-streaming/validation-results.json": "df2efedc9cb4f198ed52d684e3da9b5bc8622bbda7b0a7fc9216ad2329baf22a",
+    "configs/dispatcharr-iptv/permanent-streaming/validation-results.json": "1fdffff152283fd7e141d94c9c6fdfe076dfd16768b31dc5b8485da3b5abe0c9",
     "configs/dispatcharr-iptv/permanent-streaming/verify.py": "9b6bb1eab509ae3d7c2e8d0143829ddd1b6b92e05b9340ed5c1bcdf99db0cfaa",
     "configs/dispatcharr-iptv/trusted-guard-tests/run-offline.sh": "b7474762b317805693c94ec76b41f4c6c0af6f7e478cb2353c2ebb623b2ccf8f",
     "configs/dispatcharr-iptv/trusted-guard-tests/test_implementation.py": "63305daa3b6b34c04febdd740fb56e63b1a08c5ee1ca79a30ff6dc61089f427d"
@@ -131,7 +131,7 @@
     },
     "/docker/dispatcharr-iptv/permanent-streaming/README.md": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/README.md",
-      "sha256": "cee2b638b746340f45fea72fdfc1c52700f645341bee6eb42b72767d7d9203e0",
+      "sha256": "8d47edb478a1e2845f358b75f6e374076e3fdee0b0d423752e108c800d532312",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
@@ -152,7 +152,7 @@
     },
     "/docker/dispatcharr-iptv/permanent-streaming/api.py": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/api.py",
-      "sha256": "aabd860d76651e021ca5b61677c8c02b554f3ae5901f41072c9518434b1fca15",
+      "sha256": "74b824154c19b1fc612330ddf462b80bdc7ada830da502b737bb944ac4e32b6c",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
@@ -187,7 +187,7 @@
     },
     "/docker/dispatcharr-iptv/permanent-streaming/contracts.py": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/contracts.py",
-      "sha256": "2cfd3e900d5f91b00e95e3e576142ea15d46af56f4acd11f0ebb714dc032249e",
+      "sha256": "2faddb7e2d33a2d1a841abd36244770101c294a69df6cb527dae773eef90fe20",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
@@ -264,7 +264,7 @@
     },
     "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/manifest.json",
-      "sha256": "797dcdd7230efb89c2d133443c6d6e4371700e567299744f54d4245fc7d42a69",
+      "sha256": "9014af51977ae95a33ea5a380480196da8352af6043bde6126c9b39a4c8f781c",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
@@ -306,7 +306,7 @@
     },
     "/docker/dispatcharr-iptv/permanent-streaming/register.py": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/register.py",
-      "sha256": "20f0ed9ed1c44be718dbc2e1c8bb2147cde0d818152f984d2080d2cb3bc03652",
+      "sha256": "a92d5cbba346238d8c2807587be02201d4fa93e50a416bc5975ba4fe7eb16055",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
@@ -348,21 +348,21 @@
     },
     "/docker/dispatcharr-iptv/permanent-streaming/tests/run-offline.sh": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/tests/run-offline.sh",
-      "sha256": "238ed027c00afe6c52e0c42294e305259f42dba5fc2ff2335ef5222f9101823d",
+      "sha256": "978694b1160ebdd0fe3e7fba861964188b690305976052759961927419e90790",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
     },
     "/docker/dispatcharr-iptv/permanent-streaming/tests/test_candidate.py": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/tests/test_candidate.py",
-      "sha256": "45e13af50ad9e76abd6f52cbd940ce6033831aa0622089851b09ad944441fdba",
+      "sha256": "afa66139f415e6aabc0d305c71fd4f171c0fa7e693a217dcabaa0ae432d0d66f",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
     },
     "/docker/dispatcharr-iptv/permanent-streaming/tests/test_contract.py": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/tests/test_contract.py",
-      "sha256": "1cfcaed0882b06dae1ce7f2f48f8b8ca7ab64c277a8f694c289ef5b840ba2082",
+      "sha256": "3f2545316b816314a6a540eab643bf37493b33ea1181cfce67a5b2840c7e6e52",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
@@ -404,7 +404,7 @@
     },
     "/docker/dispatcharr-iptv/permanent-streaming/validation-results.json": {
       "source": "configs/dispatcharr-iptv/permanent-streaming/validation-results.json",
-      "sha256": "df2efedc9cb4f198ed52d684e3da9b5bc8622bbda7b0a7fc9216ad2329baf22a",
+      "sha256": "1fdffff152283fd7e141d94c9c6fdfe076dfd16768b31dc5b8485da3b5abe0c9",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
@@ -496,6 +496,20 @@
     "/etc/systemd/system/docker.service.d/50-dispatcharr-order.conf": {
       "source": "configs/dispatcharr-iptv/minimal-phase6b3d/units/docker.service.50-dispatcharr-order.conf",
       "sha256": "c9beb54d2b2e6285013355f3a80dd6677ff7723d10e835f45c499f39fb9e581b",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644"
+    },
+    "/docker/dispatcharr-iptv/permanent-streaming/tests/test_rollback.py": {
+      "source": "configs/dispatcharr-iptv/permanent-streaming/tests/test_rollback.py",
+      "sha256": "5b320ffd27a19f2f659223af4158537b405884ec4e32b625faee56a15a31f0a6",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644"
+    },
+    "/docker/dispatcharr-iptv/permanent-streaming/tests/fixtures/relay-inspect-c611253.json": {
+      "source": "configs/dispatcharr-iptv/permanent-streaming/tests/fixtures/relay-inspect-c611253.json",
+      "sha256": "d7aa9f8ae10fed661cbea925a64295a8045720b2b22d49fa52f52ed7f492c3b1",
       "uid": 0,
       "gid": 0,
       "mode": "0644"
