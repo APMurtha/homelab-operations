@@ -1,0 +1,54 @@
+{
+  "mode": "offline AirVPN native metadata hardening; no production/provider contact",
+  "baseline_retained": 405,
+  "new_tests": 92,
+  "total": 497,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "suites": {
+    "tools": [
+      139
+    ],
+    "unit": [
+      66
+    ],
+    "network": [
+      14
+    ],
+    "main": [
+      39,
+      26,
+      17,
+      7,
+      3,
+      12,
+      28,
+      50,
+      13,
+      15
+    ],
+    "historical": [
+      26
+    ],
+    "prior": [
+      14
+    ],
+    "design": [
+      28
+    ]
+  },
+  "log_sha256": {
+    "dispatcharr-hardening-tools.log": "e19719ac5797baad63cd1ca2bece8ed729c884a1d99ff9e5bb57f157aaaa6f2b",
+    "dispatcharr-hardening-unit.log": "e50654ccb34f0f1434b41112e8b9ef984235deb68c2f0e35bf40c60bfae90ff1",
+    "dispatcharr-hardening-network.log": "c996bbe6aa3332f95e887a808979c48f74649d504cc3f23955dd49ae8eff2ce5",
+    "dispatcharr-hardening-main.log": "4f34700403c10e21c4f61b77037011bae6ee21d669c0854882ca3b717a57b6e1",
+    "dispatcharr-hardening-historical.log": "771a1a9d840f346bc664b124dbe45d79f8dec5d77bffcb585c15971b2f191f0b",
+    "dispatcharr-hardening-prior.log": "db09fbc9fc2dbbf1e2deb6621ff9a5b4d24d1ce94c5d5b25171bfa21be07e663",
+    "dispatcharr-hardening-design.log": "8364e35123ba88c0e645f47efa7ab20e8c6f5fe019541fe6f86fbe45d8a7d2f2"
+  },
+  "live_registration": "DISABLED",
+  "native_removal": "DISABLED",
+  "image_build_or_deployment": "NONE",
+  "Caddy_fixture_requests": 91
+}

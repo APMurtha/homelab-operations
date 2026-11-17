@@ -181,3 +181,27 @@ login cannot unlock it. Native creation itself fetches provider data even when
 inactive; its server-side redirect/retry/logging behavior needs separate approval
 and controls. No new provider is routed through the DW English relay or exported
 to Jellyfin. No media URL or format has been tested by this development work.
+
+## AirVPN server-hardening candidate
+
+The offline native adapter now requires `dispatcharr-native-airvpn-v1` before
+registration or refresh. It verifies exact patched source hashes, required
+features, provider key, exact guide URL digest, unexpired approval and a current
+guard-generation assertion. Missing/mismatched evidence stops before native
+writes. The verified contract is retained in the private ledger.
+
+Account creation explicitly requests `metadata_discovery=true`. After creating
+owned channel/guide mappings, the adapter submits one more journaled EPG import:
+the hardened server suppresses automatic remote per-channel programme jobs.
+The workflow still ends with inactive account/source and hidden channels.
+
+This does **not** unlock live execution. The server patch has not been built or
+installed; production cannot satisfy this contract. The synthetic server supplies
+a simulated assertion only. Policies cannot be created by a CLI flag, `--apply`,
+existing admin credentials or the old metadata-path approval.
+
+See [native provider hardening](dispatcharr-native-provider-hardening.md) for
+network controls, explicit background-work rules, supported input limits and the
+separate build/deployment prerequisites. Native removal and new provider media
+activation remain disabled; the existing DW English relay and Jellyfin settings
+are unchanged.

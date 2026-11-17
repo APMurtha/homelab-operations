@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "server_contract": "dispatcharr-native-airvpn-v1",
+  "provider_key": "0000000000000000000000000000000000000000000000000000000000000000",
+  "network_owner": "AirVPN",
+  "purpose": "IPTV_METADATA_ONLY",
+  "review_reference": "PLACEHOLDER: separate owner-approved metadata review required",
+  "boot_id": "00000000-0000-0000-0000-000000000000",
+  "netns": [0, 0],
+  "host_netns": [0, 0],
+  "expires_epoch": 0,
+  "vpn_interface": "tun0",
+  "policy_review_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "operations": ["discover", "refresh", "epg"],
+  "epg_url_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "endpoints": [
+    {"host": "approved-provider.example.invalid", "path": "/player_api.php", "ipv4": ["PLACEHOLDER_APPROVED_PUBLIC_IPV4"]},
+    {"host": "approved-provider.example.invalid", "path": "/xmltv.php", "ipv4": ["PLACEHOLDER_APPROVED_PUBLIC_IPV4"]}
+  ]
+}

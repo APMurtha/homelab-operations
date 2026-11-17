@@ -7,6 +7,8 @@ substitute an HTTP client without the separate server-side network/logging revie
 import copy
 import re
 import shlex
+import json
+from pathlib import Path
 import time
 import uuid
 from decimal import Decimal, InvalidOperation
@@ -23,6 +25,8 @@ EPG = '/api/epg/epgdata/'
 PROFILES = '/api/core/streamprofiles/'
 COLLECTIONS = (ACCOUNTS, CHANNELS, STREAMS, GROUPS, SOURCES, EPG, PROFILES)
 NATIVE_OWNER = OWNER + '/native-v1'
+SECURITY = '/api/core/provider-security/'
+SERVER_CONTRACT = json.loads(Path(__file__).with_name('server-contract.json').read_text())
 
 
 def ident(value):
@@ -48,7 +52,7 @@ class API:
 
     def call(self, method, path, body=None, statuses=(200,)):
         # Restrict this adapter independently of the injected transport.
-        read = method == 'GET' and any(re.fullmatch(re.escape(p) + r'(?:[1-9][0-9]*/|\?(?:visibility_filter=all&)?page=[1-9][0-9]*)', path) for p in COLLECTIONS)
+        read = method == 'GET' and (bool(re.fullmatch(re.escape(SECURITY)+r'\?provider_key=[a-f0-9]{64}&epg_url_sha256=[a-f0-9]{64}',path)) or any(re.fullmatch(re.escape(p) + r'(?:[1-9][0-9]*/|\?(?:visibility_filter=all&)?page=[1-9][0-9]*)', path) for p in COLLECTIONS))
         write = ((method == 'POST' and path in (ACCOUNTS, CHANNELS, SOURCES, '/api/epg/import/'))
                  or (method == 'PATCH' and any(re.fullmatch(re.escape(p) + r'[1-9][0-9]*/', path) for p in (ACCOUNTS, SOURCES)))
                  or (method == 'PATCH' and re.fullmatch(re.escape(ACCOUNTS) + r'[1-9][0-9]*/group-settings/', path))
@@ -66,6 +70,21 @@ class API:
             raise Refused('native_API_outcome_uncertain_no_retry') from None
         if status not in statuses: raise Refused('native_API_status_refused_no_retry')
         return result
+
+    def server_contract(self, key, epg_digest):
+        value=self.call('GET',SECURITY+'?provider_key='+key+'&epg_url_sha256='+epg_digest)
+        if (not isinstance(value,dict) or value.get('contract')!=SERVER_CONTRACT['contract']
+                or value.get('network_owner')!='AirVPN' or value.get('provider_key')!=key
+                or value.get('epg_url_sha256')!=epg_digest
+                or value.get('source_hashes')!=SERVER_CONTRACT['source_hashes']
+                or value.get('features')!=SERVER_CONTRACT['features']
+                or set(value.get('operations',[]))!={'discover','refresh','epg'}
+                or value.get('media_activation') is not False or value.get('native_removal') is not False
+                or not re.fullmatch('[a-f0-9]{64}',str(value.get('guard_generation','')))
+                or type(value.get('expires_epoch')) not in (float,int)
+                or not time.time()<value['expires_epoch']<=time.time()+86400):
+            raise Refused('hardened_server_contract_unverified_no_mutation')
+        return value
 
     def detail(self, path, pk):
         row = self.call('GET', path + str(ident(pk)) + '/')
@@ -211,6 +230,7 @@ class Adapter:
         # native ID from a display label. Caller must supply the locked profile.
         checked = provider(p['name'],p['server'],p['username'],p['password'],p['epg_url'],p['max_streams'])
         if checked != p: raise Refused('native_provider_identity_conflict')
+        verified_contract = self.api.server_contract(p['key'],digest(epg_url(p)))
         ident(profile_id)
         profiles = []
         for row in self.api.rows(PROFILES):
@@ -237,6 +257,7 @@ class Adapter:
             raise Refused('native_duplicate_EPG_source')
         baseline_groups = self.api.rows(GROUPS)
         self.ledger.begin(p, selected)
+        self.ledger.value['server_contract'] = verified_contract
         self.ledger.value['baseline_channels'] = baseline
         self.ledger.value['baseline_accounts'] = accounts
         self.ledger.value['indirect_account_effects'] = []
@@ -245,11 +266,11 @@ class Adapter:
         body = {'name':p['name'], 'account_type':'XC', 'server_url':p['server'], 'username':p['username'],
                 'password':p['password'], 'max_streams':p['max_streams'], 'is_active':False,
                 'refresh_interval':24, 'cron_expression':'', 'custom_properties':tag,
-                'enable_vod':False, 'auto_enable_new_groups_live':False,
+                'metadata_discovery':True, 'enable_vod':False, 'auto_enable_new_groups_live':False,
                 'auto_enable_new_groups_vod':False, 'auto_enable_new_groups_series':False}
         # Write-only creation flags are stored under custom_properties by native
         # serializer; compare persisted fields, never assume response echoes flags.
-        expected = {k:v for k,v in body.items() if k not in ('enable_vod','auto_enable_new_groups_live','auto_enable_new_groups_vod','auto_enable_new_groups_series','custom_properties')}
+        expected = {k:v for k,v in body.items() if k not in ('metadata_discovery','enable_vod','auto_enable_new_groups_live','auto_enable_new_groups_vod','auto_enable_new_groups_series','custom_properties')}
         account = self.ledger.mutate(self.api,'POST',ACCOUNTS,body,expected,ACCOUNTS,before={'existing_ids':[r['id'] for r in accounts]},statuses=(201,))
         aid = account['id']; resources = self.ledger.value['resources']
         resources['account'] = {'id':aid,'tag':tag['provider_cli'],'profiles':account.get('profiles',[])}
@@ -319,6 +340,11 @@ class Adapter:
                        for a in accounts if a != now.get(a['id'])]
             self.ledger.value['indirect_account_effects'] = effects
             self.ledger.save()
+        # Channel signals no longer queue remote programme work. Explicitly
+        # import the now-owned mappings through one journaled operator request.
+        source = self.api.detail(SOURCES,source['id'])
+        self.ledger.mutate(self.api,'POST','/api/epg/import/',{'id':source['id'],'force':False},before={'updated_at':source.get('updated_at')},statuses=(202,))
+        self.wait(SOURCES,source['id'],source.get('updated_at'))
         # Keep metadata draft channels hidden and account/source inactive. The
         # temporary active window above is NOT a safe network isolation boundary.
         self.patch(SOURCES,self.api.detail(SOURCES,source['id']),{'is_active':False})
@@ -404,9 +430,11 @@ class Adapter:
 
         No new channels and no remapping on refresh. Queued work is never retried.
         """
+        verified_contract = self.api.server_contract(self.ledger.key,digest(epg_url(self.ledger.value['provider'])))
         self.verify()
         v = self.ledger.value; r = v['resources']
         if v['phase'] != 'registered_inactive': raise Refused('native_incomplete_registration_requires_review')
+        v['server_contract'] = verified_contract
         v['phase'] = 'refreshing'; self.ledger.save()
         account = self.patch(ACCOUNTS,self.api.detail(ACCOUNTS,r['account']['id']),{'is_active':True})
         self.ledger.mutate(self.api,'POST','/api/m3u/refresh/'+str(account['id'])+'/',{},before={'updated_at':account.get('updated_at')},statuses=(202,))

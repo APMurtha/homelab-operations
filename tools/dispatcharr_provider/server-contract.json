@@ -1,0 +1,31 @@
+{
+  "contract": "dispatcharr-native-airvpn-v1",
+  "features": [
+    "artwork_stripped",
+    "bounded_io",
+    "guard_grant",
+    "manual_jobs",
+    "no_auto_dvr",
+    "no_redirect",
+    "no_retry",
+    "public_ipv4_pinning",
+    "tls",
+    "xml_no_dtd"
+  ],
+  "schema": 1,
+  "source_hashes": {
+    "apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
+    "apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
+    "apps/epg/tasks.py": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
+    "apps/m3u/api_views.py": "61c9289fa4c6bc9ecc275d39386c6ff0081a551535ce95d44353fe92c51e4e3f",
+    "apps/m3u/signals.py": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
+    "apps/m3u/tasks.py": "4294d180806627da4029af9b955a3c40f5ac13869da23adc25b4bec7293085ac",
+    "core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
+    "core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
+    "core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+    "core/provider_security.py": "8f0195161771e25dc47b39a41b5cf81230d618529c5c9cce2f00ecc2fbfd845f",
+    "core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
+    "core/provider_transport.py": "f2540f50bad331dede6fc457a35db23e91bd121db3a1a977ff1617f2274e15a0",
+    "core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
+  }
+}

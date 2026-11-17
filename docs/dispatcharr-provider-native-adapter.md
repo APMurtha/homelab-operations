@@ -1,5 +1,10 @@
 # Dispatcharr native Xtream and XMLTV adapter
 
+> Follow-up: this report records the `04e8295` adapter and its 405-test baseline.
+> The subsequent offline [AirVPN hardening candidate](dispatcharr-native-provider-hardening.md)
+> adds a required server contract and explicit EPG programme import. It remains
+> unbuilt/undeployed; live registration and removal remain disabled.
+
 2026-11-17. `APMurtha/homelab-operations`, branch
 `docs/udm-pro-max-migration-prep`. Starting implementation: `7f6822a`.
 

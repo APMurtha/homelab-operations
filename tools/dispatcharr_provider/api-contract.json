@@ -101,5 +101,17 @@
     "ownership": "native-private ledger plus append-only intents, response IDs, exact readbacks, original PATCH values, resource relationships and recorded signal effects",
     "removal": "disabled; native account deletion cascades streams and auto-created channels and cannot prove all shared/cascade relationships",
     "live_gate": "unconditional; neither metadata approval, --apply nor an admin login enables native HTTP writes"
+  },
+  "server_hardening": {
+    "contract": "dispatcharr-native-airvpn-v1",
+    "status": "OFFLINE CANDIDATE ONLY; original production release unchanged; live client and native deletion disabled",
+    "server_contract_read": "GET /api/core/provider-security/?provider_key=<SHA256>&epg_url_sha256=<SHA256>; authenticated IsAdmin, DEBUG false; no provider request",
+    "exact_source_output_manifest": "configs/dispatcharr-iptv/native-provider-hardening/output-hashes.json",
+    "CLI_expected_contract": "tools/dispatcharr_provider/server-contract.json",
+    "create_extension": "metadata_discovery=true explicitly requests approved synchronous group discovery; false/absent is network-silent XC creation",
+    "refresh_extension": "manual refresh/import API enqueues operator_requested=true; default/periodic worker calls deny remote work",
+    "EPG_programmes": "after channel mappings, a second explicitly journaled EPG import replaces the denied automatic remote per-channel parse task",
+    "network": "existing AirVPN namespace and kernel protections plus root-approved HTTPS/443 public-IP/path pinning; no additional egress grant",
+    "media": "not authorized or enabled; broadcaster-specific relay unchanged"
   }
 }

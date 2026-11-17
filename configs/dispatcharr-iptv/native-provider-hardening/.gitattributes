@@ -1,0 +1,2 @@
+# Unified diff context prefixes and removed upstream lines are artifact data.
+server.patch -whitespace

@@ -1,0 +1,11 @@
+{
+  "apps/channels/models.py": "f76cd4a71a2997b04ce836fc3191d56755c26b88fcdfb9caec85b3c67d119f04",
+  "apps/channels/signals.py": "06485b52efcc01864d67ff422dcff28f5937791e822e0061b883baf049a4b8cf",
+  "apps/channels/tasks.py": "92fd879189109310b58b9cdd684b4e00cb5e1d62b6931e975ab41f68ab8a6279",
+  "apps/channels/utils.py": "212c56502bfe5f1baa1a4806d4382af6ce0de55daedc246397ca08d2a286a682",
+  "apps/epg/models.py": "975b645dee46899dec59f5620c664de9c246045d437b66c3edd52b1948589178",
+  "apps/epg/serializers.py": "0d84a6664f5cfa53fc44cb1ed32a8ca6994def5756105f6d65050e40afd446b4",
+  "apps/m3u/models.py": "f8e0cd0862d9c576cbd7ac6af71c195a1fde8eaa1b3ea5f225c3b8b56ead7219",
+  "apps/m3u/serializers.py": "4ef8f623a187fe411674b4ab41338dfd41c20f66cd6b8b1c5279109a33fe5821",
+  "core/scheduling.py": "48ec9620fa122f56c589e295442c98efdd8fcb858528522329ae581ae907c489"
+}

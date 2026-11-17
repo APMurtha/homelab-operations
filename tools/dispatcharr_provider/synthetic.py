@@ -6,8 +6,9 @@ private and durable so separate CLI invocations can inspect the same simulation.
 import copy
 import re
 import uuid
+import time
 from .core import atomic, private_read, Refused
-from .native import ACCOUNTS, CHANNELS, STREAMS, GROUPS, SOURCES, EPG, PROFILES
+from .native import ACCOUNTS, CHANNELS, STREAMS, GROUPS, SOURCES, EPG, PROFILES, SECURITY, SERVER_CONTRACT
 
 
 class Synthetic:
@@ -64,6 +65,13 @@ class Synthetic:
     def exchange(self, method, path, body=None):
         self.calls.append((method,path,copy.deepcopy(body)))
         if self.fail: self.fail(method,path,body)
+        if method == 'GET' and path.startswith(SECURITY+'?provider_key='):
+            key=path.split('=',1)[1].split('&',1)[0]
+            epg_digest=path.rsplit('=',1)[1]
+            return 200,{'contract':SERVER_CONTRACT['contract'],'network_owner':'AirVPN','provider_key':key,
+                'features':SERVER_CONTRACT['features'],'source_hashes':SERVER_CONTRACT['source_hashes'],
+                'epg_url_sha256':epg_digest,'guard_generation':'a'*64,'expires_epoch':time.time()+300,
+                'operations':['discover','refresh','epg'],'media_activation':False,'native_removal':False}
         if method == 'GET':
             for collection in self.data:
                 if path.startswith(collection+'?'):
@@ -84,7 +92,7 @@ class Synthetic:
             row['profiles'] = [{'id':row['id']+100,'is_default':True}]
             row['channel_groups'] = []
             # Synchronous group discovery happens EVEN for inactive accounts.
-            for g in self.catalogue['groups'].values():
+            for g in (self.catalogue['groups'].values() if body.get('metadata_discovery') is True else []):
                 group = self.allocate(GROUPS,{'name':g['name']})
                 row['channel_groups'].append({'channel_group':group['id'],'enabled':False,
                     'auto_channel_sync':False,'auto_sync_channel_start':None,'auto_sync_channel_end':None,
@@ -97,7 +105,7 @@ class Synthetic:
             row = self.allocate(CHANNELS,body); row.update(uuid=str(uuid.uuid4()),channel_number=10000+row['id'])
             if row.get('epg_data_id'): self.signal_jobs.append(('parse_programs_for_tvg_id',row['epg_data_id']))
             for account in self.data[ACCOUNTS]:
-                if account.get('locked') and account.get('name') == 'Custom':
+                if account.get('locked') and account.get('name','').lower() == 'custom':
                     relations = account.setdefault('channel_groups',[])
                     if not any(r['channel_group']==row['channel_group_id'] for r in relations):
                         relations.append({'channel_group':row['channel_group_id'],'enabled':True,'auto_channel_sync':False})
