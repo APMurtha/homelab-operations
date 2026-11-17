@@ -1,0 +1,97 @@
+{
+  "actual_base_source_hashes": {
+    "apps/epg/api_views.py": "df6ebcd84afe9237cb8ca2989d572170a2c8a325b85f8781d1d8becb217e2e4f",
+    "apps/epg/signals.py": "541c1157f01b794d05cf74b58eeaab521fa161273ce3430bb705955b94153e7a",
+    "apps/epg/tasks.py": "deb4792a39ed93c57da435ecc2a4fcdf5b4dad8f4e087d3afdb5d4f2b7932ff9",
+    "apps/m3u/api_views.py": "1299f6d86af5bd86ca04087f3ca70120ee1b04686c182ea0682560f0b7165d63",
+    "apps/m3u/signals.py": "854c44f190e57a262e474e0d24a237c004a557a036a7dc527f05b1381ecd4bd3",
+    "apps/m3u/tasks.py": "921e0fea7273c0ce7d1b1380a4f675718fbc5cdb3bb0d38005cdae2b73cce981",
+    "apps/proxy/live_proxy/input/buffer.py": "17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810",
+    "apps/proxy/live_proxy/input/manager.py": "ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf",
+    "apps/proxy/live_proxy/output/ts/generator.py": "db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b",
+    "apps/proxy/live_proxy/readiness.py": "fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b",
+    "core/api_urls.py": "aa780f16f02f7bcffe5fdf26aa3f658a0e91190e84377540c75ec73b1dbce81e",
+    "core/xtream_codes.py": "702aa9eae38cc3fce733a2f42e66f5b2b68458a22fd95d57ed0dc14a9231c76d"
+  },
+  "approved_commit": "1124d9699097faa5a2b865ad8989da9f5743cfbf",
+  "base_image": {
+    "id": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+    "size": 4248387073
+  },
+  "base_onbuild": null,
+  "baseline_tests": 497,
+  "build_attempts": 0,
+  "context_files": {
+    "Dockerfile": "ce726b756f63f42f90d24d447ec18aaf245781f0491738f238945f4a9e1a58ad",
+    "app/apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
+    "app/apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
+    "app/apps/epg/tasks.py": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
+    "app/apps/m3u/api_views.py": "61c9289fa4c6bc9ecc275d39386c6ff0081a551535ce95d44353fe92c51e4e3f",
+    "app/apps/m3u/signals.py": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
+    "app/apps/m3u/tasks.py": "4294d180806627da4029af9b955a3c40f5ac13869da23adc25b4bec7293085ac",
+    "app/core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
+    "app/core/provider_contract_hashes.json": "7df269d2091eea5ed78e16d291d3c790ce49f64930ee2fdcc66569340ae9c474",
+    "app/core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
+    "app/core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+    "app/core/provider_security.py": "8f0195161771e25dc47b39a41b5cf81230d618529c5c9cce2f00ecc2fbfd845f",
+    "app/core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
+    "app/core/provider_transport.py": "f2540f50bad331dede6fc457a35db23e91bd121db3a1a977ff1617f2274e15a0",
+    "app/core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
+  },
+  "errors": 0,
+  "failures": 0,
+  "log_sha256": {
+    "dispatcharr-image-design.log": "0252b93f10bc25ac4abe361ec5d309bac61de09f196997c3919d7f6c15f58554",
+    "dispatcharr-image-hardening.log": "868da75e8b6d96a021b03f0a21696e03ef4a12ecd9e1402eacd1b9ff84b84297",
+    "dispatcharr-image-historical.log": "7bbd284e9252c05cc3598dab72baf590bd30e374697c11fafc496ddd79cf2d6f",
+    "dispatcharr-image-input-tests.log": "65d0b75a43fcebd577452e9ab436dbe4e891d1ca0746dd46c9c504d1526d782d",
+    "dispatcharr-image-main.log": "98d58746a2960733ddd549075088cecd0825b9b9036c0c0ad8593e3be68f03a9",
+    "dispatcharr-image-network.log": "36cbbc7bca430ccebd1fe854807dece889540cc21c25aaa3cfc371681644c18a",
+    "dispatcharr-image-prior.log": "f5b6e05dc930bab788cafd4315cfaa42d7a51df0f262b9a442b7b516529c6cfc",
+    "dispatcharr-image-tools.log": "195cf2268bec64eefd7186a7ec7972a51bdf61743a8c9b03e5726cdbe307981b"
+  },
+  "new_image_id": null,
+  "new_input_verifier_tests": 5,
+  "new_test_containers_created": 0,
+  "production_changed": false,
+  "real_Django_Celery_integration": "NOT_RUN",
+  "skips": 0,
+  "source_exported_from_host": false,
+  "status": "PREFLIGHT_PASS_BUILD_BLOCKED_BY_APPROVAL_REVIEW",
+  "suites": {
+    "design": [
+      28
+    ],
+    "hardening": [
+      66
+    ],
+    "historical": [
+      26
+    ],
+    "input-tests": [
+      5
+    ],
+    "main": [
+      39,
+      26,
+      17,
+      7,
+      3,
+      12,
+      28,
+      50,
+      13,
+      15
+    ],
+    "network": [
+      14
+    ],
+    "prior": [
+      14
+    ],
+    "tools": [
+      139
+    ]
+  },
+  "verification_method": "read_only_image_save_hashes_only_no_containers"
+}
