@@ -8,6 +8,19 @@ HERE = Path(__file__).resolve().parent
 NAMES = {'iptv-vpn': 'rivendell-iptv-vpn', 'dispatcharr': 'dispatcharr', 'gateway': 'rivendell-iptv-gateway', 'relay': 'rivendell-iptv-relay'}
 class Refusal(RuntimeError): pass
 
+RELAY_TMPFS = {'/tmp': 'rw,nosuid,nodev,noexec,size=16m,uid=1000,gid=1000,mode=0700'}
+
+def mount_index(container):
+    # Reject duplicates before indexing: a dict comprehension would hide them.
+    result = {}
+    for mount in container.get('Mounts', []):
+        target = mount.get('Destination')
+        if not isinstance(target, str) or not target.startswith('/') or target in result:
+            raise Refusal('invalid_or_duplicate_mount')
+        result[target] = mount
+    return result
+
+
 def canonical(value):
     if isinstance(value, dict):
         return {k: canonical(v) for k, v in value.items()
@@ -65,7 +78,7 @@ def topology(state, require_running=False):
                        'gateway': {'/etc/caddy/Caddyfile': str(ROOT / 'permanent-streaming/Caddyfile')},
                        'relay': {'/opt/permanent': str(ROOT / 'permanent-streaming'), '/etc/resolv.conf': str(ROOT / 'resolv.vpn.conf'), '/guard': '/run/dispatcharr-guard', '/run/credentials/relay.json': str(ROOT / 'private/permanent-relay.json')}}
     for service, mounts in required_mounts.items():
-        actual = {m['Destination']: m for m in containers[service].get('Mounts', [])}
+        actual = mount_index(containers[service])
         for target, source in mounts.items():
             m = actual.get(target, {})
             if m.get('Type') != 'bind' or m.get('Source') != source or m.get('RW') is not False:
@@ -103,13 +116,29 @@ def topology(state, require_running=False):
     if 'no-new-privileges:true' not in (h.get('SecurityOpt') or []):
         raise Refusal('relay_security_option_changed')
     expected_mounts = {'/runtime': '/run/dispatcharr-permanent/relay', '/exports': '/docker/jellyfin/config/iptv/permanent-dw'}
-    actual = {m['Destination']: m for m in r.get('Mounts', [])}
+    if h.get('Tmpfs') != RELAY_TMPFS:
+        raise Refusal('relay_tmpfs_configuration_changed')
+    actual = mount_index(r)
     for target, source in expected_mounts.items():
         if actual.get(target, {}).get('Source') != source or actual[target].get('Type') != 'bind' or actual[target].get('RW') is not True:
             raise Refusal('relay_runtime_mount_changed')
-    allowed = set(required_mounts['relay']) | set(expected_mounts) | {'/tmp'}
-    if set(actual) != allowed:
+    binds = set(required_mounts['relay']) | set(expected_mounts)
+    # Newly created stopped containers omit tmpfs from Mounts. HostConfig.Tmpfs
+    # remains authoritative for its exact options in every lifecycle state.
+    # Running containers must additionally expose the live tmpfs mount. A stopped
+    # container may retain that entry after it has previously run.
+    if set(actual) - {'/tmp'} != binds:
         raise Refusal('unexpected_relay_mount')
+    if any(actual[target].get('Propagation', 'rprivate') != 'rprivate' for target in binds):
+        raise Refusal('unsafe_relay_bind_propagation')
+    tmp = actual.get('/tmp')
+    if tmp is None:
+        if r['State']['Running']:
+            raise Refusal('running_relay_tmpfs_missing')
+    elif (tmp.get('Type') != 'tmpfs' or tmp.get('RW') is not True
+          or tmp.get('Source') not in ('', None)
+          or tmp.get('Mode', '') != '' or tmp.get('Propagation', '') != ''):
+        raise Refusal('unsafe_relay_tmpfs_mount')
     if r['Config'].get('Entrypoint') != ['python', '-B', '/opt/permanent/relay_main.py']:
         raise Refusal('relay_entrypoint_changed')
     return tuple((k, containers[k]['Id'], containers[k]['State']['StartedAt']) for k in sorted(NAMES)) + (('network', n['Id']),)

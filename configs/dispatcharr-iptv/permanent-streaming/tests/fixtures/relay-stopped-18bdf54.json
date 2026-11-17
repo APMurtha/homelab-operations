@@ -1,0 +1,49 @@
+{
+  "provenance": "18bdf54 docs/dispatcharr-permanent-streaming-deployment.md section 12; sanitized mount-field projection, not full raw Docker inspect",
+  "State": {
+    "Running": false
+  },
+  "HostConfig": {
+    "Tmpfs": {
+      "/tmp": "rw,nosuid,nodev,noexec,size=16m,uid=1000,gid=1000,mode=0700"
+    }
+  },
+  "Mounts": [
+    {
+      "Destination": "/exports",
+      "Source": "/docker/jellyfin/config/iptv/permanent-dw",
+      "Type": "bind",
+      "RW": true
+    },
+    {
+      "Destination": "/guard",
+      "Source": "/run/dispatcharr-guard",
+      "Type": "bind",
+      "RW": false
+    },
+    {
+      "Destination": "/runtime",
+      "Source": "/run/dispatcharr-permanent/relay",
+      "Type": "bind",
+      "RW": true
+    },
+    {
+      "Destination": "/etc/resolv.conf",
+      "Source": "/docker/dispatcharr-iptv/resolv.vpn.conf",
+      "Type": "bind",
+      "RW": false
+    },
+    {
+      "Destination": "/opt/permanent",
+      "Source": "/docker/dispatcharr-iptv/permanent-streaming",
+      "Type": "bind",
+      "RW": false
+    },
+    {
+      "Destination": "/run/credentials/relay.json",
+      "Source": "/docker/dispatcharr-iptv/private/permanent-relay.json",
+      "Type": "bind",
+      "RW": false
+    }
+  ]
+}

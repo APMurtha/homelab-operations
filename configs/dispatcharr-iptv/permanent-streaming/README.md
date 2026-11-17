@@ -129,6 +129,23 @@ acceptance; a mismatch retains the receipt and fails closed.
    relay and gateway stopped with `up --no-start --no-deps --no-build --pull never
    --force-recreate dispatcharr relay gateway`. Verify CLI flags and all stopped
    identities before proceeding. Never use a direct start to bypass admission.
+   The mount verifier validates the exact `/tmp` options through
+   `HostConfig.Tmpfs`, separately from the six relay bind mounts. A newly created
+   stopped relay omits `/tmp` from `Mounts`; a running relay must enumerate its
+   safe tmpfs there. A stopped relay may retain that entry after a prior run.
+   Duplicate, extra, missing or unsafe mount targets are refused in either state.
+
+   For each deployment diagnostic snapshot comparison use
+   `python3 -B diagnostic_inventory.py BEFORE.json AFTER.json` with the private
+   baseline schema (`containers` records: `name`, `id`, `image`, `started`,
+   `running`, `health`, `restart`, `restart_count`, `host_config_sha256`;
+   top-level `network_ids`, `docker_process`, `dedicated_network`). Capture fresh
+   snapshots read-only as in the prior deployment. This helper only reads JSON;
+   it never contacts Docker or services, and prints no record values. It excludes
+   exactly the four names in `contracts.NAMES`, including `rivendell-iptv-relay`,
+   and strictly compares all listed fields of every genuinely unrelated service,
+   plus Docker and network identities. Do not reuse the historical three-name
+   diagnostic exclusion list or change the installed three-service verifier.
 7. Install only `30-permanent-streaming.conf` into the existing stack unit's drop-in
    directory, after the unchanged `20-resource-admission.conf`; daemon-reload,
    inspect the effective order, and issue the separately authorized managed start.

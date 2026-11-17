@@ -1,26 +1,28 @@
 {
-  "mode": "offline candidate validation; no production mutations",
+  "mode": "offline corrected candidate validation; no production contact or mutations",
   "host_python": "3.14",
   "development_PyYAML": "6.0.3",
   "suites": {
     "candidate_policy_registration_exports_Jellyfin_lifecycle": 39,
-    "four_service_security_contract": 9,
+    "four_service_security_contract": 16,
     "provenance_and_manifest": 3,
     "existing_minimal_persistence": 12,
     "existing_boot_admission": 28,
     "isolated_TLS_DNS_lifecycle_resources": 11,
-    "pinned_Caddy_groups": 15
+    "pinned_Caddy_groups": 15,
+    "deployment_diagnostic_inventory": 7,
+    "historical_persistence_controller": 26
   },
-  "total_tests": 117,
+  "total_tests": 157,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
   "native_Caddy_fixture_requests": 91,
   "native_Caddy_binary_sha256": "a563843e11cbce39c557bd429ebb787d56f49d51d9bbb3292cd9b36b37a60cdf",
   "native_unit_syntax_and_dependency_fixture": "pass; no services executed",
-  "installed_Compose_config_stdin_quiet_no_env_resolution": "pass; no files written or lifecycle operations",
+  "installed_Compose_config_stdin_quiet_no_env_resolution": "not repeated in correction task; compose.yaml unchanged from f7115a8",
   "network_fixture_boundary": "unshared user/network namespace; only lo and synthetic 93.184.216.34; no default route",
-  "pinned_API_source_files_compared_to_running_original_AIO": 14,
+  "pinned_API_source_files_compared_to_running_original_AIO": "not repeated in correction task; all API pins and implementation unchanged from f7115a8",
   "not_exercised": [
     "four-service installed runtime",
     "live API authentication/registration",
@@ -30,5 +32,8 @@
     "container/host restart or reboot",
     "backup/restore"
   ],
-  "reproduce": "CADDY_TEST_BINARY=/path/to/verified/caddy sh configs/dispatcharr-iptv/permanent-streaming/tests/run-offline.sh"
+  "reproduce": "CADDY_TEST_BINARY=/path/to/verified/caddy sh configs/dispatcharr-iptv/permanent-streaming/tests/run-offline.sh",
+  "correction_regression_baseline": "18bdf54 section 12 sanitized stopped mount projection; original verifier refusal reproduced offline",
+  "reproduce_historical_persistence": "python3 -B -m unittest discover -s configs/dispatcharr-iptv/persistence-phase6b3/tests",
+  "production_contact": "none; original running stack not contacted or changed"
 }
