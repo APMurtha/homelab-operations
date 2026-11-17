@@ -1,0 +1,19 @@
+{
+  "mode": "offline feasibility counterexamples; no deployable correction selected",
+  "decision": "NO-GO: protected guard lifecycle needs separately reviewed generation/revocation publication",
+  "permission_fixture_tests": 14,
+  "existing_permanent_and_persistence_tests": 157,
+  "total_tests": 171,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "native_unit_verification": "pass; temporary offline fixtures only",
+  "native_Caddy_requests": 91,
+  "fixture_boundary": "mapped user/mount/network namespaces; temporary private tmpfs and real read-only bind mounts; UID/GID 1000, empty supplementary groups, zero effective capabilities",
+  "guard_execution": "unmodified guard.py; only /run directory path redirected to temporary fixture; nft subprocesses mocked; real policy and WireGuard validation",
+  "production_contact": false,
+  "candidate_or_guard_changes": false,
+  "candidate_manifest_changed": false,
+  "broadcaster_fetches": 0,
+  "synthetic_startup_check": "loopback health only; request counter zero; clean SIGTERM and endpoint removal"
+}
