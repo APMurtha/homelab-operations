@@ -1,17 +1,15 @@
 # Dispatcharr permanent streaming deployment — trusted release failed; original services restored
 
-2026-11-17 UTC (2026-11-16 US/Eastern). Andrew's Rivendell, 10.10.20.30.
-Latest approved release: `824d0be03af997762160e7bb7dd1fa497a5dfd9f`, branch `docs/udm-pro-max-migration-prep`.
+2026-11-17 UTC. Andrew's Rivendell, 10.10.20.30.
+Installed release: **`227122dcbe9ebc76be46b8a91231350d6c93bdb4`**, branch `docs/udm-pro-max-migration-prep`.
 
-**Follow-up — 05:32 UTC: scoped orphaned-record cleanup PASS.** Separately authorized cleanup using reviewed correction `227122d` removed only channel 2 and stream 2. Both detail 404s, completed receipt and unchanged original protected runtime are verified. See [the cleanup report](dispatcharr-scoped-orphaned-record-cleanup.md), including the expected derived group-count diagnostic. No corrected candidate was deployed.
+**Latest status — 05:44 UTC: controlled permanent deployment PASS.** All four services are healthy. The sole managed start completed at 05:42:24 UTC; final running verification and independent non-media acceptance passed. New owned channel **3** and stream **3** use a fresh relay binding. Old IDs 2 remain absent. Admission passed in **15.002 seconds**. No deployment retry or rollback was required.
 
-**Historical deployment result — 05:10 UTC: coordinated deployment FAIL. Original protected three-service runtime restored and healthy; API rollback incomplete.** The trusted guard published its generation and namespace grant, and the unprivileged relay became healthy. Managed backend readiness, registration, exports and gateway startup completed. The final running-contract verifier failed; offline replay reproduces `running_relay_tmpfs_missing` from Docker's mount representation. Scoped cleanup withdrew readiness and stopped all four services. The complete original protected source/unit baseline was restored through one authorized managed restoration start.
+The completed cleanup receipt and stale exports were verified, archived intact and reconciled before registration. The matched trusted guard, namespace grant, exact security/resource contracts, backend workers, local exports and gateway pass. Relay telemetry records **zero fetches** through final verification. Jellyfin configuration and all unrelated services remain unchanged.
 
-**Retained state at 05:10 UTC, before the follow-up cleanup: one owned hidden DW English channel (ID 2) and stream (ID 2) remained.** The rollback precheck refused before any API mutation because the channel collection omitted the hidden channel. Fresh detail GET confirms its fields still match the ownership receipt. Cleanup stopped at this discrepancy; no deletion, forced reconciliation or candidate retry followed. This is not a completed application-state rollback.
+**GO for separately authorized Jellyfin integration.** Live broadcaster reachability, playback and end-to-end Jellyfin acceptance remain untested in this deployment. No Jellyfin modification, xTeVe retirement or playback is authorized or performed here.
 
-**NO-GO for Jellyfin integration, playback or another deployment.** Correction `227122d` addressed the running tmpfs verifier and hidden-channel handling offline; separate deployment authorization remains required. No Jellyfin changes or broadcaster requests were initiated.
-
-Sections 1–13 retain historical results. **Section 14 records this coordinated attempt and its retained state before the separately authorized cleanup linked above.** Default Group ID 2 and the approved exact ACL remain in place.
+**Section 15 records the successful corrected deployment.** Sections 1–14 retain historical preflight/failure/restoration evidence; their earlier retained-state and NO-GO statements describe those dated attempts. The separately authorized [orphaned-record cleanup](dispatcharr-scoped-orphaned-record-cleanup.md) completed before this retry.
 
 **Historical deployment attempt — stopped before installation or disruption.** Two mandatory prerequisites fail: no existing Default Group and an application network ACL incompatible with the approved registrar. The original healthy three-container stack remains running. No stop/start authorization was consumed and no rollback was needed.
 
@@ -601,3 +599,98 @@ Transition manifest SHA-256: `75d6fbb8357c515058eb4acb145b0920d363055a11782c8752
 | `/etc/systemd/system/dispatcharr-stack.service.d/20-resource-admission.conf` | `578e03101e64c14da217e3d77f5bed9e0dbfbab9dad24b3f077c6b3891aed023` |
 | `/etc/systemd/system/dispatcharr-stack.service.d/30-permanent-streaming.conf` | `55ed3a21aec684c70b0599be358a915d2b91ffdfe088bee7a338e1774ce1a1c9` |
 | `/etc/systemd/system/docker.service.d/50-dispatcharr-order.conf` | `c9beb54d2b2e6285013355f3a80dd6677ff7723d10e835f45c499f39fb9e581b` |
+
+
+## 15. Controlled permanent deployment retry 227122d — PASS
+
+### Authorization and fresh preflight
+
+The owner authorized one controlled deployment attempt of `227122dcbe9ebc76be46b8a91231350d6c93bdb4`, including the matched protected-baseline transition and safe scoped rollback if required. Exclusive-administration confirmation remained in force during the same maintenance window. Reviewed the latest deployment, hidden-channel correction, completed cleanup and trusted implementation reports and the candidate installation procedure. No candidate source was changed during deployment.
+
+At **05:37:33 UTC**, before any stop, the original three-service stack was healthy and idle. Original running/guard contracts and all **17 protected hashes**, including the nine persistence/admission files, passed. There were no live-channel Redis keys, media processes or recordings. The accepted administrative credential authenticated as level 10; Default Group **2**, unique locked streamcopy/MPEG-TS profile **1**, and exact approved ACL digest `cede3b0a514ef30c4d77fbcd09c0e079d9369afc7dcd82dfe9771acaaec60a3e` matched.
+
+Both old record detail endpoints returned **404**, the old ownership ledger was absent, and the completed cleanup receipt matched its recorded SHA-256 `53203a5bbaedfa402a545917eddc8ccbe97397a2814d79014fdd3c9072361325`. Its ownership was channel 2/stream 2 and both stages were absent/complete; no unresolved journal, commit or DELETE intent existed. The hidden-inclusive API inventory contained no channels or streams.
+
+The actual retained inactive tree had **45 files** from `824d0be`; every byte matched that immutable commit before reconciliation. The manifest's older 44-file `776f984` inventory remains historical lineage, not the actual staged-tree approval for this attempt. The corrected candidate's complete **67 target/source mappings** and source hashes matched `227122d`. No host-generated hash replaced an approval value.
+
+The existing immutable patched, VPN and gateway images were available locally; no build/pull occurred. Root-private recovery artifacts under `/root/dispatcharr-minimal-recovery-20261116T051539Z` matched their recorded hashes. All three independent checkpoint archive hashes on **Denethor** at `/mnt/data/Backups/Rivendell/dispatcharr-checkpoints/20261116T043321Z` were freshly verified. No new backup or restore exercise occurred.
+
+Exact nftables semantics, VPN default route through tun0, OUTPUT DROP/embedded-DNS rejection, loopback resolvers and disabled IPv6 passed. Jellyfin remained healthy at `172.20.0.2`; its Live TV SHA-256 matched `28d72351abb46aac33dff87e30ff4bf58ae44122d63b6e3197b26a843540a71b`. The unrelated-service/Docker/network baseline matched prior acceptance.
+
+Fresh systemd compatibility inspection verified root hook execution in the exact guard/stack unit cgroups, unified cgroups, unchanged original ordering and nine-minute/four-minute stack timeouts. Native offline proposed three-service and four-service unit fixtures passed on Rivendell's systemd `255.4-1ubuntu8.18`. Current private configuration/credential permissions and schemas passed without disclosure.
+
+### Completed cleanup and trusted-anchor reconciliation
+
+After the sole old-unit stop, the private state lock was acquired and the exact completed receipt was checked again: hash, IDs, completion stages, UID/GID 1000, mode 0600, regular type and single link. It was **renamed intact** into the new root-private deployment journal as `retired-owned-rollback.json`. It was not blindly deleted or rewritten. Its historical identity and contents remain preserved, and the active state directory then contained only its existing lock, permitting genuinely new registration.
+
+All stale export names, links and file hashes were compared against the fresh preflight snapshot. Only those identified children were moved intact to the root-private `retired-exports` evidence directory. The existing export base directory retained UID/GID 1000 and mode 0750. No Jellyfin tuner/provider referenced or was changed to these files by this task. The old UUID/endpoint was not reused.
+
+The existing public guard-status directory was **preserved at the same inode**. Its root:root 0755 metadata and private anchor matched current host boot/device/inode; it was empty and its private transaction was revoked/unblocked with no owner intent. The original private guard remained root:root 0700. No anchor replacement, transaction reset, copied marker or manual grant publication occurred. This is reuse of the explained trusted anchor under the approved protocol, not adoption of an unexplained object.
+
+### Matched installation and timeline
+
+Only the protected original stack was stopped. The existing VPN-owner container and Docker network were retained. The complete matched release was installed: trusted guard, minimal verifier/cleanup, guard drop-in, resource-admission 20 drop-in and corrected permanent candidate. All **67 installed target hashes** passed after the 30 drop-in was installed. The private relay change was only `ready_file` → `guard_status_dir=/guard-status`; source, digest, credentials and 12-second deadlines were preserved. Policy, WireGuard, DNS and persistent application data were preserved.
+
+Patched AIO, relay and gateway were staged **stopped**, with no build/pull or dependencies. The exact stopped contract passed: six required bind mounts, read-only source/config/status access, exact `HostConfig.Tmpfs`, namespace, privileges and resource limits. Native installed-unit verification passed; systemd reload and inspection confirmed the exact reviewed prestart order, early readiness withdrawal, unchanged admission helper/thresholds/timeouts, runtime-directory preservation and scoped cleanup hooks.
+
+| UTC, 2026-11-17 | Event |
+|---|---|
+| 05:38:51–05:38:55 | Single old-unit managed stop; only original three protected containers stopped |
+| 05:39:40 | Completed cleanup receipt and stale exports archived intact |
+| 05:39:40–05:39:41 | Matched files/private migration installed; 66 mappings verified before 30 |
+| From 05:39:59 | AIO/relay/gateway staged stopped; full stopped contract pass |
+| From 05:40:37 | 30 installed; all 67 hashes, native/effective unit checks and reload pass |
+| 05:40:51 | Sole managed candidate start; early withdrawal/input gate pass |
+| 05:40:51–05:41:07 | Admission helper exits 0 after **15.002 seconds** of measured intervals |
+| 05:41:07 | Guard apply/publication, stopped-owner capture and prestart pass |
+| 05:41:07–05:42:23 | Managed lifecycle exits 0: VPN verification/grant, AIO+relay, backend, registration/exports, gateway |
+| 05:42:23–05:42:24 | Corrected final running verifier exits **0**; unit active/exited, Result=success |
+| 05:43:23 | Independent comprehensive non-media acceptance **PASS** |
+| 05:44:09 | Startup diagnostics/source review confirms zero relay fetches and no startup tracebacks/migration errors |
+
+Admission retained the approved 4-CPU policy: idle ≥50%, steal ≤10%, load1 <4, three consecutive five-second samples, maximum wait 300 seconds. Observed samples were:
+
+| Elapsed seconds | CPU idle % | Steal % | Load1 | Qualifying streak |
+|---:|---:|---:|---:|---:|
+| 5.001 | 96.682 | 0.000 | 0.29 | 1 |
+| 10.002 | 94.310 | 0.050 | 0.27 | 2 |
+| 15.002 | 97.284 | 0.000 | 0.25 | 3 |
+
+There was **one candidate attempt**, no automatic retry and no rollback. No installed gate was bypassed or relaxed.
+
+### Four-service, backend and binding acceptance
+
+All four dedicated services are healthy with restart count **0** and restart policy `no`. Both systemd's final post-check and a separate read-only invocation of the corrected `verify.py running` returned PASS. The previous tmpfs representation incompatibility is resolved: exact `/tmp` options remain mandatory through `HostConfig.Tmpfs`, with six exact binds and strict optional Mounts representation checks.
+
+| Service | Immutable running image |
+|---|---|
+| `rivendell-iptv-vpn` | `sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209` |
+| `dispatcharr` | `sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21` |
+| `rivendell-iptv-relay` | `sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21` |
+| `rivendell-iptv-gateway` | `sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9` |
+
+VPN-owner ID remains `1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e`. Its new running namespace matches the trusted grant and actual relay namespace. A fresh guard generation differs from the prior retired generation; guard/grant fields, policy digest, current boot and relay-pinned generation agree. Transaction phase is granted, unblocked. An actual host UID/GID 1000 probe is denied access to the root-private readiness marker, while the actual UID/GID 1000 relay can validate only its approved public interface. These remain readiness checks, with the approved asynchronous-cleanup/check-to-use/non-continuous-attestation limitations; they do not prove instantaneous revocation or continuous kernel state.
+
+The accepted backend gate passed both during managed startup and independent acceptance: PostgreSQL, authenticated Redis, **two fresh Redis-backed uWSGI workers**, and Default/DVR Celery. The migration inventory remains **184**, fingerprint `b00f51e91c5b882cd84d3b2579d074ca`; no unexpected migrations or startup tracebacks/migration errors were observed. Existing M3U account count remains 1 and EPG-source count 0.
+
+Supported API detail reads confirm exactly **one new owned stream ID 3 and channel ID 3**, hidden channel number **9001**, group **2**, profile **1**. Every saved field matches its current record. The hidden-inclusive collection confirms no duplicate/shared channel or stream. Old IDs **2** still return detail 404. There is no pending journal, commit or rollback receipt in the new active ownership state. The fresh opaque relay endpoint, instance, binding, current channel UUID and export generation agree; no historical endpoint is published here.
+
+Stable local M3U/XMLTV files are generated under `/docker/jellyfin/config/iptv/permanent-dw/current/`. The M3U contains only the new channel UUID and canonical local gateway TS URL, number 9001; the old UUID is absent. XML parses as a single channel and explicitly labeled availability placeholder, not invented broadcaster listings. File modes/ownership are 1000:1000 0640 beneath the preserved 0750 export directory, and the actual Jellyfin UID can read both files. The existing reviewed relay writer renews the placeholder hourly with a 49-hour window; source/configuration are verified, but a future hour-boundary renewal has not yet been observed during this short acceptance window.
+
+The gateway was brought up only after verified backend/relay registration and exports. Gateway health returns **200**. Forbidden HLS/provider/export-route probes return **403** before upstream media access. The exact approved Caddy source, including the reviewed identity-header adjustment and response filters, matches its pin. No live stream request was made. The relay's reviewed rolling budget remains 120 attempts per trailing 60 seconds, four fetches, bounded workers/maps/telemetry/sizes and 12-second deadlines; installed policy source is unchanged. Final telemetry records **zero fetches**, no fatal state and no media processes.
+
+### Security, unrelated services and decision
+
+Exact nftables semantics, VPN-only tun0 routing, DNS/embedded-resolver restrictions, disabled IPv6, image/source/mount/namespace/privilege/resource restrictions and unchanged published ports/network identities all pass. Docker's process identity is unchanged. The corrected four-service inventory comparator passes. Full Config/HostConfig/Mounts hashes, IDs and start times of genuinely unrelated containers also match the existing pre-cleanup comparison checkpoint. No unrelated service was recreated, removed or modified.
+
+Jellyfin is healthy; peer remains `172.20.0.2`, and its Live TV hash remains `28d72351abb46aac33dff87e30ff4bf58ae44122d63b6e3197b26a843540a71b`. No Jellyfin API/settings write or xTeVe retirement was performed. No broadcaster fetch/playback, VM/hypervisor operation, reboot, Docker restart, image build/pull or extra backup/restore occurred.
+
+Root-private preflight, reconciliation, installation, stopped/live-contract, lifecycle/journal, API/binding and publication evidence remains under `/docker/dispatcharr-iptv/private/controlled-deployment-227122d-20261117/` (0700 directory, 0600 receipts). The archived completed receipt and exports preserve prior evidence. Credentials, tokens, private broadcaster URL, opaque endpoint, raw private transaction contents and recovery archives are excluded from this report.
+
+**Permanent backend deployment PASS. GO for separately authorized Jellyfin integration.** The four-service stack is left healthy and running. End-to-end Jellyfin channel/guide discovery, broadcaster reachability and playback remain pending their separate authorization; no current playback success is claimed. xTeVe retirement remains a separate next step. Stop after this publication.
+
+### Exact installed release manifest
+
+The complete [67-target transition manifest at approved commit 227122d](https://github.com/APMurtha/homelab-operations/blob/227122dcbe9ebc76be46b8a91231350d6c93bdb4/configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json) records each installed source/target SHA-256 and root:root 0644 mode; **every mapping was verified on host after installation and at final acceptance**. The candidate has 45 source entries plus manifest/results, 47 files total. No manifest was regenerated on Rivendell.
+
+Transition manifest SHA-256: `47ae4041f2ec9e35c46cf586133001562ce0e3fdde6804fe21c54ce01f6672c8`. Installed candidate manifest SHA-256: `9014af51977ae95a33ea5a380480196da8352af6043bde6126c9b39a4c8f781c`. Guard publisher SHA-256 remains `d25808d50ff14dd1f195397d34b1ead33c3ed8fa5b6aebc5a6c4bf2c120e91b0`; rolling-budget source remains `86b11daec92b621d2bb4d9288da78ea909976f5483c5aab4417a29961b22bd56`. The published report commit changes documentation only, leaving the installed release identity `227122d` explicit.
