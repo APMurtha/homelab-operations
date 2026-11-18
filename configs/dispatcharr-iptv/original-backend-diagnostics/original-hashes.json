@@ -1,0 +1,8 @@
+{
+  "source_commit": "227122dcbe9ebc76be46b8a91231350d6c93bdb4",
+  "files": {
+    "backend.py": "651c7f5952667ac0bda3e21e1e1edb73963aea16b38c9ceca8501182ae774dbf",
+    "lifecycle.py": "9dbe2ec2cfb41b847cffc5cff487e558c16f56d5d992474670989c387d286779",
+    "manifest.json": "9014af51977ae95a33ea5a380480196da8352af6043bde6126c9b39a4c8f781c"
+  }
+}

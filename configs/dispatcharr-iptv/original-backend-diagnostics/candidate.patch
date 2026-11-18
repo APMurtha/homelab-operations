@@ -1,0 +1,377 @@
+--- a/permanent-streaming/backend.py
++++ b/permanent-streaming/backend.py
+@@ -10,0 +11,152 @@
++# Diagnostic projection only. No values from commands, environment or exceptions.
++import contextlib
++import math
++import sys
++
++DIAG_PREFIX = 'DISPATCHARR_BACKEND_DIAG '
++STAGES = ('api_sources', 'postgres', 'redis', 'uwsgi', 'celery')
++MAX_RECORD = 768
++
++
++def failure_code(stage, error, metrics):
++    known = {
++        'pinned_API_source_changed': 'source_hash_mismatch',
++        'Redis_not_ready': 'redis_ping_failed',
++        'unexpected_worker_count': 'worker_count_exceeded',
++        'two_fresh_web_workers_required': 'fresh_workers_missing',
++    }
++    if type(error) is ValueError and len(error.args) == 1:
++        # Equality tests only: never serialize an exception's message/arguments.
++        for message, code in known.items():
++            if error.args == (message,) and code in FAILURES[stage]: return code
++        if stage=='postgres' and error.args == ('database_or_migrations_changed',):
++            return 'postgres_command_failed' if metrics.get('returncode') else 'migration_mismatch'
++        if stage=='celery' and error.args == ('Celery_not_ready',):
++            if metrics.get('returncode'): return 'celery_command_failed'
++            if not metrics.get('default_present') and not metrics.get('dvr_present'): return 'celery_roles_missing'
++            if not metrics.get('default_present'): return 'celery_default_missing'
++            if not metrics.get('dvr_present'): return 'celery_dvr_missing'
++            return 'celery_reply_count'
++    if type(error).__module__.startswith('redis.'):
++        code = {'AuthenticationError':'redis_authentication_failed', 'ConnectionError':'redis_connection_failed',
++                'TimeoutError':'redis_timeout'}.get(type(error).__name__)
++        if code: return code
++    if isinstance(error, subprocess.TimeoutExpired): return 'subprocess_timeout'
++    if isinstance(error, FileNotFoundError): return 'file_missing'
++    if isinstance(error, PermissionError): return 'file_permission'
++    if isinstance(error, json.JSONDecodeError): return 'invalid_manifest'
++    if isinstance(error, ImportError): return 'dependency_unavailable'
++    return 'unexpected_exception'
++
++
++class Diagnostics:
++    def __init__(self):
++        self.started = time.monotonic()
++        self.values = {}
++
++    def metrics(self, **values):
++        self.values.update(values)
++
++    def emit(self, stage, event, classification, metrics=False):
++        elapsed = round(time.monotonic() - self.started, 6)
++        if not math.isfinite(elapsed) or elapsed < 0: raise ValueError('diagnostic_clock_invalid')
++        record = {'stage':stage, 'event':event, 'elapsed_s':elapsed, 'classification':classification}
++        if metrics: record.update(self.values)
++        raw = DIAG_PREFIX + json.dumps(record, sort_keys=True, allow_nan=False, separators=(',', ':'))
++        if len(raw.encode()) > MAX_RECORD: raise ValueError('diagnostic_record_limit')
++        print(raw, file=sys.stderr, flush=True)
++
++    @contextlib.contextmanager
++    def stage(self, name):
++        self.values = {}
++        self.emit(name, 'start', 'checking')
++        try:
++            yield
++        except Exception as error:
++            self.emit(name, 'fail', failure_code(name, error, self.values), metrics=True)
++            raise
++        else:
++            self.emit(name, 'pass', 'ready', metrics=True)
++
++
++# Shared producer/reader schema. Importing this module does not run check().
++FAILURES = {
++    'api_sources': {'source_hash_mismatch'},
++    'postgres': {'postgres_command_failed', 'migration_mismatch'},
++    'redis': {'redis_ping_failed','redis_authentication_failed','redis_connection_failed','redis_timeout'},
++    'uwsgi': {'worker_count_exceeded','fresh_workers_missing','redis_authentication_failed','redis_connection_failed','redis_timeout'},
++    'celery': {'celery_command_failed','celery_roles_missing','celery_default_missing','celery_dvr_missing','celery_reply_count'},
++}
++COMMON_FAILURES = {'file_missing','file_permission','invalid_manifest','dependency_unavailable','subprocess_timeout','unexpected_exception'}
++METRICS = {'api_sources': {'count'}, 'postgres': {'returncode'}, 'redis': set(),
++           'uwsgi': {'count'}, 'celery': {'count','returncode','default_present','dvr_present'}}
++
++
++class InvalidDiagnostics(ValueError): pass
++
++
++def decode_record(raw):
++    def pairs(items):
++        value = {}
++        for key,item in items:
++            if key in value: raise InvalidDiagnostics('duplicate_field')
++            value[key] = item
++        return value
++    def constant(_): raise InvalidDiagnostics('nonfinite_number')
++    try:
++        value = json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
++    except (ValueError, TypeError, UnicodeError):
++        raise InvalidDiagnostics('invalid_JSON') from None
++    base = {'stage','event','elapsed_s','classification'}
++    if not isinstance(value,dict) or not base <= set(value): raise InvalidDiagnostics('fields')
++    stage=value['stage'];event=value['event'];code=value['classification']
++    if not isinstance(stage,str) or stage not in STAGES: raise InvalidDiagnostics('stage')
++    if not isinstance(event,str) or event not in {'start','pass','fail'}: raise InvalidDiagnostics('event')
++    if not isinstance(code,str): raise InvalidDiagnostics('classification')
++    if set(value)-base-METRICS[stage]: raise InvalidDiagnostics('fields')
++    elapsed=value['elapsed_s']
++    if type(elapsed) not in (int,float) or not 0 <= elapsed <= 90 or not math.isfinite(elapsed): raise InvalidDiagnostics('elapsed')
++    if 'count' in value and (type(value['count']) is not int or not 0<=value['count']<=65535): raise InvalidDiagnostics('count')
++    if 'returncode' in value and (type(value['returncode']) is not int or not -255<=value['returncode']<=255): raise InvalidDiagnostics('returncode')
++    for field in ['default_present','dvr_present']:
++        if field in value and type(value[field]) is not bool: raise InvalidDiagnostics('role')
++    if event=='start':
++        if set(value)!=base or code!='checking': raise InvalidDiagnostics('start')
++    elif event=='pass':
++        if code!='ready' or set(value)!=base|METRICS[stage]: raise InvalidDiagnostics('pass')
++        if stage=='api_sources' and value['count']!=14: raise InvalidDiagnostics('source_count')
++        if stage=='uwsgi' and value['count']!=2: raise InvalidDiagnostics('worker_count')
++        if stage in {'postgres','celery'} and value['returncode']!=0: raise InvalidDiagnostics('returncode')
++        if stage=='celery' and (value['count']!=2 or value['default_present'] is not True or value['dvr_present'] is not True): raise InvalidDiagnostics('roles')
++    elif code not in FAILURES[stage]|COMMON_FAILURES: raise InvalidDiagnostics('failure')
++    if event=='fail':
++        if code=='migration_mismatch' and value.get('returncode')!=0:raise InvalidDiagnostics('migration_evidence')
++        if code in {'postgres_command_failed','celery_command_failed'} and ('returncode' not in value or value['returncode']==0):raise InvalidDiagnostics('command_evidence')
++        if code=='fresh_workers_missing' and ('count' not in value or value['count']==2):raise InvalidDiagnostics('worker_evidence')
++        if code=='worker_count_exceeded' and value.get('count',0)<=16:raise InvalidDiagnostics('worker_evidence')
++        if code in {'celery_roles_missing','celery_default_missing','celery_dvr_missing','celery_reply_count'}:
++            if not METRICS['celery']<=set(value) or value['returncode']!=0:raise InvalidDiagnostics('Celery_evidence')
++            expected=('celery_roles_missing' if not value['default_present'] and not value['dvr_present'] else 'celery_default_missing' if not value['default_present'] else 'celery_dvr_missing' if not value['dvr_present'] else 'celery_reply_count')
++            if code!=expected or code=='celery_reply_count' and value['count']==2:raise InvalidDiagnostics('Celery_evidence')
++    return value
++
++
++class RecordStream:
++    def __init__(self):
++        self.records=[];self.index=0;self.open=False;self.terminal=False;self.last_elapsed=0
++
++    def append(self, raw):
++        if len(raw)>MAX_RECORD or self.terminal or self.index>=len(STAGES): raise InvalidDiagnostics('record_limit_or_terminal')
++        value=decode_record(raw)
++        if value['stage']!=STAGES[self.index] or value['elapsed_s']<self.last_elapsed: raise InvalidDiagnostics('sequence')
++        event=value['event']
++        if not self.open and event!='start' or self.open and event=='start': raise InvalidDiagnostics('sequence')
++        self.last_elapsed=value['elapsed_s'];self.records.append(value)
++        if event=='start':self.open=True
++        elif event=='fail':self.open=False;self.terminal=True
++        else:self.open=False;self.index+=1;self.terminal=self.index==len(STAGES)
++
++    @property
++    def passed(self):return self.index==len(STAGES) and self.terminal
++
++
+@@ -12,34 +164,46 @@
+-    pins = json.loads(Path('/opt/permanent/api-source-pins.json').read_text())
+-    for name, expected in pins['files'].items():
+-        if hashlib.sha256((Path('/app') / name).read_bytes()).hexdigest() != expected:
+-            raise ValueError('pinned_API_source_changed')
+-    env = os.environ.copy()
+-    for pg, source in [('PGHOST','POSTGRES_HOST'), ('PGPORT','POSTGRES_PORT'),
+-                       ('PGDATABASE','POSTGRES_DB'), ('PGUSER','POSTGRES_USER'), ('PGPASSWORD','POSTGRES_PASSWORD')]:
+-        env[pg] = os.environ.get(source, '')
+-    env['PGOPTIONS'] = '-c default_transaction_read_only=on -c statement_timeout=10000 -c lock_timeout=3000'
+-    query = "SELECT count(*)||':'||md5(string_agg(app||'.'||name,',' ORDER BY app,name)) FROM django_migrations"
+-    p = subprocess.run(['psql','-XAt','--no-password','-v','ON_ERROR_STOP=1','-c',query],
+-                       env=env, capture_output=True, text=True, timeout=15)
+-    if p.returncode or p.stdout.strip() != '184:b00f51e91c5b882cd84d3b2579d074ca':
+-        raise ValueError('database_or_migrations_changed')
+-    import redis
+-    r = redis.Redis(host=os.environ.get('REDIS_HOST','localhost'), port=int(os.environ.get('REDIS_PORT','6379')),
+-                    password=os.environ.get('REDIS_PASSWORD') or None, decode_responses=True,
+-                    socket_connect_timeout=3, socket_timeout=3)
+-    if not r.ping(): raise ValueError('Redis_not_ready')
+-    workers = []
+-    for key in r.scan_iter(match='live:worker:*:heartbeat', count=100):
+-        if len(workers) > 16: raise ValueError('unexpected_worker_count')
+-        try:
+-            pid = int(key.rsplit(':',2)[1]); age = time.time() - float(r.get(key))
+-            if (Path('/proc') / str(pid) / 'comm').read_text().strip() == 'uwsgi' and 0 <= age < 30 and r.ttl(key) > 0:
+-                workers.append(pid)
+-        except (OSError, ValueError, TypeError): continue
+-    if len(workers) != 2: raise ValueError('two_fresh_web_workers_required')
+-    p = subprocess.run(['celery','-A','dispatcharr','inspect','ping','--timeout=8'],
+-                       cwd='/app', capture_output=True, text=True, timeout=40)
+-    nodes = re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',p.stdout)
+-    if p.returncode or len(nodes) != 2 or {n.split('@')[0] for n in nodes} != {'default','dvr'}:
+-        raise ValueError('Celery_not_ready')
+-
++    diagnostic = Diagnostics()
++    with diagnostic.stage('api_sources'):
++        pins = json.loads(Path('/opt/permanent/api-source-pins.json').read_text())
++        diagnostic.metrics(count=len(pins['files']))
++        for name, expected in pins['files'].items():
++            if hashlib.sha256((Path('/app') / name).read_bytes()).hexdigest() != expected:
++                raise ValueError('pinned_API_source_changed')
++    with diagnostic.stage('postgres'):
++        env = os.environ.copy()
++        for pg, source in [('PGHOST','POSTGRES_HOST'), ('PGPORT','POSTGRES_PORT'),
++                           ('PGDATABASE','POSTGRES_DB'), ('PGUSER','POSTGRES_USER'), ('PGPASSWORD','POSTGRES_PASSWORD')]:
++            env[pg] = os.environ.get(source, '')
++        env['PGOPTIONS'] = '-c default_transaction_read_only=on -c statement_timeout=10000 -c lock_timeout=3000'
++        query = "SELECT count(*)||':'||md5(string_agg(app||'.'||name,',' ORDER BY app,name)) FROM django_migrations"
++        p = subprocess.run(['psql','-XAt','--no-password','-v','ON_ERROR_STOP=1','-c',query],
++                           env=env, capture_output=True, text=True, timeout=15)
++        diagnostic.metrics(returncode=p.returncode)
++        if p.returncode or p.stdout.strip() != '184:b00f51e91c5b882cd84d3b2579d074ca':
++            raise ValueError('database_or_migrations_changed')
++    with diagnostic.stage('redis'):
++        import redis
++        r = redis.Redis(host=os.environ.get('REDIS_HOST','localhost'), port=int(os.environ.get('REDIS_PORT','6379')),
++                        password=os.environ.get('REDIS_PASSWORD') or None, decode_responses=True,
++                        socket_connect_timeout=3, socket_timeout=3)
++        if not r.ping(): raise ValueError('Redis_not_ready')
++    with diagnostic.stage('uwsgi'):
++        workers = []
++        diagnostic.metrics(count=0)
++        for key in r.scan_iter(match='live:worker:*:heartbeat', count=100):
++            if len(workers) > 16: raise ValueError('unexpected_worker_count')
++            try:
++                pid = int(key.rsplit(':',2)[1]); age = time.time() - float(r.get(key))
++                if (Path('/proc') / str(pid) / 'comm').read_text().strip() == 'uwsgi' and 0 <= age < 30 and r.ttl(key) > 0:
++                    workers.append(pid)
++                    diagnostic.metrics(count=len(workers))
++            except (OSError, ValueError, TypeError): continue
++        if len(workers) != 2: raise ValueError('two_fresh_web_workers_required')
++    with diagnostic.stage('celery'):
++        p = subprocess.run(['celery','-A','dispatcharr','inspect','ping','--timeout=8'],
++                           cwd='/app', capture_output=True, text=True, timeout=40)
++        nodes = re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',p.stdout)
++        diagnostic.metrics(returncode=p.returncode, count=len(nodes),
++                           default_present=any(n.split('@')[0]=='default' for n in nodes),
++                           dvr_present=any(n.split('@')[0]=='dvr' for n in nodes))
++        if p.returncode or len(nodes) != 2 or {n.split('@')[0] for n in nodes} != {'default','dvr'}:
++            raise ValueError('Celery_not_ready')
+--- a/permanent-streaming/lifecycle.py
++++ b/permanent-streaming/lifecycle.py
+@@ -28,0 +29,126 @@
++# Only backend invocation output uses this path. Other execute()/cleanup is unchanged.
++import json
++import selectors
++import secrets
++
++MAX_CAPTURE = 4096
++MAX_RECEIPT = 16384
++GENERIC_BACKEND = b'Backend readiness refused; values withheld.'
++
++
++def _protocol():
++    spec=importlib.util.spec_from_file_location('original_backend_diagnostic_schema',HERE/'backend.py')
++    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
++    return module
++
++
++def _private_dir():
++    target=ROOT/'private'/'backend-diagnostics'
++    for path in [ROOT,*ROOT.parents]:
++        st=path.lstat()
++        if not stat.S_ISDIR(st.st_mode) or st.st_uid!=0 or st.st_gid!=0 or stat.S_IMODE(st.st_mode)&0o022:
++            raise ValueError('diagnostic_ancestor_unsafe')
++    if os.geteuid()!=0 or os.getegid()!=0:raise ValueError('diagnostic_writer_not_root')
++    private=ROOT/'private';st=private.lstat()
++    if not stat.S_ISDIR(st.st_mode) or (st.st_uid,st.st_gid,stat.S_IMODE(st.st_mode))!=(0,0,0o700):raise ValueError('diagnostic_private_unsafe')
++    parent=os.open(private,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
++    try:
++        actual=os.fstat(parent)
++        if (actual.st_dev,actual.st_ino)!=(st.st_dev,st.st_ino) or (actual.st_uid,actual.st_gid,stat.S_IMODE(actual.st_mode))!=(0,0,0o700):raise ValueError('diagnostic_parent_changed')
++        try:os.mkdir('backend-diagnostics',0o700,dir_fd=parent)
++        except FileExistsError:pass
++        os.fsync(parent)  # Persist a newly created private-directory entry before launch.
++        fd=os.open('backend-diagnostics',os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=parent)
++    finally:os.close(parent)
++    try:
++        st=os.fstat(fd)
++        if (st.st_uid,st.st_gid,stat.S_IMODE(st.st_mode))!=(0,0,0o700):raise ValueError('diagnostic_directory_unsafe')
++        return target,fd
++    except BaseException:os.close(fd);raise
++
++
++def _receipt(target, directory, name, value):
++    # Held dirfd plus current-path identity; never overwrite/adopt existing files.
++    parts=name.split('.')
++    if len(parts)!=3 or len(parts[0])!=32 or any(c not in '0123456789abcdef' for c in parts[0]) or parts[1] not in {'intent','result'} or parts[2]!='json':raise ValueError('diagnostic_filename')
++    st=target.lstat();held=os.fstat(directory)
++    if not stat.S_ISDIR(st.st_mode) or (st.st_dev,st.st_ino)!=(held.st_dev,held.st_ino) or (st.st_uid,st.st_gid,stat.S_IMODE(st.st_mode))!=(0,0,0o700):raise ValueError('diagnostic_anchor_changed')
++    data=(json.dumps(value,sort_keys=True,allow_nan=False,separators=(',',':'))+'\n').encode()
++    if len(data)>MAX_RECEIPT:raise ValueError('diagnostic_receipt_limit')
++    fd=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=directory)
++    with os.fdopen(fd,'wb') as out:
++        os.fchmod(out.fileno(),0o600);st=os.fstat(out.fileno())
++        if not stat.S_ISREG(st.st_mode) or (st.st_uid,st.st_gid,stat.S_IMODE(st.st_mode),st.st_nlink)!=(0,0,0o600,1):raise ValueError('diagnostic_file_unsafe')
++        out.write(data);out.flush();os.fsync(out.fileno())
++    os.fsync(directory)
++
++
++def _capture_backend(args, timeout=90):
++    protocol=_protocol();stream=protocol.RecordStream();started=time.monotonic()
++    process=None;selector=selectors.DefaultSelector();buffer=b'';total=0;generic=False;reason=None;code=None
++    try:
++        try:process=subprocess.Popen(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE,bufsize=0)
++        except OSError:reason='launch_failed'
++        if process is not None:
++            selector.register(process.stdout,selectors.EVENT_READ,'stdout');selector.register(process.stderr,selectors.EVENT_READ,'stderr')
++            while selector.get_map() and reason is None:
++                remaining=timeout-(time.monotonic()-started)
++                if remaining<=0:reason='deadline_exceeded';break
++                for key,_ in selector.select(remaining):
++                    chunk=os.read(key.fileobj.fileno(),4096)
++                    if not chunk:selector.unregister(key.fileobj);continue
++                    total+=len(chunk)
++                    if total>MAX_CAPTURE:reason='output_limit';break
++                    if key.data=='stdout':reason='unexpected_output';break
++                    buffer+=chunk
++                    while b'\n' in buffer:
++                        line,buffer=buffer.split(b'\n',1)
++                        if len(line)>protocol.MAX_RECORD:reason='record_limit';break
++                        if line==GENERIC_BACKEND and not generic:generic=True;continue
++                        prefix=protocol.DIAG_PREFIX.encode()
++                        if not line.startswith(prefix):reason='unexpected_output';break
++                        try:stream.append(line[len(prefix):])
++                        except protocol.InvalidDiagnostics:reason='invalid_diagnostics';break
++                    if reason is not None:break
++                    if len(buffer)>protocol.MAX_RECORD:reason='record_limit';break
++            if reason is not None and process.poll() is None:process.kill()
++            try:code=process.wait(timeout=max(0.001,timeout-(time.monotonic()-started)) if reason is None else 10)
++            except subprocess.TimeoutExpired:
++                reason='deadline_exceeded';process.kill();code=process.wait(timeout=10)
++            if reason is None and buffer:reason='truncated_diagnostics'
++            if reason is None:
++                if code==0 and stream.passed and not generic:reason='accepted'
++                elif not stream.records:reason='launch_failed_before_first_diagnostic'
++                elif stream.records[-1]['event']=='fail' and code!=0:reason='backend_stage_failed'
++                else:reason='incomplete_or_inconsistent_diagnostics'
++    except Exception:
++        reason='capture_failed'
++    finally:
++        if process is not None:
++            if process.poll() is None:process.kill();process.wait(timeout=10)
++            if process.stdout is not None:process.stdout.close()
++            if process.stderr is not None:process.stderr.close()
++        selector.close()
++    return {'reason':reason,'returncode':code,'records':stream.records,'producer_entered':bool(stream.records),'boundary':'inside_readiness' if stream.records else 'before_first_diagnostic','captured_bytes':min(total,MAX_CAPTURE+4096)}
++
++
++def execute_backend(args, timeout=90):
++    target=None;directory=None
++    try:
++        target,directory=_private_dir();invocation=secrets.token_hex(16)
++        _receipt(target,directory,invocation+'.intent.json',{'schema':1,'invocation':invocation,'state':'intent'})
++        outcome=_capture_backend(args,timeout)
++        _receipt(target,directory,invocation+'.result.json',{'schema':1,'invocation':invocation,'state':'complete',**outcome})
++        # Only records already accepted by the strict decoder are forwarded.
++        for record in outcome['records']:
++            print('DISPATCHARR_BACKEND_DIAG '+json.dumps(record,sort_keys=True,allow_nan=False,separators=(',',':')),file=sys.stderr,flush=True)
++        if outcome['reason']!='accepted':
++            print('Backend diagnostic evidence: '+outcome['reason']+'; backend not accepted.',file=sys.stderr,flush=True)
++            raise ValueError('scoped_command_failed')
++    except Exception:
++        print('Backend diagnostic evidence gap or failure; no automatic retry.',file=sys.stderr,flush=True)
++        raise ValueError('scoped_command_failed') from None
++    finally:
++        if directory is not None:os.close(directory)
++
++
+@@ -34 +160,2 @@
+-    execute(command, 90)
++    if environment: execute_backend(command, 90)
++    else: execute(command, 90)
+--- a/permanent-streaming/manifest.json
++++ b/permanent-streaming/manifest.json
+@@ -11 +11 @@
+-    "backend.py": "651c7f5952667ac0bda3e21e1e1edb73963aea16b38c9ceca8501182ae774dbf",
++    "backend.py": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
+@@ -25 +25 @@
+-    "lifecycle.py": "9dbe2ec2cfb41b847cffc5cff487e558c16f56d5d992474670989c387d286779",
++    "lifecycle.py": "171530848e5623b3ab3a578798c83d3991b1299798202f544fc70fd92a26bc8f",

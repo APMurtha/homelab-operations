@@ -1,0 +1,21 @@
+{
+  "files": {
+    "README.md": "93211cad22030f88327d9abd17907c21d533677d10c3208e44ca5b9cfb65d7b0",
+    "candidate-inventory.json": "4cf27e5ad65bd1b81be72bbbe99c1b46209adf4add600646cdcfd65b026e302e",
+    "candidate.patch": "a3fa38e37fc465c0f6f4d65a4864baac9c93c55bcdc8b4d6f9ed5b338be22d57",
+    "candidate/backend.py": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
+    "candidate/lifecycle.py": "171530848e5623b3ab3a578798c83d3991b1299798202f544fc70fd92a26bc8f",
+    "candidate/manifest.json": "1eb1a2b68e564b56cc105b31eb6281b610cf0e1f3684fea9246fd02eaabcc8f5",
+    "offline-results.json": "0398b1d0470a1dd91f0336a7f11a7cd34dc37b9abee211b92136431ac17f5861",
+    "original-hashes.json": "5e3558daa34afd58633673c22ac53127107d02ea85f1ab75969fc28fef9adca2",
+    "original/backend.py": "651c7f5952667ac0bda3e21e1e1edb73963aea16b38c9ceca8501182ae774dbf",
+    "original/lifecycle.py": "9dbe2ec2cfb41b847cffc5cff487e558c16f56d5d992474670989c387d286779",
+    "original/manifest.json": "9014af51977ae95a33ea5a380480196da8352af6043bde6126c9b39a4c8f781c",
+    "tests/permission_fixture.py": "7e12cd7324097c0a35522b331f6f28c204f62e229d02d14d54b6abb68f6f4811",
+    "tests/run-permissions.sh": "89aa5a9c6e69d198f10fbd5925f26a070820dd0ab8443ad3a14b1a9317fe5d2a",
+    "tests/test_diagnostics.py": "6b18e41e8dc4850d385fd9adfb9e4740838c5616c57fedf748ddc55825c1a4ba",
+    "verify_candidate.py": "1764bc1adf3307e86607f77db059a2181acede33296533eebaae7bdbdfe6279a"
+  },
+  "mode": "OFFLINE REVIEW ONLY",
+  "schema": 1
+}

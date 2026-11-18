@@ -1,0 +1,50 @@
+{
+  "Docker_operations": 0,
+  "application_runtime_attempts": 0,
+  "candidate_installation_targets": 3,
+  "errors": 0,
+  "existing_offline_regressions": 236,
+  "failures": 0,
+  "isolated_filesystem_checks": 13,
+  "limitations": [
+    "Synthetic predicates/protocol tests and real local filesystem access semantics; not a real Django/Redis/Celery run.",
+    "Production not accessed or changed; receipt filesystem durability and actual startup compatibility require separately authorized acceptance.",
+    "Intent without a successful final receipt indicates an evidence gap; receipts are not authorization or a health latch."
+  ],
+  "logs": {
+    "existing_persistence": {
+      "sha256": "2c80dd659cd1143190d7f53f84f15957ceb766a9611dfaa817d6e171a29fa8d6",
+      "tests": 26
+    },
+    "existing_security_lifecycle": {
+      "sha256": "315073e8705d174ba4c5142d2e37f12d0fc0fcec939d94bfbc7bbdd09cea2401",
+      "tests": 210
+    },
+    "isolated_permissions": {
+      "sha256": "98fa128333e96613f11ed6704252a6cf3d9f9375d25b17a2adfd0cffa3497cff",
+      "tests": 13
+    },
+    "new_unit": {
+      "sha256": "b85dd58e217cf631b4532ad29801bc098cd626df908f34212ac3078ab1cd5bec",
+      "tests": 69
+    }
+  },
+  "manifest_installed_path_closure": true,
+  "new_unit_tests": 69,
+  "original_lifecycle_critical_function_AST_equivalence": true,
+  "permission_fixture": {
+    "Docker_operations": 0,
+    "checks": 13,
+    "external_requests": 0,
+    "fixture": "disposable UID0/UID1000 chroot",
+    "success": true
+  },
+  "predicate_AST_equivalence": true,
+  "production_access": 0,
+  "result": "PASS_OFFLINE_ONLY",
+  "schema": 1,
+  "skips": 0,
+  "source_baseline_commit": "227122dcbe9ebc76be46b8a91231350d6c93bdb4",
+  "total_unit_regression_tests": 305,
+  "unchanged_installed_targets": 64
+}
