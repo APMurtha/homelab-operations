@@ -4,13 +4,14 @@ Payload contains the test harness and approved client source, no credentials.
 import base64
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import time
 
 DOCKER=['docker','-H','unix:///var/run/docker.sock']
 NAME='dispatcharr-native-runtime-1124d96'
-IMAGE='sha256:26c93e71dd431127ef72c651bfe0ad3f7431cef7c135749002833f1fc1524c78'
+IMAGE=None  # Requires the separately reviewed successful build receipt, never the failed image.
 OWNER='1124d96'
 
 def docker(args,timeout=60):
@@ -25,7 +26,21 @@ def production():
         if not rows[name].endswith('healthy'):raise RuntimeError('production_health_drift')
     return rows
 
-def main(payload,work):
+def prepare_fixture(work,payload):
+    # Only synthetic/public test source enters this bind; transport parent stays private.
+    fixture=work/'fixture';fixture.mkdir(mode=0o755)
+    for name,data in payload.items():
+        if name.startswith('/') or '..' in Path(name).parts:raise RuntimeError('unsafe_fixture_path')
+        path=fixture/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(base64.b64decode(data,validate=True));path.chmod(0o644)
+    for directory in [fixture,*[p for p in fixture.rglob('*') if p.is_dir()]]:directory.chmod(0o755)
+    return fixture
+
+def main(payload,work,image=None):
+    global IMAGE
+    if (not isinstance(image,str) or not re.fullmatch('sha256:[a-f0-9]{64}',image)
+            or image in {'sha256:26c93e71dd431127ef72c651bfe0ad3f7431cef7c135749002833f1fc1524c78',
+                         'sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21'}):raise RuntimeError('new_accepted_test_image_required')
+    IMAGE=image
     work=Path(work)
     receipt=json.loads((work/'build-receipt.json').read_text())
     if receipt.get('image_id')!=IMAGE or receipt.get('state')!='verified':raise RuntimeError('built_image_not_verified')
@@ -34,10 +49,7 @@ def main(payload,work):
     if memory<2*1024**3 or __import__('os').getloadavg()[0]>2:raise RuntimeError('test_capacity_gate_failed')
     before=production();networks=docker(['network','ls','--no-trunc','--format','{{.ID}} {{.Name}}'])
     if subprocess.run(DOCKER+['inspect',NAME],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0:raise RuntimeError('test_name_conflict')
-    fixture=work/'fixture';fixture.mkdir(mode=0o700)
-    for name,data in payload.items():
-        if name.startswith('/') or '..' in Path(name).parts:raise RuntimeError('unsafe_fixture_path')
-        path=fixture/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(base64.b64decode(data,validate=True));path.chmod(0o644)
+    fixture=prepare_fixture(work,payload)
     pk=docker(['create','--pull=never','--name',NAME,'--label','dispatcharr.integration.owner='+OWNER,'--network=none','--read-only','--restart=no','--cap-drop=ALL','--cap-add=CHOWN','--cap-add=DAC_OVERRIDE','--cap-add=FOWNER','--cap-add=SETUID','--cap-add=SETGID','--cap-add=KILL','--security-opt','no-new-privileges:true','--memory=1536m','--memory-swap=1536m','--cpus=1','--pids-limit=256','--sysctl','net.ipv4.ip_unprivileged_port_start=0','--tmpfs','/data:rw,nosuid,nodev,size=512m','--tmpfs','/test-state:rw,nosuid,nodev,mode=0700,size=256m','--tmpfs','/run:rw,nosuid,nodev,size=32m','--tmpfs','/tmp:rw,nosuid,nodev,mode=1777,size=128m','--tmpfs','/guard-status:rw,nosuid,nodev,mode=0755,size=1m','--mount','type=bind,src='+str(fixture/'passwd')+',dst=/etc/passwd,readonly','--mount','type=bind,src='+str(fixture/'group')+',dst=/etc/group,readonly','--mount','type=bind,src='+str(fixture)+',dst=/fixture,readonly','--entrypoint','/dispatcharrpy/bin/python',IMAGE,'-B','/fixture/runtime_test.py'])
     result={'image_id':IMAGE,'container_id':pk,'owner':OWNER}
     try:

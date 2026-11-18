@@ -16,7 +16,7 @@ import tarfile
 import time
 
 BASE='sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21'
-TAG='local/dispatcharr-native-hardening:1124d96-review'
+TAG='local/dispatcharr-native-hardening:policy-lifecycle-review-v2'
 DOCKER=['docker','-H','unix:///var/run/docker.sock']
 LABEL='dispatcharr.integration.owner=1124d96'
 

@@ -1,0 +1,129 @@
+{
+  "Docker_operations": 0,
+  "application_outputs_unchanged": 14,
+  "approved_application_commit": "0b8ac7d326a89c9607654d426eb0270f65e41136",
+  "baseline_tests_retained": 537,
+  "changed_file_sha256": {
+    "configs/dispatcharr-iptv/boot-admission-phase6b3k/20-resource-admission.conf": "e639eab69f150f9f9ab833def8353c38f33bdbf00e3cb23e5ad0dfc595edd964",
+    "configs/dispatcharr-iptv/boot-admission-phase6b3k/README.md": "ed5063ad6c53479a1e481e0fac9ca649d9d205c8709d2a4de7be4d36fe0af1fc",
+    "configs/dispatcharr-iptv/boot-admission-phase6b3k/artifact-hashes.json": "7f34075462c2f3a2d49a916431778de19475f65c0115735299fe92ec5dc02111",
+    "configs/dispatcharr-iptv/boot-admission-phase6b3k/tests/test_admit.py": "89f2b16eb9f45402e899415db94662435dd0832c3e5659ab95d97ba943e033f6",
+    "configs/dispatcharr-iptv/guard.py": "147cb62b0fa19e90d391b5583bde7e342f71bfca748e068f730ba3dd56e91f8a",
+    "configs/dispatcharr-iptv/hardened-image-integration/Dockerfile": "42dfee8640d31b41bca3db95009f8acd25f97c4909c0f707448c413a00a4dc25",
+    "configs/dispatcharr-iptv/hardened-image-integration/README.md": "0025ed1468fcab8cbb65114b87755f471d99b035ac7bd352ddaa4408707c5549",
+    "configs/dispatcharr-iptv/hardened-image-integration/build_once.py": "009c0a70be6b41aadcb726de821feba8ec825d0b1be3c76fb266aee772c5d7d6",
+    "configs/dispatcharr-iptv/hardened-image-integration/run_runtime.py": "1cafc87802fc6558d105e9860809a42e24be20cc933a928079efd7fe07e95c64",
+    "configs/dispatcharr-iptv/minimal-phase6b3d/README.md": "04e556e2e9d8a72a595ac9d259dc7f30890535dd275f703cb76cc65ed1b9fe9c",
+    "configs/dispatcharr-iptv/minimal-phase6b3d/artifact-hashes.json": "7a0952ae77f122a9b5b6d0993a1458c55581cb2e34c47cd82b60b1c1292e0857",
+    "configs/dispatcharr-iptv/minimal-phase6b3d/cleanup.py": "0007aafcc865746e2186e3d491a9c913958985453e8ea66f7523e690dc5406f2",
+    "configs/dispatcharr-iptv/minimal-phase6b3d/tests/test_minimal.py": "87f11a6e49728302ed2cb12af0a6209ece26764c0b2efc88a26cb853d26673ad",
+    "configs/dispatcharr-iptv/minimal-phase6b3d/units/dispatcharr-egress-guard.service.d/20-trusted-readiness.conf": "37226a0e1d77a14d2f0c0e16254f0f6699e7e0c543afcebfd24630cde0249a34",
+    "configs/dispatcharr-iptv/minimal-phase6b3d/verify.py": "3133c228bcad182454e3fa03e0af9ae26e39dbf23f616cc39c47d8a44e07f89c",
+    "configs/dispatcharr-iptv/native-provider-hardening/README.md": "3513518b0237df00258c05b8d3762f7231c969a4d8f5f7d7930ad3840f7be74f",
+    "configs/dispatcharr-iptv/native-provider-hardening/publish_policy.py": "0e0a36dffeed12b092e97025ce0ec857dd1b470009321d677b3fd25796baa4e8",
+    "configs/dispatcharr-iptv/native-provider-hardening/release-contract.json": "d1c1d2b72b70beecd8a8f67a9c071317fab04bc00133a9b2d0377a9fd07d3eab",
+    "configs/dispatcharr-iptv/native-provider-hardening/tests/permission_fixture.py": "a61b2e6b1a4bbfb5c5c8bb149983dcbc77062c88faa6dab82cea6c2c998c18bc",
+    "configs/dispatcharr-iptv/native-provider-hardening/tests/test_final_integration.py": "c6b1d18ef089b513ab4671aa3a5f1dc2e0609ccf238146229814a1a87a7789ac",
+    "configs/dispatcharr-iptv/permanent-streaming/30-permanent-streaming.conf": "8889cad7cf511579487a4472aac8deb89e23d9617e5b302b872732b8a7f44e86",
+    "configs/dispatcharr-iptv/permanent-streaming/40-native-hardening.conf": "c0688992469db9c181faa9be16530db14fe734d5939de3b988c5ab8c90d6dd64",
+    "configs/dispatcharr-iptv/permanent-streaming/README.md": "fe2744059edfbfa364f1efc837ebef844784e84810f255b213423acb3c6c45ff",
+    "configs/dispatcharr-iptv/permanent-streaming/base-input-pins.json": "cfe0d81ad95dd3daa73b8740a002474c8e8de7d94c2f219c29a1ac1663195ccf",
+    "configs/dispatcharr-iptv/permanent-streaming/compose.native.yaml": "02666b070ee6ff6ef32471cf8573cb471f0106504ba2e86a094b70143d28677d",
+    "configs/dispatcharr-iptv/permanent-streaming/contracts.py": "570fea676d9d816667126db90e6dbcff5e5de7e1d08970eecf356d15a67b7cc3",
+    "configs/dispatcharr-iptv/permanent-streaming/lifecycle.py": "680a863d45216c272b9a2ac41df0723b0fe780ba19704a1976b6568b8f437649",
+    "configs/dispatcharr-iptv/permanent-streaming/manifest.json": "67b6fd25803944c721c6b85f41badb14da79d1f612c6a2d574098ce67ad4a051",
+    "configs/dispatcharr-iptv/permanent-streaming/native_contract.py": "ce2d906d47285d4d9b09488c3e7e92bcaec5f0f195572a54e081dc7c46e356f9",
+    "configs/dispatcharr-iptv/permanent-streaming/tests/verify_units.py": "f863b1e09792617e6ae356bead33284d74d0c4abd36fc11c122af4a7737976a5",
+    "configs/dispatcharr-iptv/permanent-streaming/verify.py": "6f8e6fa2a3c222a575206b352debaa30ef9ac1b6e8b6fef839c9472c143c27e4",
+    "configs/dispatcharr-iptv/provider_control.py": "33fd56fc7a461ad9e416ba10f0bbdea175b2382e461e192bcb213a77e5844d24",
+    "configs/dispatcharr-iptv/trusted-guard-tests/test_implementation.py": "b65d951b07426ac716cc06dac528a52eaaec6f943109700184d86a46f62caa95",
+    "configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json": "ce54e1d847724b50d469305f700ba66a0c847a5ae41364fbb1492dcc1181ecd3"
+  },
+  "critical_files_unchanged": [
+    "security.py",
+    "compose.proposed.yaml",
+    "vpn-owner-gate.sh",
+    "vpn-startup-gate.py",
+    "resolv.vpn.conf",
+    "vpn-post-rules.txt",
+    "minimal-phase6b3d/accepted-table.template.json",
+    "minimal-phase6b3d/contracts.py",
+    "minimal-phase6b3d/units/dispatcharr-stack.service",
+    "minimal-phase6b3d/units/dispatcharr-egress-guard.service",
+    "boot-admission-phase6b3k/admit.py",
+    "permanent-streaming/compose.yaml",
+    "permanent-streaming/hls_relay.py",
+    "permanent-streaming/Caddyfile",
+    "native-provider-hardening/output-hashes.json",
+    "native-provider-hardening/server.patch",
+    "native-provider-hardening/source-pins.json",
+    "hardened-image-integration/build_once.executed.py",
+    "hardened-image-integration/verification-results.json"
+  ],
+  "deployment_ready": false,
+  "errors": 0,
+  "failures": 0,
+  "image_builds": 0,
+  "installed_target_mappings": 80,
+  "log_sha256": {
+    "dispatcharr-final-design.log": "919d9d43756cab07207662402d1d39466513b11181cf31df627b1b4123307137",
+    "dispatcharr-final-hardening.log": "4c69d88fbbb53b90551f0ec502e68237292c36cd2f76e7e7bcb31be9d9a9daa2",
+    "dispatcharr-final-historical.log": "c63b73793448371268d560f76ffdca1043cfb97ca6f1efa0737a95caadb928f6",
+    "dispatcharr-final-main.log": "1dfdad2a2b0b1b2314edd73c807ed45a328eded85e6716519b6c8c32c67edca9",
+    "dispatcharr-final-native-units.log": "63f1a7ac57640533bd309153ea9d4174ec63307e32301358a06fff190d51ff20",
+    "dispatcharr-final-network.log": "43e174daab8301c9479c5e1512660871191e2aa773aca232309e42aa7326d9ab",
+    "dispatcharr-final-packaging.log": "5653f7faf708a15b4fe0e7779ac49df51985a92ced4876f44aa616deca5a0d3a",
+    "dispatcharr-final-permissions.log": "280c8bb66fa8aca97cc8a1ea33529c33a4955c31683ec72e6f477dcecd7cfdf3",
+    "dispatcharr-final-prior.log": "80a9ea949e25946e587d05d4df4eff66dd6b233509348b08bb92e1fd9477ec59",
+    "dispatcharr-final-tools.log": "e3f15c098caa0eafd807a03f3796c5baa977cf7af5b51352f132f46a05548454"
+  },
+  "native_image_id": null,
+  "new_tests": 33,
+  "production_changed": false,
+  "production_contacted": false,
+  "readiness_hashes_unchanged": 4,
+  "real_provider_authorizations": 0,
+  "real_provider_requests": 0,
+  "skips": 0,
+  "status": "OFFLINE_PASS_GO_NEXT_SEPARATELY_AUTHORIZED_ISOLATED_BUILD",
+  "suites": {
+    "design": [
+      28
+    ],
+    "hardening": [
+      91
+    ],
+    "historical": [
+      26
+    ],
+    "main": [
+      39,
+      26,
+      17,
+      7,
+      3,
+      12,
+      28,
+      50,
+      13,
+      15
+    ],
+    "native-units": [],
+    "network": [
+      14
+    ],
+    "packaging": [
+      8
+    ],
+    "permissions": [
+      40
+    ],
+    "prior": [
+      14
+    ],
+    "tools": [
+      139
+    ]
+  },
+  "total_tests": 570
+}

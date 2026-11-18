@@ -48,3 +48,12 @@ root-only contract is separately incompatible with actual UID1000 application
 workers; changing code-directory modes alone cannot make this release acceptable.
 Do not chmod the private policy, run workers as root, substitute a synthetic grant,
 change approved server source, or reuse this image for deployment.
+
+The final offline integration selects a new future review tag
+`local/dispatcharr-native-hardening:policy-lifecycle-review-v2`; the COPY-only
+Dockerfile labels the unchanged approved application sources at 0b8ac7d.
+`run_runtime.py` now requires an explicit new image ID matching its build receipt,
+refuses the failed/base image and has no default image. Its public synthetic code
+fixture directories use 0755 inside a private transport parent. No updated harness
+has been executed in Docker. Later real Django/Celery/API test bodies remain
+unvalidated; see the final integration report for the required matrix.

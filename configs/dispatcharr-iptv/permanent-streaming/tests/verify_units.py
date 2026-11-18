@@ -4,6 +4,7 @@ Uses the exact existing stack/guard units and candidate drop-in, plus a small
 Docker readiness fixture. It does not prove real Docker or kernel behavior.
 """
 import os
+import sys
 from pathlib import Path
 import subprocess
 import tempfile
@@ -26,6 +27,8 @@ def main():
         (dropins / "20-resource-admission.conf").write_bytes(
             (HERE.parent / "boot-admission-phase6b3k/20-resource-admission.conf").read_bytes())
         (dropins / "30-permanent-streaming.conf").write_bytes((HERE / "30-permanent-streaming.conf").read_bytes())
+        if '--native' in sys.argv:
+            (dropins / '40-native-hardening.conf').write_bytes((HERE/'40-native-hardening.conf').read_bytes())
         # Readiness graph only; ExecStart is never executed by `verify`.
         (root / "docker.service").write_text(
             "[Unit]\nDescription=OFFLINE Docker readiness fixture\n"

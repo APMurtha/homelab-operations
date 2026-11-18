@@ -16,11 +16,13 @@ def managed():
 def cleanup():
     managed()
     errors=[]
-    commands=[['/usr/bin/python3','-B',str(ROOT/'guard.py'),'revoke-public'],
+    commands=[['/usr/bin/python3','-B',str(ROOT/'provider_control.py'),'revoke'],
+              ['/usr/bin/python3','-B',str(ROOT/'guard.py'),'revoke-public'],
               ['/usr/bin/docker','compose','--project-name','rivendell-iptv','--project-directory',str(ROOT),
                '-f',str(ROOT/'compose.proposed.yaml'),'-f',str(ROOT/'minimal-phase6b3d/compose.persistence.proposed.yaml'),
                'stop','--timeout','60','gateway','dispatcharr','iptv-vpn'],
-              ['/usr/bin/python3','-B',str(ROOT/'guard.py'),'assert-revoked']]
+              ['/usr/bin/python3','-B',str(ROOT/'guard.py'),'assert-revoked'],
+              ['/usr/bin/python3','-B',str(ROOT/'provider_control.py'),'assert-revoked']]
     for command in commands:
         try:
             result=subprocess.run(command,capture_output=True,timeout=200 if 'compose' in command else 10)

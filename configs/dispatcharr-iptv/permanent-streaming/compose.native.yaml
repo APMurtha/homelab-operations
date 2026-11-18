@@ -1,0 +1,23 @@
+# UNBOUND candidate overlay. No default/fallback image; never apply on its own.
+services:
+  dispatcharr:
+    image: ${DISPATCHARR_HARDENED_IMAGE:?Reviewed immutable hardened AIO binding required}
+    volumes:
+    - type: bind
+      source: /run/dispatcharr-guard-status
+      target: /guard-status
+      read_only: true
+      bind:
+        create_host_path: false
+    - type: bind
+      source: /run/dispatcharr-provider-status
+      target: /run/dispatcharr-provider-status
+      read_only: true
+      bind:
+        create_host_path: false
+    - type: bind
+      source: /docker/dispatcharr-iptv/native-provider-hardening
+      target: /opt/native-provider-hardening
+      read_only: true
+      bind:
+        create_host_path: false

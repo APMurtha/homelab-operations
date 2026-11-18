@@ -13,8 +13,9 @@ from urllib.parse import urlsplit
 from contracts import ROOT, NAMES, Refusal, topology, verify_table
 
 HERE = Path(__file__).resolve().parent
-PATCHED = 'local/dispatcharr-readiness@sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21'
-IMAGES = {'dispatcharr': PATCHED, 'relay': PATCHED,
+LEGACY_AIO = 'local/dispatcharr-readiness@sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21'
+RELAY_IMAGE = 'local/dispatcharr-readiness@sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21'
+IMAGES = {'dispatcharr': LEGACY_AIO, 'relay': RELAY_IMAGE,
           'iptv-vpn':'qmcgaw/gluetun@sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209',
           'gateway':'caddy:2-alpine@sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9'}
 
@@ -33,7 +34,7 @@ def file_pin(path, expected):
         raise Refusal('accepted_source_changed')
 
 
-def inputs():
+def inputs(native=False):
     for name, expected in json.loads((HERE/'base-input-pins.json').read_text()).items():
         file_pin(ROOT/name, expected)
     for name, expected in json.loads((HERE/'manifest.json').read_text())['files'].items():
@@ -42,12 +43,14 @@ def inputs():
     for f, expected in [('/etc/systemd/system/dispatcharr-stack.service','30e7f5e64b7a6ce3f8ec3cf80572d74bb2dd1ed67083929276cf55fbb65c357e'),
         ('/etc/systemd/system/dispatcharr-egress-guard.service','bde5207014fa24781d8cd1275a54dac056684299e498f4773fca2ed2e98cc174'),
         ('/etc/systemd/system/docker.service.d/50-dispatcharr-order.conf','c9beb54d2b2e6285013355f3a80dd6677ff7723d10e835f45c499f39fb9e581b'),
-        ('/etc/systemd/system/dispatcharr-stack.service.d/20-resource-admission.conf','578e03101e64c14da217e3d77f5bed9e0dbfbab9dad24b3f077c6b3891aed023')]:
+        ('/etc/systemd/system/dispatcharr-stack.service.d/20-resource-admission.conf','e639eab69f150f9f9ab833def8353c38f33bdbf00e3cb23e5ad0dfc595edd964')]:
         file_pin(Path(f), expected)
     # TRUSTED-GUARD-DROPIN
-    file_pin(Path('/etc/systemd/system/dispatcharr-egress-guard.service.d/20-trusted-readiness.conf'), '392994ee3a0eec4b87127b13aa1efb51ce058fd135fbbed52f17d30fde2dbefc')
+    file_pin(Path('/etc/systemd/system/dispatcharr-egress-guard.service.d/20-trusted-readiness.conf'), '37226a0e1d77a14d2f0c0e16254f0f6699e7e0c543afcebfd24630cde0249a34')
     file_pin(Path('/etc/systemd/system/dispatcharr-stack.service.d/30-permanent-streaming.conf'),
              json.loads((HERE/'manifest.json').read_text())['files']['30-permanent-streaming.conf'])
+    if native:
+        file_pin(Path('/etc/systemd/system/dispatcharr-stack.service.d/40-native-hardening.conf'),json.loads((HERE/'manifest.json').read_text())['files']['40-native-hardening.conf'])
     # Existing base guard still verifies original files. The candidate lives beside
     # them, so guard-before-Docker behavior does not depend on a changed base pin.
     sys.path.insert(0,str(ROOT))
@@ -85,10 +88,15 @@ def guard(policy,digest):
     return trusted_guard.Publisher().coherence(ROOT/'private/egress-policy.json')
 
 
-def workload(state,running=False):
-    topology(state,running)
+def workload(state,running=False,native=False):
+    topology(state,running,native)
+    expected=dict(IMAGES)
+    if native:
+        from native_contract import image
+        expected["dispatcharr"]=image()
     for service,c in state['containers'].items():
-        if c['Config'].get('Image')!=IMAGES[service]:raise Refusal('accepted_image_changed')
+        if c['Config'].get('Image')!=expected[service]:raise Refusal('accepted_image_changed')
+        if native and service=='dispatcharr' and c.get('Image')!=expected[service]:raise Refusal('AIO_immutable_identity_changed')
         if c['HostConfig'].get('CgroupParent',''):raise Refusal('retired_cgroup_override_present')
         if running and c['State'].get('Health',{}).get('Status')!='healthy':raise Refusal('component_unhealthy')
 
@@ -116,11 +124,15 @@ def vpn_running():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=['inputs','prestart','running']);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=['inputs','prestart','running']);p.add_argument('--native',action='store_true');a=p.parse_args()
     try:
-        policy,digest=inputs()
-        if a.mode!='inputs':guard(policy,digest);workload(snapshot(),a.mode=='running')
+        if a.native:
+            from native_contract import image
+            image()
+        policy,digest=inputs(a.native)
+        if a.mode!='inputs':guard(policy,digest);workload(snapshot(),a.mode=='running',a.native)
         if a.mode=='running':
+            if a.native:command(['docker','exec','--user','1000:1000','dispatcharr','python','-B','/opt/permanent/native_contract.py'])
             vpn_running()
             snap=snapshot();owner=snap['containers']['iptv-vpn']
             # Host reader runs in the host namespace; inspect grant against the actual owner instead.

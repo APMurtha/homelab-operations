@@ -19,6 +19,8 @@ from unittest.mock import patch
 BASE=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(BASE))
 import publish_policy as writer
+sys.path.insert(0,str(BASE.parent))
+import provider_control
 from runtime import provider_policy as policy,provider_security as security,provider_transport as transport
 spec=importlib.util.spec_from_file_location('packaging_recipe',BASE.parent/'hardened-image-integration/build_once.py')
 recipe=importlib.util.module_from_spec(spec);spec.loader.exec_module(recipe)
@@ -262,6 +264,59 @@ class Permissions(unittest.TestCase):
         finally:os.umask(old)
         self.assertEqual((legacy/'apps').stat().st_mode&0o777,0o700)
         self.denied(lambda:(legacy/'apps/api/__init__.py').read_bytes())
+
+    def test_control_preserves_anchor_and_revokes_via_directory_mount(self):
+        with patch.object(provider_control,'PRIVATE',self.private),patch.object(provider_control,'PUBLIC',self.public):
+            before=self.public.stat().st_ino;mount=self.bind(self.public)
+            provider_control.revoke();provider_control.prepare();provider_control.prepare()
+            self.assertEqual(self.public.stat().st_ino,before)
+            self.denied(lambda:policy.Reader(mount,self.guard).read(self.key))
+            self.denied(lambda:self.private_file.read_bytes())
+    def test_actual_guard_withdrawal_revokes_provider_assertions_first(self):
+        spec=importlib.util.spec_from_file_location('guard_policy_bridge',BASE.parent/'guard.py');guard=importlib.util.module_from_spec(spec);spec.loader.exec_module(guard)
+        private=self.root/'guard-private';private.mkdir(mode=0o700)
+        instance=guard.Publisher(private,self.guard)
+        with patch.object(provider_control,'PRIVATE',self.private),patch.object(provider_control,'PUBLIC',self.public):instance.withdraw()
+        self.assertFalse((self.public/(self.key+'.json')).exists())
+        self.assertFalse((self.guard/'guard.json').exists())
+        self.denied(lambda:self.reader().read(self.key))
+    def test_completed_change_receipt_cannot_hide_subsequent_policy_drift(self):
+        self.staged();self.publisher.replace_policy(self.key)
+        value=json.loads(self.private_file.read_text());value['operations']=['epg'];self.private_file.write_text(json.dumps(value))
+        with self.assertRaises(Exception):self.publisher.publish(self.key)
+        self.assertFalse((self.public/(self.key+'.json')).exists())
+    def test_control_prepare_creates_no_authorization(self):
+        private=self.root/'new-private';public=self.root/'new-public'
+        with patch.object(provider_control,'PRIVATE',private),patch.object(provider_control,'PUBLIC',public):
+            provider_control.prepare();provider_control.assert_revoked()
+            self.assertFalse(list(public.iterdir()));self.assertEqual(private.stat().st_mode&0o777,0o700)
+    def staged(self):
+        value=copy.deepcopy(self.p);value['operations']=['discover'];path=self.private/(self.key+'.staged.json');path.write_text(json.dumps(value));path.chmod(0o600);return value
+    def test_policy_change_withdraws_without_automatic_publication(self):
+        value=self.staged();self.publisher.replace_policy(self.key)
+        self.assertEqual(json.loads(self.private_file.read_text()),value)
+        prior=self.private/(self.key+'.prior.json')
+        self.assertEqual(json.loads(prior.read_text()),self.p);self.denied(lambda:prior.read_bytes())
+        self.assertFalse((self.public/(self.key+'.json')).exists())
+        self.publisher.publish(self.key);self.allowed(lambda:self.reader().read(self.key))
+    def test_unprivileged_policy_change_refused(self):
+        self.staged();self.denied(lambda:self.publisher.replace_policy(self.key));self.denied(lambda:self.publisher.reconcile_change(self.key))
+    def test_interrupted_policy_change_blocks_publication_until_reconciled(self):
+        self.staged();real=self.publisher.write
+        def interrupted(fd,name,*args):
+            if name==self.key+'.json':raise OSError('synthetic')
+            return real(fd,name,*args)
+        with patch.object(self.publisher,'write',side_effect=interrupted),self.assertRaises(OSError):self.publisher.replace_policy(self.key)
+        with self.assertRaises(Exception):self.publisher.publish(self.key)
+        self.publisher.reconcile_change(self.key)
+        self.assertFalse((self.public/(self.key+'.json')).exists())
+        self.publisher.publish(self.key);self.allowed(lambda:self.reader().read(self.key))
+    def test_conflicting_policy_change_is_retained_and_refused(self):
+        self.staged();receipt={'schema':1,'state':'pending','old':'d'*64,'new':'e'*64}
+        path=self.private/(self.key+'.change.json');path.write_text(json.dumps(receipt));path.chmod(0o600)
+        with self.assertRaises(Exception):self.publisher.reconcile_change(self.key)
+        self.assertEqual(json.loads(path.read_text()),receipt)
+        self.assertFalse((self.public/(self.key+'.json')).exists())
 
     def test_code_packaging_uid1000_traverse_compile_and_import(self):
         overlay=self.root/'overlay';hashes=prepare.prepare(Path('/tmp/dispatcharr-native-hardening-input'),overlay)

@@ -330,16 +330,16 @@ class Lifecycle(unittest.TestCase):
                 if kind==failure:raise ValueError('synthetic')
             with patch.object(lifecycle,'trusted',return_value=publisher),patch.object(lifecycle,'execute',side_effect=execute):
                 with self.assertRaises(ValueError):lifecycle.stop()
-            publisher.revoke.assert_called_once_with(False);self.assertEqual(events,['stop','assert'])
+            publisher.revoke.assert_called_once_with(False);self.assertEqual(events,['assert','stop','assert','assert'])
     def test_original_cleanup_attempts_scoped_stop_after_guard_program_failure(self):
         spec=importlib.util.spec_from_file_location('original_cleanup',BASE/'minimal-phase6b3d/cleanup.py');cleanup=importlib.util.module_from_spec(spec);spec.loader.exec_module(cleanup)
-        for failed in (0,1,2):
+        for failed in range(5):
             calls=[]
             def run(c,**k):
                 calls.append(c);return subprocess.CompletedProcess(c,1 if len(calls)-1==failed else 0)
             with patch.object(cleanup,'managed'),patch.object(cleanup.subprocess,'run',side_effect=run):
                 with self.assertRaises(ValueError):cleanup.cleanup()
-            self.assertEqual(len(calls),3);self.assertEqual(calls[1][-3:],['gateway','dispatcharr','iptv-vpn'])
+            self.assertEqual(len(calls),5);self.assertEqual(calls[2][-3:],['gateway','dispatcharr','iptv-vpn'])
     def test_original_cleanup_attempts_scoped_stop_after_timeout(self):
         spec=importlib.util.spec_from_file_location('cleanup_timeout',BASE/'minimal-phase6b3d/cleanup.py');cleanup=importlib.util.module_from_spec(spec);spec.loader.exec_module(cleanup);calls=[]
         def run(c,**k):
@@ -348,14 +348,14 @@ class Lifecycle(unittest.TestCase):
             return subprocess.CompletedProcess(c,0)
         with patch.object(cleanup,'managed'),patch.object(cleanup.subprocess,'run',side_effect=run):
             with self.assertRaises(ValueError):cleanup.cleanup()
-        self.assertEqual(len(calls),3)
+        self.assertEqual(len(calls),5)
     def test_exact_effective_hook_order_and_runtime_preservation(self):
         base=BASE/'minimal-phase6b3d/units'
         guard_drop=(base/'dispatcharr-egress-guard.service.d/20-trusted-readiness.conf').read_text()
         self.assertIn('RuntimeDirectoryPreserve=yes',guard_drop);self.assertIn('RuntimeDirectoryMode=0755',guard_drop)
         for file in [BASE/'boot-admission-phase6b3k/20-resource-admission.conf',BASE/'permanent-streaming/30-permanent-streaming.conf']:
             text=file.read_text();steps=[line for line in text.splitlines() if line.startswith('ExecStartPre=') and line!='ExecStartPre=']
-            self.assertTrue(steps[0].startswith('ExecStartPre=/usr/bin/rm -f --'))
+            self.assertTrue(steps[0].endswith('provider_control.py revoke'))
             self.assertLess(text.index('admit.py'),text.index('guard.py apply'))
             self.assertNotIn('Timeout',text);self.assertIn('ExecStopPost=-/usr/bin/rm -f --',text)
         self.assertIn('ExecStopPost=/usr/bin/python3 -B /docker/dispatcharr-iptv/guard.py revoke',guard_drop)

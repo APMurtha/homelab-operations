@@ -144,6 +144,10 @@ class Publisher:
 
     def withdraw(self,legacy=True):
         errors=[];valid_old=True
+        try:
+            import provider_control
+            provider_control.revoke()
+        except Exception:errors.append(ValueError('provider_withdrawal_failed'))
         try:old=self.transaction()
         except (OSError,ValueError):
             valid_old=False;old={'phase':'unknown','blocked':True};errors.append(ValueError('private_transaction_unreadable'))
@@ -164,14 +168,28 @@ class Publisher:
             except OSError as exc:errors.append(exc)
         if errors:raise ValueError('revocation_failed')
 
+    def early_provider_withdrawal(self):
+        # This precedes even guard-directory/lock validation. Unit cleanup still
+        # compensates when private guard corruption prevents its own revocation.
+        try:
+            import provider_control
+            provider_control.revoke()
+            return True
+        except Exception:return False
+
     def revoke(self,legacy=True):
+        provider_ok=self.early_provider_withdrawal()
         with self.locked():
             # Withdraw first; an unmanaged attempted mutation cannot retain old authorization.
-            self.withdraw(legacy);require_managed()
+            self.withdraw(legacy)
+            if not provider_ok:raise ValueError('provider_withdrawal_failed')
+            require_managed()
 
     def apply(self,policy_path,wireguard_path):
+        provider_ok=self.early_provider_withdrawal()
         with self.locked():
             self.withdraw(True)
+            if not provider_ok:raise ValueError('provider_withdrawal_failed')
             try:
                 require_managed()
                 if self.transaction().get('blocked'):raise ValueError('incomplete_guard_transaction_requires_review')

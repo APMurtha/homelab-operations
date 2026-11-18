@@ -42,7 +42,7 @@ def verify_table(live, policy):
     if canonical(live) != canonical(expected_table(policy)):
         raise Refusal('guard_semantic_mismatch')
 
-def topology(state, require_running=False):
+def topology(state, require_running=False, native=False):
     n = state['network']
     if (n.get('Name'), n.get('Driver'), n.get('EnableIPv6')) != ('rivendell-iptv-egress', 'bridge', False):
         raise Refusal('network_contract_changed')
@@ -77,6 +77,22 @@ def topology(state, require_running=False):
                        'iptv-vpn': {'/guard': '/run/dispatcharr-guard', '/opt/egress-policy.json': str(ROOT / 'private/egress-policy.json'), '/opt/vpn-owner-gate.sh': str(ROOT / 'vpn-owner-gate.sh'), '/gluetun/wireguard/wg0.conf': str(ROOT / 'private/wg0.conf'), '/iptables/post-rules.txt': str(ROOT / 'vpn-post-rules.txt')},
                        'gateway': {'/etc/caddy/Caddyfile': str(ROOT / 'permanent-streaming/Caddyfile')},
                        'relay': {'/opt/permanent': str(ROOT / 'permanent-streaming'), '/etc/resolv.conf': str(ROOT / 'resolv.vpn.conf'), '/guard-status': '/run/dispatcharr-guard-status', '/run/credentials/relay.json': str(ROOT / 'private/permanent-relay.json')}}
+    if native:
+        required_mounts['dispatcharr'].update({'/guard-status':'/run/dispatcharr-guard-status',
+            '/run/dispatcharr-provider-status':'/run/dispatcharr-provider-status',
+            '/opt/native-provider-hardening':str(ROOT/'native-provider-hardening')})
+        aio=containers['dispatcharr'];h=aio['HostConfig']
+        if (aio['Config'].get('User','')!='' or set(h.get('CapDrop') or [])!={'ALL'}
+                or set(h.get('CapAdd') or [])!={'CHOWN','DAC_OVERRIDE','FOWNER','SETUID','SETGID','KILL'}
+                or 'no-new-privileges:true' not in (h.get('SecurityOpt') or [])
+                or h.get('Memory')!=3221225472 or h.get('NanoCpus')!=2000000000 or h.get('PidsLimit')!=512):raise Refusal('native_AIO_security_changed')
+        actual=mount_index(containers['dispatcharr'])
+        writable={'/data':str(ROOT/'data'),'/runtime':'/run/dispatcharr-permanent/relay'}
+        if set(actual)!=set(required_mounts['dispatcharr'])|set(writable):raise Refusal('unexpected_native_AIO_mount')
+        for target,source in writable.items():
+            m=actual[target]
+            if m.get('Source')!=source or m.get('Type')!='bind' or m.get('RW') is not True:raise Refusal('AIO_data_mount_changed')
+        if any(m.get('Propagation','rprivate')!='rprivate' for m in actual.values()):raise Refusal('AIO_mount_propagation')
     for service, mounts in required_mounts.items():
         actual = mount_index(containers[service])
         for target, source in mounts.items():

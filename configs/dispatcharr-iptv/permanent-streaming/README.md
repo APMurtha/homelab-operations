@@ -195,3 +195,29 @@ namespaces; they create only lo and a synthetic public address, with no external
 interface/default route. Certificates, HTTP responses, API models, media packets
 and credentials are synthetic. The pinned Caddy binary is deliberately excluded
 from Git. See `validation-results.json` and the implementation report for results.
+
+## Native provider hardening overlay (unbound offline candidate)
+
+See `docs/dispatcharr-native-hardening-final-integration.md` in the repository.
+The base four-service Compose file and relay image remain unchanged. Native mode
+adds `compose.native.yaml` and `40-native-hardening.conf`; release-contract.json
+currently has a null AIO image. Native verification/start refuses that state and
+refuses the known failed image. Do not install the 40 drop-in or stage native
+containers until a separately authorized image build and real application matrix
+succeed and the complete matched pins are reviewed.
+
+All managed modes now withdraw provider status before admission/guard application
+and during cleanup, without publishing or renewing approval. Native prepare only
+creates or validates an empty stable public anchor. Its root-private source policy
+is never mounted into AIO. The three AIO overlay mounts are public guard status,
+public provider status and the sanitized read-only source/contract bundle; the
+relay's six existing binds and exact tmpfs are unchanged.
+
+Stop and cleanup deliberately use the base service names without resolving a
+native image binding, so an incomplete/missing image binding cannot prevent scoped
+shutdown. Rollback integration first withdraws/verifies provider status and then
+uses the existing conflict-checked owned-record rollback. Unknown API or policy
+change outcomes block further mutation. Private-policy changes use root-only
+replace-policy/reconcile-change with staged 0600 files and private receipts; no
+automatic publication follows a change. Five-minute leases and the documented
+asynchronous/check-to-use limitations remain.

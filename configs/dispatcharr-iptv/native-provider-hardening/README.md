@@ -97,3 +97,25 @@ instantaneous; leases bound retained records to 300 seconds under a trusted cloc
 A stale directory bind cannot observe host-path replacement. Never replace the
 public anchor while workers run; revoke via the original anchor, verify expiry
 or shutdown, then coordinate retirement. No adoption/replacement command exists.
+
+### Coordinated lifecycle integration
+
+Current candidate integration is documented in
+[the final integration report](../../../docs/dispatcharr-native-hardening-final-integration.md).
+`release-contract.json` deliberately has `aio_image: null`. Its 14 runtime outputs
+are unchanged from approved 0b8ac7d; no image identity is invented. The existing
+three/four-service paths stay explicit; native Compose/drop-in selection is gated.
+
+Host `provider_control.py` supplies idempotent revoke/assert/empty-anchor prepare.
+The guard withdraw path, admission/drop-ins and scoped cleanup call it. No managed
+hook calls publish or renew. Never silently create/adopt a replaced public anchor.
+
+For a separately authorized private-policy edit, stage KEY.staged.json under the
+existing root-private directory with exact 0600 permissions. Root-only
+`replace-policy KEY` locks, withdraws first, validates identity/schema, retains
+KEY.prior.json privately, and records intent before atomic replacement. A pending
+KEY.change.json blocks publication. `reconcile-change KEY` accepts only the
+recorded old/new digest and never publishes; conflicts remain blocked. These
+operations do not change Dispatcharr API records and must not be confused with
+native API ownership journals. Direct edits of an existing policy outside this
+protocol are unsupported. No real policy is supplied or installed here.

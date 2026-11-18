@@ -258,9 +258,9 @@ class UnitTests(unittest.TestCase):
     def test_effective_prestart_order_preserves_every_original_check(self):
         before = service_directives(self.base)
         after = service_directives(self.base + "\n" + self.drop)
-        self.assertEqual(after["ExecStartPre"][1], before["ExecStartPre"][0])
-        self.assertTrue(after["ExecStartPre"][2].endswith("boot-admission-phase6b3k/admit.py"))
-        self.assertEqual(after["ExecStartPre"][3:], before["ExecStartPre"][1:])
+        self.assertEqual(after["ExecStartPre"][2], before["ExecStartPre"][0])
+        self.assertTrue(after["ExecStartPre"][3].endswith("boot-admission-phase6b3k/admit.py"))
+        self.assertEqual(after["ExecStartPre"][4:], before["ExecStartPre"][1:])
         self.assertEqual(set(service_directives(self.drop)), {"ExecStartPre", "ExecStopPost"})
         for k in before.keys() - {"ExecStartPre", "ExecStopPost"}:
             self.assertEqual(after[k], before[k])
@@ -272,8 +272,8 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(values["TimeoutStopSec"], ["240"])
         self.assertEqual(values["Restart"], ["no"])
         self.assertIn("--wait-timeout 360", values["ExecStart"][0])
-        self.assertIn("minimal-phase6b3d/cleanup.py", values["ExecStopPost"][1])
-        self.assertTrue(values["ExecStartPre"][0].startswith("/usr/bin/rm -f --"))
+        self.assertIn("minimal-phase6b3d/cleanup.py", values["ExecStopPost"][2])
+        self.assertTrue(values["ExecStartPre"][0].endswith("provider_control.py revoke"))
 
     def test_failure_path_model_blocks_later_commands(self):
         # Model only: actual ExecStartPre/ExecStopPost semantics are documented

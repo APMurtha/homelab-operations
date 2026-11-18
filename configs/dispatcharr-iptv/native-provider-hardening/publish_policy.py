@@ -12,8 +12,10 @@ from pathlib import Path
 import secrets
 import stat
 import time
-from runtime.provider_policy import (directory,read,project,guard_snapshot,hex64,
-                                     MAX_PROVIDERS,LEASE,LIMIT,refused)
+if __package__:
+    from .runtime.provider_policy import (directory,read,project,guard_snapshot,hex64,MAX_PROVIDERS,LEASE,LIMIT,refused,validate,digest)
+else:
+    from runtime.provider_policy import (directory,read,project,guard_snapshot,hex64,MAX_PROVIDERS,LEASE,LIMIT,refused,validate,digest)
 
 
 class Publisher:
@@ -102,6 +104,7 @@ class Publisher:
             # Withdraw BEFORE reading/validating the private policy or grant.
             self.withdraw(fd,key)
             try:
+                self.change_state(private,key)
                 p=project(read(private,key+'.json',0o600),key)
                 generation=guard_snapshot(self.guard,p)
                 count=len(os.listdir(fd))
@@ -119,9 +122,53 @@ class Publisher:
                 raise
 
 
+    def change_state(self,private,key):
+        try:state=read(private,key+'.change.json',0o600)
+        except FileNotFoundError:return
+        if (not isinstance(state,dict) or set(state)!={'schema','state','old','new'} or type(state['schema']) is not int or state['schema']!=1
+                or state['state'] not in {'committed','aborted'} or not hex64(state['old']) or not hex64(state['new'])):raise refused()
+        expected=state['new'] if state['state']=='committed' else state['old']
+        if digest(read(private,key+'.json',0o600))!=expected:raise refused()
+
+    def replace_policy(self,key):
+        """Only supported edit: consume a root-private KEY.staged.json; no grant.
+
+        Pending receipts block publication until conflict-checked reconciliation.
+        Staged inputs and receipts remain private; no credentials in arguments.
+        """
+        if not hex64(key):raise refused()
+        with self.lock() as private,self.anchor(private) as public:
+            self.withdraw(public,key)
+            self.change_state(private,key)
+            old=read(private,key+'.json',0o600)
+            # Expired approvals can be edited, but never misidentified policies.
+            if type(old.get('expires_epoch')) not in (int,float):raise refused()
+            validate({**old,'expires_epoch':time.time()+1},key)
+            new=read(private,key+'.staged.json',0o600);validate(new,key)
+            receipt={'schema':1,'state':'pending','old':digest(old),'new':digest(new)}
+            self.write(private,key+'.prior.json',old,0o600)
+            self.write(private,key+'.change.json',receipt,0o600)
+            self.write(private,key+'.json',new,0o600)
+            if digest(read(private,key+'.json',0o600))!=receipt['new']:raise refused()
+            receipt['state']='committed';self.write(private,key+'.change.json',receipt,0o600)
+
+    def reconcile_change(self,key):
+        if not hex64(key):raise refused()
+        with self.lock() as private,self.anchor(private) as public:
+            self.withdraw(public,key)
+            state=read(private,key+'.change.json',0o600)
+            if (not isinstance(state,dict) or set(state)!={'schema','state','old','new'} or type(state['schema']) is not int or state['schema']!=1
+                    or state['state']!='pending' or not hex64(state['old']) or not hex64(state['new'])):raise refused()
+            actual=digest(read(private,key+'.json',0o600))
+            if actual==state['new']:state['state']='committed'
+            elif actual==state['old']:state['state']='aborted'
+            else:raise refused()
+            self.write(private,key+'.change.json',state,0o600)
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action',choices=['init','publish','revoke','revoke-all'])
+    parser.add_argument('action',choices=['init','publish','revoke','revoke-all','replace-policy','reconcile-change'])
     parser.add_argument('key',nargs='?')
     args=parser.parse_args()
     try:
@@ -130,6 +177,8 @@ def main():
         elif args.action=='revoke-all' and args.key is None:p.revoke()
         elif args.action=='publish' and args.key:p.publish(args.key)
         elif args.action=='revoke' and args.key:p.revoke(args.key)
+        elif args.action=='replace-policy' and args.key:p.replace_policy(args.key)
+        elif args.action=='reconcile-change' and args.key:p.reconcile_change(args.key)
         else:raise refused()
     except Exception:raise SystemExit('provider_authorization_operation_failed_no_retry') from None
     print('provider_authorization_operation_complete')

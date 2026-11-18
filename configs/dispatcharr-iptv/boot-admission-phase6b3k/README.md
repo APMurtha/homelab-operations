@@ -70,3 +70,11 @@ admission, and invokes the matched scoped cleanup helper after withdrawal. CPU
 thresholds, admit.py, base unit bytes and timeouts are unchanged. Earlier command-
 list-only descriptions above document the original baseline. Use the complete
 trusted-guard implementation transition; do not install this drop-in alone.
+
+
+The coordinated native-hardening candidate inserts provider authorization
+withdrawal before the existing guard-marker withdrawal and admission command.
+It does not change admit.py, thresholds, sample windows, retries or unit timeouts.
+Cleanup attempts provider withdrawal and existing scoped stop even on failure.
+See docs/dispatcharr-native-hardening-final-integration.md; no drop-in is installed
+by this offline work.

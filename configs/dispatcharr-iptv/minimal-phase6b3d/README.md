@@ -47,3 +47,12 @@ The coordinated implementation changes guard.py, this verifier and the effective
 Base units, Compose, image identities and nftables semantics remain unchanged.
 See docs/dispatcharr-trusted-guard-implementation.md; do not independently install
 this directory or silently update installed hashes. Retired controller pins stay old.
+
+
+The native-hardening offline transition adds provider_control.py withdrawal to
+managed prestart/cleanup and the guard writer. A never-initialized provider
+interface remains a no-op for this original three-service stack; partial state
+refuses. The matched verifier pins now include the sanitized provider publisher
+bundle. Install/restore the complete matched set, never just guard.py. Base unit,
+original AIO image, firewall policy and scoped service names are unchanged.
+See docs/dispatcharr-native-hardening-final-integration.md before installation.
