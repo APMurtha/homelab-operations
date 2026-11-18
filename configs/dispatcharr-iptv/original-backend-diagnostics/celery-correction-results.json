@@ -1,0 +1,94 @@
+{
+  "broker_comparison": {
+    "missing_environment_variables_are_not_treated_as_mismatch": true,
+    "no_authoritative_worker_snapshots_available": true,
+    "outputs": "fixed booleans only; known=false means no equality or mismatch conclusion",
+    "pure_helper_accepts": [
+      "inspection",
+      "default",
+      "dvr"
+    ],
+    "runtime_imports_or_queries_added": false,
+    "runtime_result": "unknown"
+  },
+  "candidate_sha256": {
+    "backend.py": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
+    "lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
+    "manifest.json": "52f8c8e14ecc33fec0b362b1ef32f7d79111ba9d127ee759bc08b939a8f1620b"
+  },
+  "changed_files_sha256": {
+    "configs/dispatcharr-iptv/original-backend-diagnostics/README.md": "39c7784e3ca5d4952c82239bfae3531ab5ebfff41b19b1c80415d730ecffbd0b",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/candidate-inventory.json": "17692690075a71edc0da8abf87c7319ef427d4ddf436480fe4d77b0b290f3b0c",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/candidate.patch": "f13bee83f9d3a66ca7368d7ab44a07c6f7c3a105c3f577c8fe31093284470bdf",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/backend.py": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/manifest.json": "52f8c8e14ecc33fec0b362b1ef32f7d79111ba9d127ee759bc08b939a8f1620b",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/installed-baseline-hashes.json": "f2db6ece950f673a6981aa4c985800b7cac33b36c4ce82d96b94f5f0fed649f3",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/installed-baseline/backend.py": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/installed-baseline/lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/installed-baseline/manifest.json": "07faa8cce4c643c0a580787b2514c955ddbc4cd0cbff77b61209de9dd97815a4",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/tests/test_celery_correction.py": "250f8b8c3bc30b8ab4927190f44f240359c3ee584dc3934fd242848d29e75875",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/tests/test_diagnostics.py": "6cc86c8b42bb056ec54ee089b389e841f2b4117cd87e9792ab7bc47465a2f297",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/verify_candidate.py": "3818323248b2401e602e01a640ed62ddbffcb0ca0c7af013669864d705a3ddf8"
+  },
+  "classifications": [
+    "celery_no_replies",
+    "celery_broker_connection_failed",
+    "celery_remote_command_failed",
+    "celery_usage_or_import_failed",
+    "celery_unclassified_failure"
+  ],
+  "decision": "GO for review of one separately authorized diagnostic restoration attempt; no current installation/start authorization; broker equality remains unknown",
+  "installation_targets": [
+    "/docker/dispatcharr-iptv/permanent-streaming/backend.py",
+    "/docker/dispatcharr-iptv/permanent-streaming/manifest.json"
+  ],
+  "installed_baseline_commit": "f4298da612300a9024ac8302c8db1252d8d69fc6",
+  "installed_baseline_sha256": {
+    "backend.py": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
+    "lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
+    "manifest.json": "07faa8cce4c643c0a580787b2514c955ddbc4cd0cbff77b61209de9dd97815a4"
+  },
+  "lifecycle_unchanged": true,
+  "limits": {
+    "attempts_per_backend": 1,
+    "backend_invocation_timeout_s": 90,
+    "celery_reply_timeout_s": 8,
+    "celery_subprocess_timeout_s": 40,
+    "child_stream_bytes_each": 16384,
+    "host_capture_bytes": 4096,
+    "private_receipt_bytes": 16384,
+    "record_bytes": 768,
+    "retries": 0,
+    "saturated_child_byte_count": 16385,
+    "startup_delays": 0
+  },
+  "original_role_failure_codes_preserved": [
+    "celery_roles_missing",
+    "celery_default_missing",
+    "celery_dvr_missing",
+    "celery_reply_count"
+  ],
+  "parent_investigation_commit": "387f2197aec34de82bd01ed8e016baa94b430f4c",
+  "production_operations": 0,
+  "schema": 1,
+  "scope": "OFFLINE ONLY; no production contact or installation",
+  "source_review": {
+    "Celery_version": "5.6.3",
+    "celery/bin/base.py": "922af38f29c48c06246dc5cf0b0e8b5bf1fe2ed58886ef6d1d182c6188db0bb7",
+    "celery/bin/celery.py": "76730385bda66607440b5dd34c688f987f6eb15103d55f2ee887e7b672c601ac",
+    "celery/bin/control.py": "c1267b714e2100b4c7f9817833a985f6f4cf704da08485ddaaa33279f54efbdd"
+  },
+  "tests": {
+    "admission": 28,
+    "all_passed": true,
+    "application_runtime_execution": false,
+    "diagnostic": 107,
+    "fixtures": "synthetic mocks, bounded local Python child processes, isolated UID0/UID1000 user/network namespace + chroot",
+    "permission_fixture_checks": 16,
+    "persistence": 12,
+    "rollback": 26,
+    "security_contract": 17,
+    "total_unit_tests": 190
+  },
+  "unchanged_installed_targets": 65
+}

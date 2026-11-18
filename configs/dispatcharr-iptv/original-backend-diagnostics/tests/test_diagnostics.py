@@ -22,14 +22,20 @@ def load(name):
 B=load('backend');L=load('lifecycle');L.HERE=HERE/'candidate'
 SECRET='SYNTHETIC_PRIVATE_PASSWORD_DO_NOT_RETAIN'
 
+def command_fields():
+    return {'command_start_s':100.0,'command_end_s':101.0,'command_elapsed_s':1.0,
+            'stdout_bytes':128,'stderr_bytes':0,'output_complete':True,'reply_output_valid':True,**B.compare_brokers()}
+
 def records(fail=None):
     result=[]
     for i,stage in enumerate(B.STAGES):
         result.append({'stage':stage,'event':'start','classification':'checking','elapsed_s':i*2.0})
         fields={'api_sources':{'count':14},'postgres':{'returncode':0},'redis':{},'uwsgi':{'count':2},'celery':{'count':2,'returncode':0,'default_present':True,'dvr_present':True}}[stage]
+        if stage=='celery':fields.update(command_fields())
         if fail==stage:
             fields={'api_sources':{'count':14},'postgres':{'returncode':0},'redis':{},'uwsgi':{'count':0},'celery':{'count':1,'returncode':0,'default_present':True,'dvr_present':False}}[stage]
-            code={'api_sources':'source_hash_mismatch','postgres':'migration_mismatch','redis':'redis_ping_failed','uwsgi':'fresh_workers_missing','celery':'celery_dvr_missing'}[stage]
+            if stage=='celery':fields.update(command_fields());fields['reply_output_valid']=False
+            code={'api_sources':'source_hash_mismatch','postgres':'migration_mismatch','redis':'redis_ping_failed','uwsgi':'fresh_workers_missing','celery':'celery_unclassified_failure'}[stage]
             result.append({'stage':stage,'event':'fail','classification':code,'elapsed_s':i*2.0+1,**fields});break
         result.append({'stage':stage,'event':'pass','classification':'ready','elapsed_s':i*2.0+1,**fields})
     return result
@@ -48,7 +54,7 @@ class BackendFixture:
         self.keys=[f'live:worker:{i}:heartbeat' for i in [21,22]]
         self.now=1000;self.redis_error=None;self.ping=True;self.value='999';self.ttl=10;self.commands=[]
         self.pg_code=0;self.pg_stdout='184:b00f51e91c5b882cd84d3b2579d074ca\n';self.pg_error=None
-        self.celery_code=0;self.celery_stdout='-> default@fixture: OK\n    pong\n-> dvr@fixture: OK\n    pong\n';self.celery_error=None
+        self.celery_code=0;self.celery_stdout='-> default@fixture: OK\n    pong\n-> dvr@fixture: OK\n    pong\n';self.celery_error=None;self.celery_stderr=''
         self.pins={'files':{f'f{i}.py':hashlib.sha256(b'code').hexdigest() for i in range(14)}}
         self.file_error=None
     def Path(self,value):
@@ -70,7 +76,7 @@ class BackendFixture:
             if self.pg_error:raise self.pg_error
             return types.SimpleNamespace(returncode=self.pg_code,stdout=self.pg_stdout,stderr=SECRET)
         if self.celery_error:raise self.celery_error
-        return types.SimpleNamespace(returncode=self.celery_code,stdout=self.celery_stdout,stderr=SECRET)
+        return types.SimpleNamespace(returncode=self.celery_code,stdout=self.celery_stdout,stderr=self.celery_stderr)
     def Redis(self,**kwargs):
         fixture=self
         class R:
@@ -83,7 +89,7 @@ class BackendFixture:
         return R()
     def execute(self):
         stream=io.StringIO();error=None;clock=itertools.count(0,.001)
-        with patch.object(B,'Path',self.Path),patch.object(B.subprocess,'run',self.run),patch.object(B.time,'time',return_value=self.now),patch.object(B.time,'monotonic',side_effect=lambda:next(clock)),patch.dict(sys.modules,{'redis':types.SimpleNamespace(Redis=self.Redis)}),patch.dict(os.environ,{'POSTGRES_PASSWORD':SECRET,'REDIS_PASSWORD':SECRET}),contextlib.redirect_stderr(stream):
+        with patch.object(B,'Path',self.Path),patch.object(B.subprocess,'run',self.run),patch.object(B,'celery_capture',side_effect=self.run),patch.object(B.time,'time',return_value=self.now),patch.object(B.time,'monotonic',side_effect=lambda:next(clock)),patch.dict(sys.modules,{'redis':types.SimpleNamespace(Redis=self.Redis)}),patch.dict(os.environ,{'POSTGRES_PASSWORD':SECRET,'REDIS_PASSWORD':SECRET}),contextlib.redirect_stderr(stream):
             try:B.check()
             except Exception as e:error=e
         value=stream.getvalue();parsed=B.RecordStream()
@@ -135,11 +141,11 @@ class BackendTests(unittest.TestCase):
     def test_missing_DVR(self):
         f=BackendFixture();f.celery_stdout='-> default@fixture: OK\n pong\n';self.assertFailure(f,'celery','celery_dvr_missing')
     def test_no_Celery_roles(self):
-        f=BackendFixture();f.celery_stdout=SECRET;self.assertFailure(f,'celery','celery_roles_missing')
+        f=BackendFixture();f.celery_stdout=SECRET;self.assertFailure(f,'celery','celery_unclassified_failure')
     def test_Celery_extra_reply(self):
         f=BackendFixture();f.celery_stdout+='-> default@duplicate: OK\n pong\n';self.assertFailure(f,'celery','celery_reply_count')
     def test_Celery_command_failure(self):
-        f=BackendFixture();f.celery_code=1;self.assertFailure(f,'celery','celery_command_failed')
+        f=BackendFixture();f.celery_code=1;self.assertFailure(f,'celery','celery_unclassified_failure')
     def test_Celery_timeout(self):
         f=BackendFixture();f.celery_error=subprocess.TimeoutExpired(SECRET,40);self.assertFailure(f,'celery','subprocess_timeout')
     def test_unexpected_exception_redacted(self):
@@ -237,6 +243,13 @@ class IntegrityTests(unittest.TestCase):
         original=next(n for n in ast.parse((HERE/'original/backend.py').read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='check')
         candidate=next(n for n in ast.parse((HERE/'candidate/backend.py').read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='check')
         class Strip(ast.NodeTransformer):
+            def visit_Try(self,n):
+                if not n.handlers and n.finalbody and len(n.body)==1 and isinstance(n.body[0],ast.Assign) and isinstance(n.body[0].value,ast.Call) and isinstance(n.body[0].value.func,ast.Name) and n.body[0].value.func.id=='celery_capture':
+                    a=copy.deepcopy(n.body[0]);a.value.func=ast.Attribute(value=ast.Name(id='subprocess',ctx=ast.Load()),attr='run',ctx=ast.Load());return a
+                return self.generic_visit(n)
+            def visit_If(self,n):
+                if isinstance(n.test,ast.BoolOp) and isinstance(n.test.values[0],ast.UnaryOp) and isinstance(n.test.values[0].operand,ast.Name) and n.test.values[0].operand.id=='complete':return None
+                return self.generic_visit(n)
             def visit_With(self,n):
                 if isinstance(n.items[0].context_expr,ast.Call) and isinstance(n.items[0].context_expr.func,ast.Attribute) and isinstance(n.items[0].context_expr.func.value,ast.Name) and n.items[0].context_expr.func.value.id=='diagnostic':
                     return [v for child in n.body if (v:=self.visit(child)) is not None]
@@ -245,7 +258,7 @@ class IntegrityTests(unittest.TestCase):
                 if isinstance(n.value,ast.Call) and isinstance(n.value.func,ast.Attribute) and isinstance(n.value.func.value,ast.Name) and n.value.func.value.id=='diagnostic':return None
                 return self.generic_visit(n)
             def visit_Assign(self,n):
-                if any(isinstance(t,ast.Name) and t.id=='diagnostic' for t in n.targets):return None
+                if any(isinstance(t,ast.Name) and t.id in {'diagnostic','command_start','complete'} for t in n.targets):return None
                 return self.generic_visit(n)
         stripped=Strip().visit(copy.deepcopy(candidate));self.assertEqual(ast.dump(original,include_attributes=False),ast.dump(stripped,include_attributes=False))
 

@@ -205,7 +205,8 @@
     "tools/dispatcharr_provider/synthetic.py": "f718ebde15e1564c7c6b3ac826d00435b40576c5d83b14e7a12b56ff17bb8dad",
     "tools/dispatcharr_provider/validation-results.json": "f598cdd992df9e6ccf6700f85a6e0995a010f2bf83e7af3bed4c53d1194e8450"
   },
-  "mode": "OFFLINE CANDIDATE ONLY; separate installation/start authorization required",
+  "installed_diagnostic_baseline_commit": "f4298da612300a9024ac8302c8db1252d8d69fc6",
+  "mode": "offline diagnostic-only two-file correction from installed f4298da; no installation authorized",
   "receipt_directory": {
     "files_mode": "0600",
     "gid": 0,
@@ -218,21 +219,14 @@
     "/docker/dispatcharr-iptv/permanent-streaming/backend.py": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
+      "sha256": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
       "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/backend.py",
-      "uid": 0
-    },
-    "/docker/dispatcharr-iptv/permanent-streaming/lifecycle.py": {
-      "gid": 0,
-      "mode": "0644",
-      "sha256": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
-      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/lifecycle.py",
       "uid": 0
     },
     "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "07faa8cce4c643c0a580787b2514c955ddbc4cd0cbff77b61209de9dd97815a4",
+      "sha256": "52f8c8e14ecc33fec0b362b1ef32f7d79111ba9d127ee759bc08b939a8f1620b",
       "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/manifest.json",
       "uid": 0
     }
@@ -241,22 +235,15 @@
     "/docker/dispatcharr-iptv/permanent-streaming/backend.py": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "651c7f5952667ac0bda3e21e1e1edb73963aea16b38c9ceca8501182ae774dbf",
-      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/original/backend.py",
-      "uid": 0
-    },
-    "/docker/dispatcharr-iptv/permanent-streaming/lifecycle.py": {
-      "gid": 0,
-      "mode": "0644",
-      "sha256": "9dbe2ec2cfb41b847cffc5cff487e558c16f56d5d992474670989c387d286779",
-      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/original/lifecycle.py",
+      "sha256": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
+      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/installed-baseline/backend.py",
       "uid": 0
     },
     "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "9014af51977ae95a33ea5a380480196da8352af6043bde6126c9b39a4c8f781c",
-      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/original/manifest.json",
+      "sha256": "07faa8cce4c643c0a580787b2514c955ddbc4cd0cbff77b61209de9dd97815a4",
+      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/installed-baseline/manifest.json",
       "uid": 0
     }
   },
@@ -292,6 +279,7 @@
     "/docker/dispatcharr-iptv/permanent-streaming/health.py": "f4da54dece514ea24df5a6561ce52b883a1737213634b95bb1eab94a1b4ec6db",
     "/docker/dispatcharr-iptv/permanent-streaming/hls_relay.py": "171461eb4bb83170a83d4b52aeca90d3f7ebc5d8486b615cdf654b7fc98078f5",
     "/docker/dispatcharr-iptv/permanent-streaming/jellyfin.py": "f328d3c5e26ca3465717b17376e6cc3a04f858595b08514e449064c68ade950f",
+    "/docker/dispatcharr-iptv/permanent-streaming/lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
     "/docker/dispatcharr-iptv/permanent-streaming/manifest_telemetry.py": "179a364baaf3a7fbde6c09082db0fc9df65639812a86e7139bc0c1ec32df5784",
     "/docker/dispatcharr-iptv/permanent-streaming/rate_budget.py": "86b11daec92b621d2bb4d9288da78ea909976f5483c5aab4417a29961b22bd56",
     "/docker/dispatcharr-iptv/permanent-streaming/reference/Caddyfile.accepted": "bf5e40d2ccba8799f4b38f15336399fea7068f676150c2f7b18a1e07dc081a98",

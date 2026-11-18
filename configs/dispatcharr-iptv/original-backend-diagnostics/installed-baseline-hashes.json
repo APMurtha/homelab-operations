@@ -1,0 +1,8 @@
+{
+  "files": {
+    "backend.py": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
+    "lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
+    "manifest.json": "07faa8cce4c643c0a580787b2514c955ddbc4cd0cbff77b61209de9dd97815a4"
+  },
+  "source_commit": "f4298da612300a9024ac8302c8db1252d8d69fc6"
+}
