@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "baseline": "3f1b2c08d684e08c356cb82930b9a04d655a66f8",
+  "result": "NO_GO_IMAGE_BINDING",
+  "attempts_used": 2,
+  "attempt_limit": 3,
+  "stop_reason": "uncertain cause of native_selected_group_missing; no third attempt",
+  "offline_distinct_tests": 681,
+  "offline_failures": 0,
+  "image": "sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be",
+  "test_only_corrections": [
+    "supported plugin autodiscovery opt-out in disposable environment",
+    "strict nullable account-registration metadata selector in test harness"
+  ],
+  "source_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_test.py": "4dc86e27d0f902e5bd736cc13c31b58f86b877fcdaff836a16814b04a77606b5",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_transport.py": "fda01cefabf4991e0536b909e7b09f7d10a8f5e3c4144655128c9f5a1b7e4172",
+    "configs/dispatcharr-iptv/hardened-image-integration/test_plugin_fixture.py": "a822a6f55af7270ad43476d9391b962476471162a705b1fb0700b947d99b183c",
+    "configs/dispatcharr-iptv/hardened-image-integration/test_registration_fixture.py": "25352ec53900cff97299002dafca1258d4e3cb6a03f50d31fe096dc2df40a34b",
+    "configs/dispatcharr-iptv/hardened-image-integration/fixtures/plugin-apps-upstream.py": "27b3b52fad5c8ca2aaf1912ac4165b1b5c58ac438cb489ce1d6182c55ef32679"
+  },
+  "evidence_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/overnight-attempt-1-results.json": "cf71b2f9fc92ccef1223b2d9f3baaf7ac3dfb968e60c7680cadb260ced202040",
+    "configs/dispatcharr-iptv/hardened-image-integration/overnight-attempt-2-results.json": "2f5e51b531948657148db3fd551132111cdbdc7632c26ab0cbb1f018d6120ff4"
+  },
+  "production_preserved": true,
+  "cleanup_verified_both": true,
+  "previous_receipts_preserved": true,
+  "no_image_or_application_changes": true,
+  "transition_manifest_sha256": "2466096d566ce5b0b5144d8a03074d16891151b5260068c6922a64c3b78ce448"
+}
