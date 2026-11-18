@@ -1,6 +1,22 @@
 # Hardened image build and isolated integration evidence
 
-Current corrected build: `sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be`.
+Current **test-only** image binding:
+`sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439`.
+See [the binding review](../../../docs/dispatcharr-corrected-image-runtime-binding.md)
+and `corrected-runtime-binding.json` for all eighteen exact source hashes.
+The build evidence is `e0da9ff`; application source correction is `8764cfd`.
+Runtime execution remains separately authorized; no attempt has been launched by
+this binding change. Production aio_image remains null and production pins are unchanged.
+Use fresh private work/attempt identities and this version's matched runner,
+admission helper, transport and fixtures. Do not overwrite prior receipts or use
+this transport to reconcile an old attempt: use that attempt's retained transport.
+
+## Historical checkpoint notes
+
+The notes below retain earlier provenance and obsolete execution details. They do
+not override the current binding review or authorize a runtime attempt.
+
+Earlier corrected build: `sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be`.
 Packaging and UID1000 policy checks passed; application acceptance stopped on an
 unclassified socket-audit event. **NO-GO for binding; do not automatically rerun
 the historical test harness.** See [runtime acceptance](../../../docs/dispatcharr-hardened-image-runtime-acceptance.md)

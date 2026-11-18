@@ -80,6 +80,39 @@ def registration_matches(rows,registration):
     return selected
 
 
+def creation_snapshot(detail):
+    """Bounded non-secret creation evidence; never retain raw API responses."""
+    if not isinstance(detail,dict) or type(detail.get('id')) is not int or detail['id']<=0 or detail.get('is_active') is not False:
+        raise RuntimeError('native_inactive_creation_readback_required')
+    groups=detail.get('channel_groups')
+    if not isinstance(groups,list) or len(groups)>16:raise RuntimeError('synthetic_group_inventory_refused')
+    out=[];ids=set();xc_ids=set()
+    for rel in groups:
+        if not isinstance(rel,dict):raise RuntimeError('native_relation_shape_refused')
+        gid=rel.get('channel_group');props=rel.get('custom_properties')
+        if (type(gid) is not int or gid<=0 or gid in ids or not isinstance(props,dict)
+                or rel.get('enabled') is not False or rel.get('auto_channel_sync') is not False):
+            raise RuntimeError('native_group_flags_or_identity_refused')
+        ids.add(gid);xc=props.get('xc_id')
+        if xc is not None:
+            if not isinstance(xc,(str,int)) or isinstance(xc,bool) or not str(xc).isdigit() or int(xc)<=0 or str(xc) in xc_ids:
+                raise RuntimeError('native_category_identity_refused')
+            xc=str(xc);xc_ids.add(xc)
+        out.append({'channel_group':gid,'xc_id':xc})
+    return {'account_id':detail['id'],'is_active':False,'groups':out}
+
+
+def discovery_failure_snapshot(status,data):
+    codes={'authorization_refused','discovery_timeout','discovery_invalid_response','discovery_incomplete'}
+    if (status not in (403,502) or not isinstance(data,dict)
+            or data.get('detail')!='native_discovery_failed_no_retry' or data.get('account_created') is not True
+            or type(data.get('account_id')) is not int or data['account_id']<=0
+            or not isinstance(data.get('discovery'),dict) or data['discovery'].get('state')!='failed'
+            or data['discovery'].get('code') not in codes
+            or (status==403)!=(data['discovery']['code']=='authorization_refused')):raise RuntimeError('native_failure_contract_refused')
+    return {'HTTP_status':status,'account_id':data['account_id'],'account_created':True,'code':data['discovery']['code']}
+
+
 def image_permissions_and_authorization():
     expected=json.loads(Path('/fixture/expected-source-hashes.json').read_text())
     modes={}
@@ -263,12 +296,21 @@ class Integration(unittest.TestCase):
         cls.server=http.server.ThreadingHTTPServer(('127.0.0.1',443),Provider);cls.server.events=[]
         ctx=ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER);ctx.load_cert_chain(cls.cert,cls.key);cls.server.socket=ctx.wrap_socket(cls.server.socket,server_side=True)
         thread=threading.Thread(target=cls.server.serve_forever,daemon=True);thread.start();cls.addClassCleanup(cls.server.server_close);cls.addClassCleanup(cls.server.shutdown)
+        cls.creation_readbacks={};cls.discovery_failures={}
         class Exchange:
             simulation=True
             def exchange(self,method,path,body=None):
                 response=cls.client.generic(method,path,data=json.dumps(body) if body is not None else '',content_type='application/json')
                 try: data=response.json()
                 except ValueError:data={}
+                if method=='POST' and path=='/api/m3u/accounts/':
+                    DIAG.record('phase_started',details={'HTTP_status':response.status_code})
+                    if response.status_code==201 and body.get('name')==cls.p['name']:
+                        detail=cls.client.get(path+str(data['id'])+'/')
+                        if detail.status_code!=200:raise RuntimeError('native_creation_detail_failed')
+                        row=creation_snapshot(detail.json());cls.creation_readbacks[row['account_id']]=row
+                    elif isinstance(data,dict) and data.get('detail')=='native_discovery_failed_no_retry':
+                        failure=discovery_failure_snapshot(response.status_code,data);cls.discovery_failures[failure['account_id']]=failure
                 return response.status_code,data
         cls.store=cls.stack.enter_context(Store(STATE/'native-state'));cls.ledger=Ledger(cls.store,cls.p['key'])
         cls.api=API(Exchange());cls.adapter=Adapter(cls.api,cls.ledger,polls=30)
@@ -314,6 +356,8 @@ class Integration(unittest.TestCase):
         before=len(self.server.events)
         result=refresh_single_m3u_account.delay(self.silent_id);result.get(timeout=20,propagate=False)
         self.assertEqual(result.state,'FAILURE');completed_task()
+        explicit=refresh_single_m3u_account.delay(self.silent_id,operator_requested=True);explicit.get(timeout=20,propagate=False)
+        self.assertEqual(explicit.state,'FAILURE');self.assertEqual(len(self.server.events),before);completed_task()
         profile=refresh_account_profiles.delay(self.silent_id).get(timeout=20)
         self.assertEqual(profile,'automatic_native_profile_refresh_disabled');self.assertEqual(len(self.server.events),before);completed_task()
 
@@ -340,7 +384,15 @@ class Integration(unittest.TestCase):
         with self.assertRaises(Refused):ledger.mutate(self.api,'POST',ACCOUNTS,body,{'name':p['name']},ACCOUNTS,statuses=(201,))
         rows=registration_matches(self.api.rows(ACCOUNTS),'c'*32)
         self.assertEqual(len(rows),1)
+        from apps.m3u.models import M3UAccount
+        account=self.api.detail(ACCOUNTS,rows[0]['id'])
+        self.assertFalse(account['is_active']);self.assertEqual(account['status'],M3UAccount.Status.ERROR)
+        failure=self.discovery_failures[account['id']]
+        self.assertEqual(failure,{'HTTP_status':403,'account_id':account['id'],'account_created':True,'code':'authorization_refused'})
         self.assertEqual(ledger.value['operations'][-1]['state'],'intent')
+        self.assertEqual(len(ledger.value['operations']),1)
+        with self.assertRaises(Refused):ledger.clean()
+        RESULT['discovery_partial_failure']={**failure,'account_inactive':True,'error_state_verified':True,'duplicate_write_blocked':True}
         with self.assertRaises(Refused):ledger.reconcile(self.api)
         self.assertEqual(self.server.events,[])
         RESULT['uncertain_mutation']={'write_attempts':1,'HTTP_failure_after_create':True,'owned_record_confirmed_by_API':rows[0]['id'],'intent_preserved':True,'automatic_retry':False}
@@ -365,6 +417,13 @@ class Integration(unittest.TestCase):
         self.assertTrue(ProgramData.objects.filter(epg=guide).exists())
         self.assertEqual(self.ledger.value['phase'],'registered_inactive')
         account=self.ledger.value['resources']['account']['id']
+        created=self.creation_readbacks[account];self.assertFalse(created['is_active'])
+        selected=[g for g in created['groups'] if g['xc_id']=='1'];self.assertEqual(len(selected),1)
+        from apps.channels.models import ChannelGroupM3UAccount
+        relation=ChannelGroupM3UAccount.objects.get(m3u_account_id=account,channel_group_id=selected[0]['channel_group'])
+        self.assertEqual(str(relation.custom_properties['xc_id']),'1')
+        self.assertEqual(native.channel_group_id,selected[0]['channel_group'])
+        RESULT['inactive_discovery_readback']={**created,'selected_native_group':selected[0]['channel_group'],'actual_association_persisted':True,'real_AirVPN_grant':False}
         self.assertEqual(Channel.objects.filter(streams__m3u_account_id=account).distinct().count(),1)
         self.assertTrue(self.server.events)
         self.assertTrue(all(e['path'] in ['/player_api.php','/xmltv.php'] for e in self.server.events))

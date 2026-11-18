@@ -1,0 +1,135 @@
+{
+  "Docker_operations": 0,
+  "GO_NO_GO": "GO for one separately authorized isolated acceptance attempt after fresh preflight; no launch authorization or production binding",
+  "baseline": "e0da9ff06ab827f6eaf79397d15dd8ce6399fe10",
+  "binding_file_sha256": "d260c99e86b43b378f0001c6d5fa432b8c100d021005e6817b0e74888558a7e7",
+  "build_evidence_sha256": "2ed95e293499735a516a0ef8eb996411b485e7b4917c7f77cad83757273e9d5c",
+  "canonical_source_contract_sha256": "3a920af181c06796131bded5c283fa2ed9c76578d3dc59bf847b5bb78ae4a546",
+  "changed_file_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/README.md": {
+      "new_sha256": "93c9ada63f891fb43c31184ce6e46f2d07b8d07f821e84cf7d544e31285cf6ea",
+      "previous_sha256": "fe8fdde788c268d5e8994f738ff113d51a8e711e911fe09c2aa0129d9a521cd3"
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/corrected-runtime-binding.json": {
+      "new_sha256": "d260c99e86b43b378f0001c6d5fa432b8c100d021005e6817b0e74888558a7e7",
+      "previous_sha256": null
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/run_runtime.py": {
+      "new_sha256": "8ae09016286ca99f82d42b3ea915235a12b5e754701499287495bca02039afbd",
+      "previous_sha256": "c5aeadca482d51d4beb61c8b9396fe613dad6ab00304ce3ee6404762ec7090e7"
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime-binding-preservation.json": {
+      "new_sha256": "9c908668ee515765046e2ea41b2bea238f8fa3d48a577bb4c02863dbb31183a1",
+      "previous_sha256": null
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_admission.py": {
+      "new_sha256": "7e029a8fb42ec2b813a0d58fd1a0e399e2b6a9a116741b570e275a9d674bee44",
+      "previous_sha256": "c7bec3b64de82afcfee3d85861480b542d93947943cd9c87802be9293573d314"
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_test.py": {
+      "new_sha256": "3641f48248a43a3182ff10f2f7121d2a0a4c11110f51427216dc5941e5381bfd",
+      "previous_sha256": "4dc86e27d0f902e5bd736cc13c31b58f86b877fcdaff836a16814b04a77606b5"
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_transport.py": {
+      "new_sha256": "70697278636f729289dfae6250dd20f13797cf236d0d34e71ecd00e60de36872",
+      "previous_sha256": "fda01cefabf4991e0536b909e7b09f7d10a8f5e3c4144655128c9f5a1b7e4172"
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/test_corrected_runtime_binding.py": {
+      "new_sha256": "d459640a0541172a0f07e08b86c8940f72245ff01b223d6afe9880c5e2ea3e83",
+      "previous_sha256": null
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/test_runtime_admission.py": {
+      "new_sha256": "bc09eb7e9f17cbb572dac19e077f6cbfeefd04df4d4c9534533c24b4f04d9faf",
+      "previous_sha256": "2bfc2cbbb3a56dbe6453def7d0d63f08f6dfac4e50fbb2efa0e2567836e660c7"
+    },
+    "configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json": {
+      "new_sha256": "548cbdb475db8934792fd7a0b640926d8f769cfa7c1bda330b05081aaea658fe",
+      "previous_sha256": "7a97700e9f26cac3421237f4c493fc3df7c9edc0f96dfe04edff9203a4e57cb0"
+    }
+  },
+  "distinct_offline_tests": 728,
+  "failures": 0,
+  "image_id": "sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439",
+  "installed_target_mappings_unchanged": true,
+  "new_tests": 15,
+  "offline_suites": {
+    "audit": {
+      "failures": 0,
+      "log_sha256": "412396e1922ffe8301a989ea3ff29fe4885004943897b81a318533239ea37c6e",
+      "test_executions": 38
+    },
+    "design": {
+      "failures": 0,
+      "log_sha256": "be968ac10060e5ea2df5ce98ca7916c925a671b553db6971dc521fd14966bd0f",
+      "test_executions": 28
+    },
+    "guard": {
+      "failures": 0,
+      "log_sha256": "f4d8c4274fac21365f5ec26dccfb6ea7af9f1efa724a4ca9058d1b39299cb15b",
+      "test_executions": 14
+    },
+    "harness": {
+      "failures": 0,
+      "log_sha256": "f68541225e7db10d037d4e6af9eefe0159459503a61652dcad7335b56ff34325",
+      "test_executions": 140
+    },
+    "isolated": {
+      "failures": 0,
+      "log_sha256": "5ffcaf4c13ea5f9bb799bdf6f67fce7290e1008e0376e9564a32560744556dd5",
+      "test_executions": 14
+    },
+    "native": {
+      "failures": 0,
+      "log_sha256": "2c328302329085532414a5f316f7186604ba0b0ec67e5f1622e012dae60a21dd",
+      "test_executions": 106
+    },
+    "permissions": {
+      "failures": 0,
+      "log_sha256": "b9e99e40dfa961b44fcdc435a133ed10c7cc7953e052b1361a86089adf2f5ac3",
+      "test_executions": 40
+    },
+    "persistence": {
+      "failures": 0,
+      "log_sha256": "2c80dd659cd1143190d7f53f84f15957ceb766a9611dfaa817d6e171a29fa8d6",
+      "test_executions": 26
+    },
+    "streaming": {
+      "failures": 0,
+      "log_sha256": "e240fcf51b005847e963592e48c7de4d74dbcead89743908019881f8fd20d1df",
+      "test_executions": 210
+    },
+    "tools": {
+      "failures": 0,
+      "log_sha256": "c0392b90bfa5f80009179b8d23b22efb4c3394b7ae98b03a90c63a3c81022728",
+      "test_executions": 147
+    }
+  },
+  "preserved_historical_files": 19,
+  "production_aio_image": null,
+  "production_compose_and_app_sources_unchanged": true,
+  "runtime_attempts": 0,
+  "runtime_socket_audit_source_unchanged": true,
+  "schema": 1,
+  "scope": "offline test-only image binding; no host/Docker/runtime operations",
+  "source_hashes": {
+    "apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
+    "apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
+    "apps/epg/tasks.py": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
+    "apps/m3u/api_views.py": "6c48c35abc821efbb428a74c832e7c8c018eef472d6f987505169cd83d902936",
+    "apps/m3u/signals.py": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
+    "apps/m3u/tasks.py": "75a6eb9276ec96b0e5de2ae2b1274a63ffe47ef89cc8d6c1620a89e049467fb1",
+    "apps/proxy/live_proxy/input/buffer.py": "17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810",
+    "apps/proxy/live_proxy/input/manager.py": "ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf",
+    "apps/proxy/live_proxy/output/ts/generator.py": "db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b",
+    "apps/proxy/live_proxy/readiness.py": "fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b",
+    "core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
+    "core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
+    "core/provider_policy.py": "2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639",
+    "core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+    "core/provider_security.py": "8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004",
+    "core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
+    "core/provider_transport.py": "4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39",
+    "core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
+  },
+  "test_executions_including_repeated_audit_tests": 763
+}

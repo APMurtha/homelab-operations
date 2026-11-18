@@ -19,9 +19,9 @@ STABILIZE_SECONDS=120
 MAX_SECONDS=180
 OBSERVATION_SECONDS=15
 RECEIPT_MAX_AGE=30
-RETAINED_IMAGE='sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be'
+RETAINED_IMAGE='sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439'
 
-EXPECTED_SOURCES = {'apps/epg/api_views.py': '6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051', 'apps/epg/signals.py': 'a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c', 'apps/epg/tasks.py': '3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6', 'apps/m3u/api_views.py': '61c9289fa4c6bc9ecc275d39386c6ff0081a551535ce95d44353fe92c51e4e3f', 'apps/m3u/signals.py': '7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92', 'apps/m3u/tasks.py': '4294d180806627da4029af9b955a3c40f5ac13869da23adc25b4bec7293085ac', 'core/api_urls.py': '8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324', 'core/provider_dns.py': '28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a', 'core/provider_policy.py': '2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639', 'core/provider_readiness.py': '5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698', 'core/provider_security.py': 'b63d7c4af215d7b135110667c1b37166ddc9b19c3456a4c6703618042d30af16', 'core/provider_security_view.py': 'b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b', 'core/provider_transport.py': '4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39', 'core/xtream_codes.py': 'ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa', 'apps/proxy/live_proxy/input/buffer.py': '17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810', 'apps/proxy/live_proxy/input/manager.py': 'ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf', 'apps/proxy/live_proxy/output/ts/generator.py': 'db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b', 'apps/proxy/live_proxy/readiness.py': 'fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b'}
+EXPECTED_SOURCES = {'apps/epg/api_views.py': '6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051', 'apps/epg/signals.py': 'a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c', 'apps/epg/tasks.py': '3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6', 'apps/m3u/api_views.py': '6c48c35abc821efbb428a74c832e7c8c018eef472d6f987505169cd83d902936', 'apps/m3u/signals.py': '7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92', 'apps/m3u/tasks.py': '75a6eb9276ec96b0e5de2ae2b1274a63ffe47ef89cc8d6c1620a89e049467fb1', 'apps/proxy/live_proxy/input/buffer.py': '17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810', 'apps/proxy/live_proxy/input/manager.py': 'ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf', 'apps/proxy/live_proxy/output/ts/generator.py': 'db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b', 'apps/proxy/live_proxy/readiness.py': 'fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b', 'core/api_urls.py': '8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324', 'core/provider_dns.py': '28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a', 'core/provider_policy.py': '2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639', 'core/provider_readiness.py': '5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698', 'core/provider_security.py': '8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004', 'core/provider_security_view.py': 'b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b', 'core/provider_transport.py': '4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39', 'core/xtream_codes.py': 'ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa'}
 
 class Refused(RuntimeError):pass
 
@@ -70,6 +70,7 @@ def capacity_valid(row):
 
 
 def verified(inspect,image,attempt_id,journal,clock=time.monotonic):
+    if image!=RETAINED_IMAGE:raise Refused('unapproved_test_image')
     journal.record('verification_started',{'image_id':image})
     result=inspect(image,EXPECTED_SOURCES)
     if (not isinstance(result,dict) or result.get('base',{}).get('id')!=image
@@ -84,7 +85,7 @@ def verified(inspect,image,attempt_id,journal,clock=time.monotonic):
 def receipt_valid(receipt,image,attempt_id,now):
     if not isinstance(receipt,dict):return False
     timestamp=receipt.get('completed_monotonic')
-    return (receipt.get('image_id')==image and receipt.get('attempt_id')==attempt_id
+    return (image==RETAINED_IMAGE and receipt.get('image_id')==image and receipt.get('attempt_id')==attempt_id
         and receipt.get('source_hashes')==EXPECTED_SOURCES and receipt.get('source_contract_sha256')==digest(EXPECTED_SOURCES)
         and receipt.get('process_exited') is True and type(receipt.get('exit_code')) is int and receipt['exit_code']==0
         and type(timestamp) in [int,float] and math.isfinite(timestamp) and 0<=now-timestamp<=RECEIPT_MAX_AGE)

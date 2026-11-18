@@ -14,7 +14,7 @@ import time
 DOCKER=['docker','-H','unix:///var/run/docker.sock']
 IMAGE=None  # Requires the separately reviewed successful build receipt, never the failed image.
 OWNER='1124d96'
-HOST_HELPERS={'runtime_admission.py': 'c7bec3b64de82afcfee3d85861480b542d93947943cd9c87802be9293573d314', 'inspect_image.py': '67549e04e19b0239229c878984f61a6b44f5e944dc1c4a5950f678e2b1872822'}
+HOST_HELPERS={'runtime_admission.py': '7e029a8fb42ec2b813a0d58fd1a0e399e2b6a9a116741b570e275a9d674bee44', 'inspect_image.py': '67549e04e19b0239229c878984f61a6b44f5e944dc1c4a5950f678e2b1872822'}
 
 def docker(args,timeout=60):
     result=subprocess.run(DOCKER+args,capture_output=True,text=True,timeout=timeout)
@@ -70,7 +70,7 @@ def prepare_fixture(work,payload):
 
 def main(payload,work,image=None,*,attempt_id=None):
     global IMAGE
-    if not isinstance(image,str) or image!='sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be':raise RuntimeError('new_accepted_test_image_required')
+    if not isinstance(image,str) or image!='sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439':raise RuntimeError('new_accepted_test_image_required')
     if 'runtime_diagnostics.py' not in payload:raise RuntimeError('diagnostic_fixture_module_required')
     admission,inspector=load_host_helpers(payload)
     IMAGE=image;work=Path(work)

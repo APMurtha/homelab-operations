@@ -1,0 +1,62 @@
+{
+  "baseline_commit": "e0da9ff06ab827f6eaf79397d15dd8ce6399fe10",
+  "security_code": {
+    "run_runtime.py": {
+      "functions": {
+        "managed": "952faf85b4226037f0db928875728a922c2cbb9cee417d426046cdad42c32a12",
+        "production": "f6dbb8e8c6e0c8815b85a1dd5af9a83f55ef45be41269b6d39c510151a3e559f",
+        "probe": "8fb95b230caf66dbd11998a4bccba02545b6c539946fbbbbaae5027426bc9e05",
+        "prepare_fixture": "109feeaa8fccc85f00ff8cf73c092f96514c029ec48a1ddfcc571cad248e1fd4"
+      }
+    },
+    "runtime_admission.py": {
+      "functions": {
+        "measure": "4e9fc1df5d61b00c3764822bc796238dee95fad29a15f413590ad2fa77a1dd2b",
+        "capacity_valid": "c69aa58402879835689f73cf0e38e4795351df9b8d68482a0f6700f73cead85e",
+        "stabilize": "3f40231c973a113ec4941a20d4a8b85d4b1985d6f6a706d5780d1a5656b181b4"
+      }
+    },
+    "runtime_transport.py": {
+      "functions": {
+        "launch": "41443fb25cd1aefaed3ead677dbd6a1f69ee875792c2b701dbd1822825a9549b",
+        "status": "23c512bdac0ba323131b33d92ab1c8bc149932331f3e1ff17114ea956d96afcc",
+        "supervise": "2684a2f0e23efa9e4cabed363fea5530b32369a66acb6ba5d94731988b0bb390",
+        "execute": "6340012251609e2f48e2b6fb9e8ef485c0ff64ab450e517c9a52decea7bf3f7b",
+        "reconcile": "98099175775cf4c1bac3f0011605fe2c3e0c6a6c18c9874e7080a50bdd70e6b3",
+        "signal_owned_group": "2d5d6c2ab5bb175160deadd91bd894dff9c62c66ce9e6b56ef231d9690718798"
+      }
+    },
+    "runtime_diagnostics.py": {
+      "whole_file_sha256": "de5ed39ff92da1002e2f90507511d9dd3cfc878b8e5de55126fb30d467bae432"
+    }
+  },
+  "historical_files_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/admission-sequencing-results.json": "fbeff409e20d2dd5d65f16088af719ca7aad7fa7dae295475d70858b656518cd",
+    "configs/dispatcharr-iptv/hardened-image-integration/corrected-image-build-results.json": "2ed95e293499735a516a0ef8eb996411b485e7b4917c7f77cad83757273e9d5c",
+    "configs/dispatcharr-iptv/hardened-image-integration/diagnostic-attempt-2-results.json": "b72c9613506c35aef0d123d7c8ebea950d06a7c12d08f239dcd2a1e73f121593",
+    "configs/dispatcharr-iptv/hardened-image-integration/diagnostic-rerun-results.json": "2a19996e1bd8d09d5f36306a9af728496ccff7f7c1b0e4fc2248a8c195dd0934",
+    "configs/dispatcharr-iptv/hardened-image-integration/overnight-attempt-1-results.json": "cf71b2f9fc92ccef1223b2d9f3baaf7ac3dfb968e60c7680cadb260ced202040",
+    "configs/dispatcharr-iptv/hardened-image-integration/overnight-attempt-2-results.json": "2f5e51b531948657148db3fd551132111cdbdc7632c26ab0cbb1f018d6120ff4",
+    "configs/dispatcharr-iptv/hardened-image-integration/overnight-fixture2-offline-results.json": "f7a57cdec392fd4b96ca17174f8837a0f73a3f787b9d5a680901cc732e77a2aa",
+    "configs/dispatcharr-iptv/hardened-image-integration/overnight-offline-results.json": "bfff08d623434ad98e6468aae0b9814135b39e116ac31e086610ddb88987d0d2",
+    "configs/dispatcharr-iptv/hardened-image-integration/overnight-summary.json": "9f12b4ba499f218cdb05651af0d05e444637f2077b4a3e397f5495667cc42974",
+    "configs/dispatcharr-iptv/hardened-image-integration/retained-image-contract.json": "a13eee5cff0b0e9781d634225cc85305e32573ab6e29322ae624ff6568bc78be",
+    "configs/dispatcharr-iptv/hardened-image-integration/rivendell-load-investigation-results.json": "f7193ed9b5ffbf256613da3646cc737194bc6695499cc6f48ac0569cf3ddd382",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime-acceptance-results.json": "d87754caf1ed874362f558eb7a17c17b09494a1030670ed12dbb2632c12df87e",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime-audit-results.json": "c63911785d0870049dd0bc9d65fba21bcc17a8da450e34689e9974953a6617d9",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime-final-acceptance-results.json": "aee89c497f569eb6b4f4e8a02580444424cdd96882979dcd32b9055550f57612",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime-session-policy-results.json": "452af79c597d773896f1f719cc914438f891733b461712dac1e59d022a84b882",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime-transport-results.json": "f51764d78eac11f70c0077ae502344d8a9ee2a9ed8aa3821b9f672f198ce0639",
+    "configs/dispatcharr-iptv/hardened-image-integration/verification-results.json": "042a16eac25b00e28840d1025832c91084b5c6ab3395904cda03a4dfb3b8939c",
+    "docs/dispatcharr-corrected-hardened-image-build.md": "4e28cf6372b45e584c6331e6c75c4a30fc9f828eaac4374223ef6cae78c6be20",
+    "docs/dispatcharr-native-group-lifecycle-fix.md": "d5383ab79ccf4dec643f6576f444f37bebc1286a15489773bb268a6593846d15"
+  },
+  "production_files_sha256": {
+    "configs/dispatcharr-iptv/native-provider-hardening/release-contract.json": "891b115e0ad7b6e154aab9f1967fca6009e60e8ae6ba6996b14a980ef9573af1",
+    "configs/dispatcharr-iptv/native-provider-hardening/server.patch": "f9c39815f7fcabeede8966b7416aaf81aa35762da2e1b6f06952a08aaa815ef3",
+    "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json": "3ee7bc90687973be77ef7bff9254411941f930d2536eebde057659e7ee48c5f5",
+    "configs/dispatcharr-iptv/permanent-streaming/compose.yaml": "3f1993c109a9e9e18a0da04616e3a09dd3a132c478f57af15cd99cceef2c27de",
+    "configs/dispatcharr-iptv/boot-admission-phase6b3k/20-resource-admission.conf": "e639eab69f150f9f9ab833def8353c38f33bdbf00e3cb23e5ad0dfc595edd964"
+  },
+  "installed_manifest_sha256": "ebeba7be5a20bcba3b956f11fab399853c2de37dabae727a5cd026dabf1cf752"
+}
