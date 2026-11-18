@@ -1,0 +1,23 @@
+{
+  "files": {
+    "README.md": "24ab88a98b6e34f0ef3ba20b9edd27933c248e6b074ec23967b885bfdcb001db",
+    "candidate/minimal-phase6b3d/artifact-hashes.json": "7be1b02537744ac8f4a34dc69e45785f13a91490cee154a331e4bdeb5cd0a995",
+    "candidate/minimal-phase6b3d/verify.py": "eeebe55564ed845f202e99544b3d1d5ffdfb0be0043aa85f5831f3d319017e43",
+    "candidate/native-provider-hardening/output-hashes.json": "dc861e4615419508a43c16613f36bad1eca549980814fbbc51efb726566a4dd4",
+    "candidate/native-provider-hardening/release-contract.json": "f0a9f7bb35af077858ac85e69827053a29f9779968fdcbc0835a84504aaab0dd",
+    "candidate/permanent-streaming/api-source-pins.json": "fa9c370625a8c517ddbd515a9d0b2f03a47ebb17cd0b7a2720210680de986043",
+    "candidate/permanent-streaming/base-input-pins.json": "3be1bc2da6f91a78bd49a4b2aaad8444d924b4db52e562435603dbe72878257c",
+    "candidate/permanent-streaming/compose.native.yaml": "fe9fe961b9c1b6d5b7ecc45b655e4b4967e1d8355f48b2155d9b3fcc9e14d2d5",
+    "candidate/permanent-streaming/manifest.json": "3fba1a65d5080b20baa76d8ebf8637c74c09d4cb17084c8cbdef24ded771e567",
+    "compose.effective.review.yaml": "26782e4348068e2666efe1b988089c44959c69d2aac9068d62dbc1b75bba2365",
+    "installed-public-baseline.json": "c3b250e08e5c5d46868119119551c816450fac1b68581eca653227bd3d9c7e4a",
+    "installed-targets.proposed.json": "586c703eea209c28d36970926b756431b4e63c748041ec391249470227b2ba9a",
+    "offline-results.json": "2e0b779ff8b7e557e06dbbe8230e56c4a6623598db31d0af94d8d624d90c0e22",
+    "review-input-pins.json": "d9fc14ea5c69289a46817267ac6ba30b302c42a09bb6163dff89ea78e263a714",
+    "rollback-targets.json": "91f418223774a9e154f9dd10ccf792a2c628636f6f0143775e19b6e89026df0a",
+    "tests/test_proposal.py": "afff4b6864725298981afd8136c7a8e0b96c9ff33a405526241257d7867161da",
+    "verify_review.py": "2fcf3c0c6414961754a144009a74ec11b343fcca133dd62c07ca1e586185dfa4"
+  },
+  "mode": "PROPOSED ONLY",
+  "schema": 1
+}

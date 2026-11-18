@@ -1,0 +1,23 @@
+# PROPOSED ONLY. Never apply without separate matched-transition authorization.
+services:
+  dispatcharr:
+    image: sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439
+    volumes:
+    - type: bind
+      source: /run/dispatcharr-guard-status
+      target: /guard-status
+      read_only: true
+      bind:
+        create_host_path: false
+    - type: bind
+      source: /run/dispatcharr-provider-status
+      target: /run/dispatcharr-provider-status
+      read_only: true
+      bind:
+        create_host_path: false
+    - type: bind
+      source: /docker/dispatcharr-iptv/native-provider-hardening
+      target: /opt/native-provider-hardening
+      read_only: true
+      bind:
+        create_host_path: false

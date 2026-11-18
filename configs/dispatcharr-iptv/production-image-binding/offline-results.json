@@ -1,0 +1,81 @@
+{
+  "accepted_image": "sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439",
+  "authorization_required": true,
+  "changed_existing_targets": 15,
+  "distinct_tests": 743,
+  "errors": 0,
+  "evidence_commit": "d5225934a6d6ff8f919e01aae4219d36dba635d6",
+  "executed_tests": 778,
+  "failures": 0,
+  "installed_targets": 80,
+  "introduced_targets": 13,
+  "known_limitations": [
+    "No current Docker or application API health probe under this review; latest full production evidence is d522593.",
+    "Production full entrypoint, existing persistent database, real AirVPN grant, deployment and rollback remain future gates.",
+    "No provider authorization, automatic lease renewal or playback."
+  ],
+  "namespace_note": "Initial sandbox denied user-namespace capabilities before fixture execution. The same unchanged namespace runners passed outside that sandbox in unrouted synthetic namespaces. No production or Docker operations.",
+  "original_public_targets_matched": 67,
+  "production_applied": false,
+  "repeated_diagnostic_tests": 35,
+  "schema": 1,
+  "skips": 0,
+  "status": "PASS_OFFLINE_REVIEW_ONLY",
+  "suites": {
+    "audit": {
+      "log_sha256": "24491058f821af13b51e4ebeba2596e3f04f5e1c22d3492ebbc5cb86bc2786ce",
+      "result": "PASS",
+      "tests_executed": 38
+    },
+    "guard-design": {
+      "log_sha256": "58b6a211db65298135c9fe738c58b4bf7068cab6df50809cc36b3e085f0d0df9",
+      "result": "PASS",
+      "tests_executed": 28
+    },
+    "guard-interface": {
+      "log_sha256": "fd5c70f7c0baa96e5781ea0ac33bf24b23868f9682e9c191da35300a5ef5fd60",
+      "result": "PASS",
+      "tests_executed": 14
+    },
+    "native": {
+      "log_sha256": "c781ce4ee5c07cac333056e2296f3b276c3df21cf704105ecf6bb86e2104ce2f",
+      "result": "PASS",
+      "tests_executed": 106
+    },
+    "network": {
+      "log_sha256": "907c2e4253deb6ec73454892c16550c2fb4dee57fe2e4b55a5819adce9edeb47",
+      "result": "PASS",
+      "tests_executed": 14
+    },
+    "permanent": {
+      "log_sha256": "8b720d5bd800b3fde18b6cea4524d2999e4db4f05a49573b227a52cce2dc5910",
+      "result": "PASS",
+      "tests_executed": 210
+    },
+    "permissions": {
+      "log_sha256": "45b5fa7b39c41cbd0b82170eb34f99956c483d976366acc7268d3059f517a836",
+      "result": "PASS",
+      "tests_executed": 40
+    },
+    "persistence": {
+      "log_sha256": "67628a28d00c36e5738b5088ee8971595cea098b46a48f12578d5e976deaa168",
+      "result": "PASS",
+      "tests_executed": 26
+    },
+    "proposal": {
+      "log_sha256": "7568549e9df93edbaa4aa2077c22faa52614a9ac7f857e2fc0c5c6ac36fc15b0",
+      "result": "PASS",
+      "tests_executed": 15
+    },
+    "runtime": {
+      "log_sha256": "1fe9aa457e4ff28872108d0b7a5f3a7a7dade06364c33d7e38c021df0fe166cf",
+      "result": "PASS",
+      "tests_executed": 140
+    },
+    "tools": {
+      "log_sha256": "ceeeb5ba92d744ed5af2d59630281ffe126559e3895c80331322bf096733172a",
+      "result": "PASS",
+      "tests_executed": 147
+    }
+  }
+}
