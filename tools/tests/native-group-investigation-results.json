@@ -1,0 +1,144 @@
+{
+  "GO_NO_GO": "NO_GO runtime retry or image binding until separately authorized application/adapter contract correction; no image build or runtime attempted",
+  "assessment": "NATIVE_DISCOVERY_LIFECYCLE_CONTRACT_DEFECT; existing optimistic simulator fidelity gap",
+  "baseline": "a038444b4bd700e3c437fa9ec62f7624fc968ce0",
+  "distinct_test_total": 689,
+  "failures": 0,
+  "fixture_identity_match": {
+    "assertion": "checked from handler output in memory and exact AST selection literal; no HTTP or sockets",
+    "fixture_category_id": "1",
+    "selected_group_id": "1",
+    "selected_stream_id": "101"
+  },
+  "new_test_artifacts_sha256": {
+    "tools/tests/fixtures/native-group-source-evidence.json": "ca088100d7eac67cc63ffcbd81061493e34c220026f1426f22db548e63370235",
+    "tools/tests/test_dispatcharr_native_group_investigation.py": "de85200b1e9c0b5507ec5259586add2f52e3912529eb440f2a5bf68a4afb8530"
+  },
+  "offline_suites": {
+    "audit": {
+      "executed_tests": 38,
+      "failures": 0,
+      "log_sha256": "dfd9456cc69e15f712d557eddd9288a6ca1dd6a9a4af8fc4f725a1acbdd9462f"
+    },
+    "design": {
+      "executed_tests": 28,
+      "failures": 0,
+      "log_sha256": "3f795d843e92b236e67bc92b8ff24b1ce1a73dd4e3615024d977c9dfe6d0f99e"
+    },
+    "guard": {
+      "executed_tests": 14,
+      "failures": 0,
+      "log_sha256": "d63558ce9d3fff393dab4b6fac42ed811791dd83827c22a118483f0d8f20c4f7"
+    },
+    "harness": {
+      "executed_tests": 116,
+      "failures": 0,
+      "log_sha256": "407235a1809e384e90ebebfc06da45881635383ccb6ed682bd56105570387e58"
+    },
+    "isolated": {
+      "executed_tests": 14,
+      "failures": 0,
+      "log_sha256": "7f5b0338c2ad2352f46f27d18e2644264dba71b6c13b26083f08cd26df18b71c"
+    },
+    "native": {
+      "executed_tests": 91,
+      "failures": 0,
+      "log_sha256": "1eb51cb23bf55c2c6e61d4cfd7be9d34b46d3560a3caab1469a6f12fd6181e8b"
+    },
+    "permissions": {
+      "executed_tests": 40,
+      "failures": 0,
+      "log_sha256": "075e2d09d3eb020cc39043cde7440319fff5c838b0c041c19d5ee7addc4cbaf4"
+    },
+    "persistence": {
+      "executed_tests": 26,
+      "failures": 0,
+      "log_sha256": "67628a28d00c36e5738b5088ee8971595cea098b46a48f12578d5e976deaa168"
+    },
+    "streaming": {
+      "executed_tests": 210,
+      "failures": 0,
+      "log_sha256": "6e1e7dae067310b8b305561a2916ac757da1f21830175d2af698508dad1f80ed"
+    },
+    "tools": {
+      "executed_tests": 147,
+      "failures": 0,
+      "log_sha256": "3c0da3602aa59ff66130cd7d7c54c69967d335bf0fd505a2dc2faa8028c0abbc"
+    }
+  },
+  "reproduction": {
+    "actual_code_executed": "unmodified Adapter/Ledger/API plus exact approved create-view and pre-category task excerpts; in-memory ORM/storage, lock and authorization-context stubs",
+    "legacy_simulator": "invents category associations during inactive account creation, unlike approved task path; left unchanged",
+    "new_tests": 8,
+    "not_executed": [
+      "Django application",
+      "Celery worker",
+      "full category import",
+      "provider HTTP",
+      "Docker",
+      "production checks"
+    ],
+    "passed": 8,
+    "source_backed_path": {
+      "DW_fixture_preserved": true,
+      "account_post_count": 1,
+      "detail_readback": true,
+      "downstream_mutations": 0,
+      "group_associations": [],
+      "is_active": false,
+      "ledger_account_operation": "verified",
+      "ledger_phase": "registering"
+    }
+  },
+  "runtime_value_limit": "Original account detail/category responses, actual new account ID and group PKs were not retained. Empty association list above is controlled reproduction evidence, not recovered runtime data.",
+  "schema": 1,
+  "source_boundary": {
+    "adapter_creates_account_active": false,
+    "adapter_reads_fresh_detail": true,
+    "inactive_result": "not found or inactive",
+    "refusal": "native_selected_group_missing",
+    "task_account_filter_active": true,
+    "view_checks_task_result": false,
+    "view_requests_explicit_discovery": true
+  },
+  "source_fragments_verified": {
+    "account_create_serializer": {
+      "excerpt_sha256": "40c7f943d5d92f172d86f0b2a0252b1de25ab2449d94311bc5190bbdc749c93d",
+      "first_line": 392,
+      "last_line": 437,
+      "path": "apps/m3u/serializers.py",
+      "source_sha256": "4ef8f623a187fe411674b4ab41338dfd41c20f66cd6b8b1c5279109a33fe5821"
+    },
+    "account_create_view": {
+      "excerpt_sha256": "7b10b4f5b10a11b5c2c4981b3c4c3345fae00ace5a2fbfcb0f4b84ca29b3b352",
+      "first_line": 109,
+      "last_line": 165,
+      "path": "apps/m3u/api_views.py",
+      "source_sha256": "61c9289fa4c6bc9ecc275d39386c6ff0081a551535ce95d44353fe92c51e4e3f"
+    },
+    "group_task_prefix": {
+      "excerpt_sha256": "9212ec0a9298b3d83a9505c60565b739fc8269c21a9d5fc2be7e4cdebdb91d4b",
+      "first_line": 1695,
+      "last_line": 1716,
+      "path": "apps/m3u/tasks.py",
+      "source_sha256": "4294d180806627da4029af9b955a3c40f5ac13869da23adc25b4bec7293085ac"
+    },
+    "save_signal": {
+      "excerpt_sha256": "c104abd13c07c9aae07215006f1504cd4c051c06b8d3ddc31e52905522e13b56",
+      "first_line": 14,
+      "last_line": 21,
+      "path": "apps/m3u/signals.py",
+      "source_sha256": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92"
+    }
+  },
+  "test_only_correction": null,
+  "total_test_executions_including_repeated_audit_unit_tests": 724,
+  "unchanged_sources_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_test.py": "4dc86e27d0f902e5bd736cc13c31b58f86b877fcdaff836a16814b04a77606b5",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_transport.py": "fda01cefabf4991e0536b909e7b09f7d10a8f5e3c4144655128c9f5a1b7e4172",
+    "configs/dispatcharr-iptv/native-provider-hardening/release-contract.json": "d1c1d2b72b70beecd8a8f67a9c071317fab04bc00133a9b2d0377a9fd07d3eab",
+    "configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json": "2466096d566ce5b0b5144d8a03074d16891151b5260068c6922a64c3b78ce448",
+    "tools/dispatcharr_provider/native.py": "601184eb63b236775ad5221bf14c064e092e26839567a726bcb72d21cc435755",
+    "tools/dispatcharr_provider/synthetic.py": "9cd6900eecc09ab8038ecc3c76244f1245f52b6fd85032659d237beb3433c93d"
+  }
+}
