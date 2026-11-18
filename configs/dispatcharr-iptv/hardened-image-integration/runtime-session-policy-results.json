@@ -1,0 +1,583 @@
+{
+  "approved_runner_sha256": "c5aeadca482d51d4beb61c8b9396fe613dad6ab00304ce3ee6404762ec7090e7",
+  "approved_transport_sha256": "fb69c44a15977ca424a897665836de1047b28fd6df65e44fc8dd04023455833a",
+  "assessment": "Live global kill policy is false; no selected-user override found; current SSH scope is independent of user manager and has no runtime kill limit. Ordinary disconnect is expected to abandon the populated scope.",
+  "baseline_commit": "8f8d719242146fc1cea67bd15a2f0bfafa540b24",
+  "inferences": [
+    "Detached supervisor and worker inherit the SSH scope; setsid/fork do not migrate cgroups.",
+    "User manager shutdown with Linger=no does not by itself terminate processes in a sibling abandoned SSH scope.",
+    "No end-to-end host disconnect survival was empirically tested."
+  ],
+  "inspection_script_sha256": {
+    "dispatcharr-session-policy-inspect.py": "93914d33f86af34ecc851ec01877087ba5ee6198ec6428ff32dccba69e7f09d4",
+    "dispatcharr-session-policy-supplement.py": "0b1c901a59f74ab336fc886437c5147323f72ef298970aa4e4f3a71f0395e843",
+    "dispatcharr-session-userdb-inspect.py": "508122e20e94609416fd2e0575e00afb7874982cb1b5efd0be618b70e7725af6"
+  },
+  "observation": {
+    "PAM_session_modules": [
+      {
+        "module": "pam_selinux.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_loginuid.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_keyinit.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_permit.so",
+        "source": "/etc/pam.d/common-session"
+      },
+      {
+        "module": "pam_deny.so",
+        "source": "/etc/pam.d/common-session"
+      },
+      {
+        "module": "pam_permit.so",
+        "source": "/etc/pam.d/common-session"
+      },
+      {
+        "module": "pam_umask.so",
+        "source": "/etc/pam.d/common-session"
+      },
+      {
+        "module": "pam_unix.so",
+        "source": "/etc/pam.d/common-session"
+      },
+      {
+        "module": "pam_systemd.so",
+        "options": [],
+        "source": "/etc/pam.d/common-session"
+      },
+      {
+        "module": "pam_motd.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_motd.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_mail.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_limits.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_env.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_env.so",
+        "source": "/etc/pam.d/sshd"
+      },
+      {
+        "module": "pam_selinux.so",
+        "source": "/etc/pam.d/sshd"
+      }
+    ],
+    "account": "murth",
+    "account_shell": "/bin/bash",
+    "cgroup_files": {
+      "/user.slice/user-1000.slice": {
+        "cgroup.events": "populated 1\nfrozen 0",
+        "cgroup.type": "domain",
+        "cpu.max": "max 100000",
+        "memory.max": "max",
+        "memory.oom.group": "0",
+        "pids.max": "20748"
+      },
+      "/user.slice/user-1000.slice/session-623.scope": {
+        "cgroup.events": "populated 1\nfrozen 0",
+        "cgroup.type": "domain",
+        "cpu.max": "max 100000",
+        "memory.max": "max",
+        "memory.oom.group": "0",
+        "pids.max": "max"
+      },
+      "/user.slice/user-1000.slice/user@1000.service": {
+        "cgroup.events": "populated 1\nfrozen 0",
+        "cgroup.type": "domain",
+        "cpu.max": "max 100000",
+        "memory.max": "max",
+        "memory.oom.group": "0",
+        "pids.max": "max"
+      }
+    },
+    "current_session_scope": "session-623.scope",
+    "effective_sshd": {
+      "client_addresses_published": false,
+      "connection_match_parameters_supplied": true,
+      "properties": {
+        "channeltimeout": "none",
+        "chrootdirectory": "none",
+        "clientalivecountmax": "2",
+        "clientaliveinterval": "300",
+        "forcecommand": "none",
+        "maxsessions": "10",
+        "permittty": "yes",
+        "permituserrc": "yes",
+        "tcpkeepalive": "yes",
+        "unusedconnectiontimeout": "none",
+        "usedns": "yes",
+        "usepam": "yes"
+      },
+      "rc": 0
+    },
+    "inspection_process_ancestry": [
+      {
+        "cgroup": "0::/user.slice/user-1000.slice/session-623.scope",
+        "comm": "python3",
+        "pgrp": 1985991,
+        "pid": 1985991,
+        "ppid": 1985990,
+        "session_id": 1985991
+      },
+      {
+        "cgroup": "0::/user.slice/user-1000.slice/session-623.scope",
+        "comm": "sshd",
+        "pgrp": 1985917,
+        "pid": 1985990,
+        "ppid": 1985917,
+        "session_id": 1985917
+      },
+      {
+        "cgroup": "0::/user.slice/user-1000.slice/session-623.scope",
+        "comm": "sshd",
+        "pgrp": 1985917,
+        "pid": 1985917,
+        "ppid": 1912,
+        "session_id": 1985917
+      },
+      {
+        "cgroup": "0::/system.slice/ssh.service",
+        "comm": "sshd",
+        "pgrp": 1912,
+        "pid": 1912,
+        "ppid": 1,
+        "session_id": 1912
+      },
+      {
+        "cgroup": "0::/init.scope",
+        "comm": "systemd",
+        "pgrp": 1,
+        "pid": 1,
+        "ppid": 0,
+        "session_id": 1
+      }
+    ],
+    "live_logind_manager": {
+      "KillExcludeUsers": {
+        "rc": 0,
+        "value": {
+          "data": [],
+          "type": "as"
+        }
+      },
+      "KillOnlyUsers": {
+        "rc": 0,
+        "value": {
+          "data": [],
+          "type": "as"
+        }
+      },
+      "KillUserProcesses": {
+        "rc": 0,
+        "value": {
+          "data": false,
+          "type": "b"
+        }
+      },
+      "UserStopDelayUSec": {
+        "rc": 0,
+        "value": {
+          "data": 10000000,
+          "type": "t"
+        }
+      }
+    },
+    "logind_configuration": {
+      "active_directives_in_order": [],
+      "rc": 0,
+      "sources": [
+        "/etc/systemd/logind.conf",
+        "/usr/lib/systemd/logind.conf.d/unattended-upgrades-logind-maxdelay.conf"
+      ]
+    },
+    "read_only": true,
+    "selected_user": {
+      "properties": {
+        "Linger": "no",
+        "Name": "murth",
+        "RuntimePath": "/run/user/1000",
+        "Service": "user@1000.service",
+        "Sessions": "623",
+        "Slice": "user-1000.slice",
+        "State": "active",
+        "UID": "1000"
+      },
+      "rc": 0
+    },
+    "session_hook_files": [
+      {
+        "exists": false,
+        "role": "system_sshrc"
+      },
+      {
+        "exists": false,
+        "role": "user_sshrc"
+      },
+      {
+        "cleanup_command_pattern_present": false,
+        "exists": true,
+        "role": "bash_logout"
+      }
+    ],
+    "sessions": {
+      "623": {
+        "properties": {
+          "Class": "user",
+          "Id": "623",
+          "IdleHint": "no",
+          "Leader": "1985917",
+          "Name": "murth",
+          "Remote": "yes",
+          "Scope": "session-623.scope",
+          "Service": "sshd",
+          "State": "active",
+          "Type": "tty",
+          "User": "1000"
+        },
+        "rc": 0
+      }
+    },
+    "ssh_process_cgroup": "0::/user.slice/user-1000.slice/session-623.scope",
+    "timestamp_UTC": "2026-11-18T04:32:28.472109+00:00",
+    "uid": 1000,
+    "unit_cleanup_directives": [
+      {
+        "directive": "KillMode",
+        "value": "process"
+      },
+      {
+        "directive": "KillMode",
+        "value": "mixed"
+      }
+    ],
+    "units": {
+      "session-623.scope": {
+        "properties": {
+          "ActiveState": "active",
+          "BindsTo": "",
+          "CPUQuotaPerSecUSec": "infinity",
+          "ControlGroup": "/user.slice/user-1000.slice/session-623.scope",
+          "DropInPaths": "",
+          "FragmentPath": "/run/systemd/transient/session-623.scope",
+          "Id": "session-623.scope",
+          "KillMode": "control-group",
+          "KillSignal": "15",
+          "LoadState": "loaded",
+          "MemoryMax": "infinity",
+          "OOMPolicy": "continue",
+          "PartOf": "",
+          "Requires": "-.mount user-1000.slice",
+          "RuntimeMaxUSec": "infinity",
+          "SendSIGHUP": "yes",
+          "SendSIGKILL": "yes",
+          "Slice": "user-1000.slice",
+          "StopWhenUnneeded": "no",
+          "SubState": "running",
+          "TasksMax": "infinity",
+          "TimeoutStopUSec": "1min 30s",
+          "Wants": "user@1000.service user-runtime-dir@1000.service"
+        },
+        "rc": 0
+      },
+      "ssh.service": {
+        "properties": {
+          "ActiveState": "active",
+          "BindsTo": "",
+          "CPUQuotaPerSecUSec": "infinity",
+          "ControlGroup": "/system.slice/ssh.service",
+          "DropInPaths": "",
+          "FragmentPath": "/usr/lib/systemd/system/ssh.service",
+          "Id": "ssh.service",
+          "KillMode": "process",
+          "KillSignal": "15",
+          "LoadState": "loaded",
+          "MemoryMax": "infinity",
+          "OOMPolicy": "stop",
+          "PartOf": "",
+          "Requires": "system.slice -.mount ssh.socket sysinit.target",
+          "RuntimeMaxUSec": "infinity",
+          "SendSIGHUP": "no",
+          "SendSIGKILL": "yes",
+          "Slice": "system.slice",
+          "StopWhenUnneeded": "no",
+          "SubState": "running",
+          "TasksMax": "9431",
+          "TimeoutStopUSec": "1min 30s",
+          "User": "",
+          "Wants": ""
+        },
+        "rc": 0
+      },
+      "ssh.socket": {
+        "properties": {
+          "ActiveState": "active",
+          "BindsTo": "",
+          "CPUQuotaPerSecUSec": "infinity",
+          "ControlGroup": "/system.slice/ssh.socket",
+          "DropInPaths": "",
+          "FragmentPath": "/usr/lib/systemd/system/ssh.socket",
+          "Id": "ssh.socket",
+          "KillMode": "control-group",
+          "KillSignal": "15",
+          "LoadState": "loaded",
+          "MemoryMax": "infinity",
+          "PartOf": "",
+          "Requires": "sysinit.target system.slice",
+          "SendSIGHUP": "no",
+          "SendSIGKILL": "yes",
+          "Slice": "system.slice",
+          "StopWhenUnneeded": "no",
+          "SubState": "running",
+          "TasksMax": "9431",
+          "User": "",
+          "Wants": ""
+        },
+        "rc": 0
+      },
+      "systemd-logind.service": {
+        "properties": {
+          "ActiveState": "active",
+          "BindsTo": "",
+          "CPUQuotaPerSecUSec": "infinity",
+          "ControlGroup": "/system.slice/systemd-logind.service",
+          "DropInPaths": "/usr/lib/systemd/system/systemd-logind.service.d/dbus.conf",
+          "FragmentPath": "/usr/lib/systemd/system/systemd-logind.service",
+          "Id": "systemd-logind.service",
+          "KillMode": "control-group",
+          "KillSignal": "15",
+          "LoadState": "loaded",
+          "MemoryMax": "infinity",
+          "OOMPolicy": "stop",
+          "PartOf": "",
+          "Requires": "-.mount system.slice sysinit.target",
+          "RuntimeMaxUSec": "infinity",
+          "SendSIGHUP": "no",
+          "SendSIGKILL": "yes",
+          "Slice": "system.slice",
+          "StopWhenUnneeded": "no",
+          "SubState": "running",
+          "TasksMax": "9431",
+          "TimeoutStopUSec": "1min 30s",
+          "User": "",
+          "Wants": "dbus.socket tmp.mount user.slice modprobe@drm.service"
+        },
+        "rc": 0
+      },
+      "user-1000.slice": {
+        "properties": {
+          "ActiveState": "active",
+          "BindsTo": "",
+          "CPUQuotaPerSecUSec": "infinity",
+          "ControlGroup": "/user.slice/user-1000.slice",
+          "DropInPaths": "/usr/lib/systemd/system/user-.slice.d/10-defaults.conf",
+          "FragmentPath": "",
+          "Id": "user-1000.slice",
+          "LoadState": "loaded",
+          "MemoryMax": "infinity",
+          "PartOf": "",
+          "Requires": "user.slice",
+          "Slice": "user.slice",
+          "StopWhenUnneeded": "yes",
+          "SubState": "active",
+          "TasksMax": "20748",
+          "Wants": ""
+        },
+        "rc": 0
+      },
+      "user.slice": {
+        "properties": {
+          "ActiveState": "active",
+          "BindsTo": "",
+          "CPUQuotaPerSecUSec": "infinity",
+          "ControlGroup": "/user.slice",
+          "DropInPaths": "",
+          "FragmentPath": "/usr/lib/systemd/system/user.slice",
+          "Id": "user.slice",
+          "LoadState": "loaded",
+          "MemoryMax": "infinity",
+          "PartOf": "",
+          "Requires": "-.slice",
+          "Slice": "-.slice",
+          "StopWhenUnneeded": "no",
+          "SubState": "active",
+          "TasksMax": "infinity",
+          "Wants": ""
+        },
+        "rc": 0
+      },
+      "user@1000.service": {
+        "properties": {
+          "ActiveState": "active",
+          "BindsTo": "",
+          "CPUQuotaPerSecUSec": "infinity",
+          "ControlGroup": "/user.slice/user-1000.slice/user@1000.service",
+          "DropInPaths": "/usr/lib/systemd/system/user@.service.d/10-login-barrier.conf /usr/lib/systemd/system/user@.service.d/timeout.conf",
+          "FragmentPath": "/usr/lib/systemd/system/user@.service",
+          "Id": "user@1000.service",
+          "KillMode": "mixed",
+          "KillSignal": "15",
+          "LoadState": "loaded",
+          "MemoryMax": "infinity",
+          "OOMPolicy": "continue",
+          "PartOf": "",
+          "Requires": "sysinit.target user-1000.slice user-runtime-dir@1000.service",
+          "RuntimeMaxUSec": "infinity",
+          "SendSIGHUP": "no",
+          "SendSIGKILL": "yes",
+          "Slice": "user-1000.slice",
+          "StopWhenUnneeded": "no",
+          "SubState": "running",
+          "TasksMax": "infinity",
+          "TimeoutStopUSec": "5s",
+          "User": "1000",
+          "Wants": ""
+        },
+        "rc": 0
+      }
+    },
+    "versions": {
+      "systemd": [
+        "systemd 255 (255.4-1ubuntu8.18)"
+      ]
+    }
+  },
+  "public_user_record_sources": {
+    "existing_userdb_service_names": [
+      "io.systemd.DynamicUser"
+    ],
+    "nss_passwd_sources": [
+      "passwd:         files systemd"
+    ],
+    "selected_files_passwd": {
+      "name": "murth",
+      "password_field_emitted": false,
+      "rc": 0,
+      "shell": "/bin/bash",
+      "uid": 1000
+    },
+    "systemd-homed.service": {
+      "properties": {
+        "ActiveState": "inactive",
+        "LoadState": "not-found",
+        "SubState": "dead"
+      },
+      "rc": 0
+    },
+    "systemd-userdbd.service": {
+      "properties": {
+        "ActiveState": "inactive",
+        "LoadState": "not-found",
+        "SubState": "dead"
+      },
+      "rc": 0
+    },
+    "systemd-userdbd.socket": {
+      "properties": {
+        "ActiveState": "inactive",
+        "LoadState": "not-found",
+        "SubState": "dead"
+      },
+      "rc": 0
+    }
+  },
+  "remaining_prerequisites": [
+    "Separate owner authorization",
+    "Fresh exact artifacts, credentials-free fixture and production/capacity preflight",
+    "New exclusive attempt identity; preserve old receipts",
+    "Stop on policy drift or uncertain state; monitor the same attempt without relaunch"
+  ],
+  "restrictions_observed": {
+    "Docker_operations": 0,
+    "application_tests": 0,
+    "background_or_disconnect_experiments": 0,
+    "provider_requests": 0,
+    "service_restarts": 0,
+    "system_configuration_changes": 0,
+    "transport_launches": 0
+  },
+  "schema": 1,
+  "status": "SESSION_POLICY_COMPATIBLE_GO_FOR_SEPARATELY_AUTHORIZED_TEST",
+  "supplement": {
+    "account": "murth",
+    "authorized_key_options": [
+      {
+        "command_option_entries": 0,
+        "entries": 3,
+        "environment_option_entries": 0,
+        "key_material_emitted": false,
+        "role": "selected_account_authorized_keys"
+      }
+    ],
+    "custom_SSHD_OPTS_present": false,
+    "inherited_user_limits": {
+      "RLIMIT_AS": [
+        -1,
+        -1
+      ],
+      "RLIMIT_CPU": [
+        -1,
+        -1
+      ],
+      "RLIMIT_FSIZE": [
+        -1,
+        -1
+      ],
+      "RLIMIT_NPROC": [
+        31437,
+        31437
+      ]
+    },
+    "public_user_record_files": [],
+    "sshd_additional_policy": {
+      "authorizedkeyscommand": "none",
+      "permituserenvironment": "no",
+      "rc": 0
+    },
+    "sshd_configuration_sources": [
+      "/etc/ssh/sshd_config",
+      "/etc/ssh/sshd_config.d/50-cloud-init.conf",
+      "/etc/ssh/sshd_config.d/99-ansible-hardening.conf"
+    ],
+    "sshd_environment_file_present": true,
+    "sshd_match_criteria": [],
+    "uid": 1000,
+    "user_dbus_introspection_rc": 0,
+    "user_dbus_property_names": [
+      ".Display",
+      ".GID",
+      ".IdleHint",
+      ".IdleSinceHint",
+      ".IdleSinceHintMonotonic",
+      ".Linger",
+      ".Name",
+      ".RuntimePath",
+      ".Service",
+      ".Sessions",
+      ".Slice",
+      ".State",
+      ".Timestamp",
+      ".TimestampMonotonic",
+      ".UID"
+    ],
+    "userdbctl_available": false
+  }
+}
