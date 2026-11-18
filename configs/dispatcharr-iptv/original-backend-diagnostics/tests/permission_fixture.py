@@ -13,7 +13,7 @@ def main():
             try:
                 os.chroot(root);os.chdir('/');os.chmod('/',0o755)
                 def fresh(number):
-                    path=Path('/case'+str(number));path.mkdir(mode=0o755);(path/'app').mkdir(mode=0o755);(path/'app/private').mkdir(mode=0o700);L.ROOT=path/'app';return L.ROOT
+                    path=Path('/case'+str(number));path.mkdir(mode=0o755);(path/'app').mkdir(mode=0o755);(path/'app/private').mkdir(mode=0o700);L.ROOT=path/'app';(path/'root').mkdir(mode=0o700);L.DIAGNOSTIC_DIR=path/'root/dispatcharr-backend-diagnostics';return L.ROOT
                 fresh(0);target,fd=L._private_dir();name='a'*32+'.intent.json'
                 L._receipt(target,fd,name,{'schema':1,'state':'intent'})
                 s=(target/name).lstat();assert (s.st_uid,s.st_gid,stat.S_IMODE(s.st_mode),s.st_nlink)==(0,0,0o600,1);assert stat.S_IMODE(target.stat().st_mode)==0o700
@@ -46,19 +46,44 @@ def main():
                 os.close(fd)
                 for number,kind in [(1,'public_private'),(2,'public_receipts'),(3,'wrong_owner'),(4,'symlink')]:
                     root=fresh(number)
-                    if kind=='public_private':(root/'private').chmod(0o755)
-                    elif kind=='public_receipts':(root/'private/backend-diagnostics').mkdir(mode=0o755)
-                    elif kind=='wrong_owner':(root/'private/backend-diagnostics').mkdir(mode=0o700);os.chown(root/'private/backend-diagnostics',1000,1000)
-                    else:(root/'private/backend-diagnostics').symlink_to('/case0/app/private/backend-diagnostics')
+                    if kind=='public_private':L.DIAGNOSTIC_DIR.parent.chmod(0o755)
+                    elif kind=='public_receipts':(L.DIAGNOSTIC_DIR).mkdir(mode=0o755)
+                    elif kind=='wrong_owner':(L.DIAGNOSTIC_DIR).mkdir(mode=0o700);os.chown(L.DIAGNOSTIC_DIR,1000,1000)
+                    else:(L.DIAGNOSTIC_DIR).symlink_to('/case0/root/dispatcharr-backend-diagnostics')
                     try:
                         _,opened=L._private_dir();os.close(opened);raise AssertionError(kind+' accepted')
                     except (ValueError,OSError):pass
-                root=fresh(5);target,fd=L._private_dir()
+                root=fresh(5)
+                # Actual incident: an unrelated app ancestor is UID1000:GID988 0770.
+                # Receipt ancestry remains independently root-private.
+                os.chown(root.parent,1000,988);root.parent.chmod(0o770)
+                # Move receipt parent outside that unsafe tree, as /root is in production.
+                safe=Path('/root');safe.mkdir(mode=0o700)
+                L.DIAGNOSTIC_DIR=safe/'dispatcharr-backend-diagnostics'
+                target,fd=L._private_dir()
                 try:L._receipt(target,fd,'../bad',{});raise AssertionError('traversal accepted')
                 except ValueError:pass
                 os.close(fd)
-                print(json.dumps({'fixture':'disposable UID0/UID1000 chroot','checks':13,'success':True,'Docker_operations':0,'external_requests':0}),flush=True);os._exit(0)
+                # Unsafe *receipt* ancestors are still rejected; app ancestry is not adopted.
+                safe.chmod(0o770)
+                try:L._private_dir();raise AssertionError('writable ancestor accepted')
+                except ValueError:pass
+                safe.chmod(0o700)
+                os.chown(safe,1000,1000)
+                try:L._private_dir();raise AssertionError('unowned ancestor accepted')
+                except ValueError:pass
+                os.chown(safe,0,0)
+                print(json.dumps({'fixture':'disposable UID0/UID1000 chroot','checks':16,'success':True,'Docker_operations':0,'external_requests':0}),flush=True);os._exit(0)
             except BaseException as error:
+                # Unsafe *receipt* ancestors are still rejected; app ancestry is not adopted.
+                safe.chmod(0o770)
+                try:L._private_dir();raise AssertionError('writable ancestor accepted')
+                except ValueError:pass
+                safe.chmod(0o700)
+                os.chown(safe,1000,1000)
+                try:L._private_dir();raise AssertionError('unowned ancestor accepted')
+                except ValueError:pass
+                os.chown(safe,0,0)
                 print(json.dumps({'fixture':'FAIL','type':type(error).__name__}),flush=True);os._exit(1)
         _,status=os.waitpid(pid,0);assert os.waitstatus_to_exitcode(status)==0
 

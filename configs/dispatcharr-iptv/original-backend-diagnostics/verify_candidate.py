@@ -15,7 +15,7 @@ def verify():
     for name,h in inv['existing_tracked_inputs_sha256'].items():
         if digest(ROOT/name)!=h:raise ValueError('unrelated_tracked_input_drift')
     if inv['unchanged_image']!='sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21' or inv['Docker_systemd_network_changes'] is not False:raise ValueError('runtime_scope_changed')
-    if inv['receipt_directory']!={'path':'/docker/dispatcharr-iptv/private/backend-diagnostics','uid':0,'gid':0,'mode':'0700','files_mode':'0600','kind':'diagnostic evidence only; never a readiness/authorization latch'}:raise ValueError('receipt_permissions_changed')
+    if inv['receipt_directory']!={'path':'/root/dispatcharr-backend-diagnostics','uid':0,'gid':0,'mode':'0700','files_mode':'0600','kind':'diagnostic evidence only; never a readiness/authorization latch'}:raise ValueError('receipt_permissions_changed')
     expected={'/docker/dispatcharr-iptv/permanent-streaming/'+n for n in ['backend.py','lifecycle.py','manifest.json']}
     if set(inv['replacement_targets'])!=expected or set(inv['rollback_targets'])!=expected:raise ValueError('replacement_scope')
     for key in ['replacement_targets','rollback_targets']:

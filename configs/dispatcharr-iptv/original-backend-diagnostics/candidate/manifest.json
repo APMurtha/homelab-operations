@@ -22,7 +22,7 @@
     "health.py": "f4da54dece514ea24df5a6561ce52b883a1737213634b95bb1eab94a1b4ec6db",
     "hls_relay.py": "171461eb4bb83170a83d4b52aeca90d3f7ebc5d8486b615cdf654b7fc98078f5",
     "jellyfin.py": "f328d3c5e26ca3465717b17376e6cc3a04f858595b08514e449064c68ade950f",
-    "lifecycle.py": "171530848e5623b3ab3a578798c83d3991b1299798202f544fc70fd92a26bc8f",
+    "lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
     "manifest_telemetry.py": "179a364baaf3a7fbde6c09082db0fc9df65639812a86e7139bc0c1ec32df5784",
     "rate_budget.py": "86b11daec92b621d2bb4d9288da78ea909976f5483c5aab4417a29961b22bd56",
     "reference/Caddyfile.accepted": "bf5e40d2ccba8799f4b38f15336399fea7068f676150c2f7b18a1e07dc081a98",

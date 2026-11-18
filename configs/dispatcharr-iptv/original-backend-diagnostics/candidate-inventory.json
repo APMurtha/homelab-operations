@@ -211,7 +211,7 @@
     "gid": 0,
     "kind": "diagnostic evidence only; never a readiness/authorization latch",
     "mode": "0700",
-    "path": "/docker/dispatcharr-iptv/private/backend-diagnostics",
+    "path": "/root/dispatcharr-backend-diagnostics",
     "uid": 0
   },
   "replacement_targets": {
@@ -225,14 +225,14 @@
     "/docker/dispatcharr-iptv/permanent-streaming/lifecycle.py": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "171530848e5623b3ab3a578798c83d3991b1299798202f544fc70fd92a26bc8f",
+      "sha256": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
       "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/lifecycle.py",
       "uid": 0
     },
     "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "1eb1a2b68e564b56cc105b31eb6281b610cf0e1f3684fea9246fd02eaabcc8f5",
+      "sha256": "07faa8cce4c643c0a580787b2514c955ddbc4cd0cbff77b61209de9dd97815a4",
       "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/manifest.json",
       "uid": 0
     }

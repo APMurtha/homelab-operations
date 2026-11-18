@@ -25,3 +25,7 @@ Read `docs/dispatcharr-original-backend-diagnostics-patch.md` before review.
 Installation of this delta and one managed restoration attempt both require
 separate authorization. No image, unit, guard, provider or Jellyfin changes are
 included. Do not apply these files over the newer native-hardening sources.
+
+Emergency correction: receipts now use `/root/dispatcharr-backend-diagnostics`,
+with strict root-private parent and ancestor validation independent of `/docker`.
+See `docs/dispatcharr-original-stack-recovery-completion.md` for installation/results.

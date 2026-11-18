@@ -31,6 +31,8 @@ import json
 import selectors
 import secrets
 
+DIAGNOSTIC_DIR = Path('/root/dispatcharr-backend-diagnostics')
+
 MAX_CAPTURE = 4096
 MAX_RECEIPT = 16384
 GENERIC_BACKEND = b'Backend readiness refused; values withheld.'
@@ -43,22 +45,23 @@ def _protocol():
 
 
 def _private_dir():
-    target=ROOT/'private'/'backend-diagnostics'
-    for path in [ROOT,*ROOT.parents]:
+    target=DIAGNOSTIC_DIR
+    private=target.parent
+    for path in [private,*private.parents]:
         st=path.lstat()
         if not stat.S_ISDIR(st.st_mode) or st.st_uid!=0 or st.st_gid!=0 or stat.S_IMODE(st.st_mode)&0o022:
             raise ValueError('diagnostic_ancestor_unsafe')
     if os.geteuid()!=0 or os.getegid()!=0:raise ValueError('diagnostic_writer_not_root')
-    private=ROOT/'private';st=private.lstat()
+    st=private.lstat()
     if not stat.S_ISDIR(st.st_mode) or (st.st_uid,st.st_gid,stat.S_IMODE(st.st_mode))!=(0,0,0o700):raise ValueError('diagnostic_private_unsafe')
     parent=os.open(private,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
     try:
         actual=os.fstat(parent)
         if (actual.st_dev,actual.st_ino)!=(st.st_dev,st.st_ino) or (actual.st_uid,actual.st_gid,stat.S_IMODE(actual.st_mode))!=(0,0,0o700):raise ValueError('diagnostic_parent_changed')
-        try:os.mkdir('backend-diagnostics',0o700,dir_fd=parent)
+        try:os.mkdir(target.name,0o700,dir_fd=parent)
         except FileExistsError:pass
         os.fsync(parent)  # Persist a newly created private-directory entry before launch.
-        fd=os.open('backend-diagnostics',os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=parent)
+        fd=os.open(target.name,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=parent)
     finally:os.close(parent)
     try:
         st=os.fstat(fd)
