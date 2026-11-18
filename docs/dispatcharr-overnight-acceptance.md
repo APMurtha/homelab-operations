@@ -39,10 +39,33 @@ credential, DNS/TLS and socket-denial regressions pass.
 
 ## Runtime campaign
 
-Attempt 1 is justified by this demonstrated, narrowly corrected fixture scheduling
-side effect. It requires fresh source/host/image/production checks, independent
-payload verification and proven cleanup from the preceding attempt. No attempt
-has yet been launched in this report revision. Every previous receipt is preserved.
+### Attempt 1 — fixture reconciliation error; clean failure
 
-Until actual runtime evidence is recorded, application acceptance and image
-binding remain **NO-GO**.
+ID: `overnight1-20261118-3d8ef59a`; payload SHA-256:
+`92a1a1165748362dc81ae8dadd1508da1a23c91fbacaefdbef3f72a5357f9235`.
+The plugin opt-out passed all runtime checks. PostgreSQL 17, authenticated Redis,
+UID1000 Django 6.0.9, 184 migrations, 57 registered Celery tasks and two actual
+Redis-backed task results completed. Four application tests passed; the fifth
+raised an error in its account-tag collection lookup (runtime_test.py:330).
+There was no socket refusal. Native import/XMLTV/backend final acceptance did not run.
+Transport reported failed with cleanup_complete=true; all 33 production container,
+network and volume fingerprints and previous receipt hashes remained unchanged.
+Full sanitized admission measurements/checkpoints are in `overnight-attempt-1-results.json`.
+
+The demonstrated test-only defect is a chained dictionary lookup on native nullable
+JSON metadata. The pinned M3U model permits `custom_properties=null`; the test
+incorrectly assumed dictionaries for every unrelated/default account. The retained
+stack ends at that expression; raw response values and the original exception
+message were not retained. Offline reproduction confirms the nullable case raises
+AttributeError. A strict structured-tag selector now excludes untagged/malformed
+metadata while retaining exact-match, duplicate-count, ownership-journal and
+no-retry assertions. No native adapter or application behavior changes.
+
+Four focused regressions cover the former exception, exact tag matching, malformed
+metadata refusal and duplicate preservation. The harness suite now passes 116
+checks; the full distinct offline baseline is 681. Source/payload pins advance
+only for these reviewed test changes. Attempt 2 is justified by this demonstrated
+fixture defect and requires a new identity, fresh preflight and the confirmed
+cleanup above. No second launch has occurred in this report revision.
+
+Application acceptance remains **NO-GO** pending the complete runtime matrix.

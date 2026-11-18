@@ -19,7 +19,7 @@ import sys
 import time
 
 APPROVED_RUNNER_SHA256='c5aeadca482d51d4beb61c8b9396fe613dad6ab00304ce3ee6404762ec7090e7'
-PAYLOAD_CORE_PINS= {'runtime_test.py': '4cf4f1af9f1ac8c7d2a38590ffb3b07dd6b574d18e25558c551b62d144649438', 'runtime_diagnostics.py': 'de5ed39ff92da1002e2f90507511d9dd3cfc878b8e5de55126fb30d467bae432'}
+PAYLOAD_CORE_PINS= {'runtime_test.py': '4dc86e27d0f902e5bd736cc13c31b58f86b877fcdaff836a16814b04a77606b5', 'runtime_diagnostics.py': 'de5ed39ff92da1002e2f90507511d9dd3cfc878b8e5de55126fb30d467bae432'}
 IMAGE='sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be'
 JOB_SECONDS=1200
 HEARTBEAT_SECONDS=5

@@ -1,0 +1,14 @@
+{
+  "distinct_offline_tests": 681,
+  "failures": 0,
+  "new_registration_fixture_tests": 4,
+  "harness_tests": 116,
+  "changed_source_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_test.py": "4dc86e27d0f902e5bd736cc13c31b58f86b877fcdaff836a16814b04a77606b5",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_transport.py": "fda01cefabf4991e0536b909e7b09f7d10a8f5e3c4144655128c9f5a1b7e4172",
+    "configs/dispatcharr-iptv/hardened-image-integration/test_registration_fixture.py": "25352ec53900cff97299002dafca1258d4e3cb6a03f50d31fe096dc2df40a34b",
+    "configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json": "2466096d566ce5b0b5144d8a03074d16891151b5260068c6922a64c3b78ce448"
+  },
+  "installed_targets_unchanged": true,
+  "runner_socket_admission_unchanged": true
+}

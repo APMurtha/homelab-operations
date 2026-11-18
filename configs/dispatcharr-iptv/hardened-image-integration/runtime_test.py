@@ -69,6 +69,17 @@ def completed_task():
 
 
 
+def registration_matches(rows,registration):
+    # Native account collections contain untagged/default records with nullable
+    # JSON. Only an exact structured registration tag is a candidate.
+    selected=[]
+    for row in rows:
+        props=row.get('custom_properties')
+        tag=props.get('provider_cli') if isinstance(props,dict) else None
+        if isinstance(tag,dict) and tag.get('registration')==registration:selected.append(row)
+    return selected
+
+
 def image_permissions_and_authorization():
     expected=json.loads(Path('/fixture/expected-source-hashes.json').read_text())
     modes={}
@@ -327,7 +338,7 @@ class Integration(unittest.TestCase):
         body={'name':p['name'],'account_type':'XC','server_url':p['server'],'username':p['username'],'password':p['password'],'is_active':False,'metadata_discovery':True,'enable_vod':False,'auto_enable_new_groups_live':False,'auto_enable_new_groups_vod':False,'auto_enable_new_groups_series':False,'max_streams':1,'refresh_interval':24,'custom_properties':{'provider_cli':{'owner':'dispatcharr-provider/v1/native-v1','key':p['key'],'registration':'c'*32}}}
         ledger.begin(p,[])
         with self.assertRaises(Refused):ledger.mutate(self.api,'POST',ACCOUNTS,body,{'name':p['name']},ACCOUNTS,statuses=(201,))
-        rows=[r for r in self.api.rows(ACCOUNTS) if r.get('custom_properties',{}).get('provider_cli',{}).get('registration')=='c'*32]
+        rows=registration_matches(self.api.rows(ACCOUNTS),'c'*32)
         self.assertEqual(len(rows),1)
         self.assertEqual(ledger.value['operations'][-1]['state'],'intent')
         with self.assertRaises(Refused):ledger.reconcile(self.api)
