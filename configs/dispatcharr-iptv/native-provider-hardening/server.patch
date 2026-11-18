@@ -1688,6 +1688,185 @@
 +        return ips
 +    except Exception: raise ValueError('VPN_DNS_refused') from None
 --- /dev/null
++++ b/core/provider_policy.py
+@@ -0,0 +1,176 @@
++"""Root-published metadata authorization, not a secret or kernel attestation.
++
++Directory inode is pinned per worker; each read reopens current paths. Leases
++bound stale bind mounts/crashed publishers to 300 seconds; revocation is observed
++at existing I/O checks, not atomically with network use. No network operations.
++"""
++import hashlib
++import json
++import math
++import os
++from pathlib import Path
++import re
++import stat
++import time
++import uuid
++import ipaddress
++from urllib.parse import urlsplit
++from .provider_transport import Refused, digest, url
++from .provider_readiness import Readiness, GUARD_FIELDS, GRANT_FIELDS
++
++LEASE = 300
++LIMIT = 65536
++MAX_PROVIDERS = 64
++PUBLIC = Path('/run/dispatcharr-provider-status')
++PRIVATE_FIELDS = {'server_contract','provider_key','network_owner','purpose','schema','review_reference','boot_id','netns','host_netns','expires_epoch','vpn_interface','policy_review_sha256','endpoints','operations','epg_url_sha256'}
++PUBLIC_FIELDS = PRIVATE_FIELDS - {'review_reference'}
++RECORD_FIELDS = {'schema','generation','guard_generation','issued_epoch','anchor_dev','anchor_ino','policy'}
++
++
++def refused():
++    return Refused('provider_authorization_unavailable')
++
++
++def hex64(value):
++    return isinstance(value,str) and re.fullmatch('[a-f0-9]{64}',value) is not None
++
++
++def boot():
++    value=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
++    if str(uuid.UUID(value))!=value: raise refused()
++    return value
++
++
++def number(value):
++    return type(value) in (int,float) and math.isfinite(value)
++
++
++def validate(p,key,public=False):
++    if not isinstance(p,dict) or set(p)!=(PUBLIC_FIELDS if public else PRIVATE_FIELDS): raise refused()
++    if (not hex64(key) or p['provider_key']!=key or p['server_contract']!='dispatcharr-native-airvpn-v1'
++            or type(p['schema']) is not int or p['schema']!=1 or p['network_owner']!='AirVPN'
++            or p['purpose']!='IPTV_METADATA_ONLY' or p['vpn_interface']!='tun0'
++            or p['boot_id']!=boot() or not hex64(p['policy_review_sha256']) or not hex64(p['epg_url_sha256'])
++            or not number(p['expires_epoch']) or not time.time()<p['expires_epoch']<=time.time()+86400): raise refused()
++    if not public and (not isinstance(p['review_reference'],str) or not p['review_reference'].strip()): raise refused()
++    for field in ('netns','host_netns'):
++        if not isinstance(p[field],list) or len(p[field])!=2 or any(type(n) is not int or n<=0 for n in p[field]): raise refused()
++    if p['netns']==p['host_netns']: raise refused()
++    operations=p['operations']
++    if not isinstance(operations,list) or not 1<=len(operations)<=3 or any(type(v) is not str for v in operations) or len(set(operations))!=len(operations) or not set(operations)<={'discover','refresh','epg'}: raise refused()
++    endpoints=p['endpoints']
++    if not isinstance(endpoints,list) or not 1<=len(endpoints)<=16: raise refused()
++    seen=set()
++    for e in endpoints:
++        if not isinstance(e,dict) or set(e)!={'host','path_sha256' if public else 'path','ipv4'}: raise refused()
++        if not isinstance(e['host'],str): raise refused()
++        u=urlsplit(url('https://'+e['host']))
++        if u.hostname!=e['host'] or u.netloc!=e['host'] or u.path or u.query: raise refused()
++        path=e['path_sha256' if public else 'path']
++        if public:
++            if not hex64(path): raise refused()
++        else:
++            if not isinstance(path,str) or not path.startswith('/'): raise refused()
++            target=urlsplit(url('https://'+e['host']+path))
++            if target.path!=path or target.query: raise refused()
++        pair=(e['host'],path)
++        if pair in seen: raise refused()
++        seen.add(pair);ips=e['ipv4']
++        if not isinstance(ips,list) or not 1<=len(ips)<=16 or len(set(ips))!=len(ips): raise refused()
++        if any(not isinstance(ip,str) or not ipaddress.IPv4Address(ip).is_global or str(ipaddress.IPv4Address(ip))!=ip for ip in ips): raise refused()
++    return p
++
++
++def project(p,key):
++    validate(p,key)
++    result=json.loads(json.dumps({k:v for k,v in p.items() if k!='review_reference'}))
++    result['endpoints']=[{'host':e['host'],'path_sha256':digest(e['path']),'ipv4':e['ipv4']} for e in p['endpoints']]
++    result['expires_epoch']=min(result['expires_epoch'],time.time()+LEASE)
++    return result
++
++
++def directory(path,mode):
++    """Open trusted ancestry without following any symlink, including parents."""
++    path=Path(path)
++    if not path.is_absolute() or '..' in path.parts: raise refused()
++    fd=os.open('/',os.O_RDONLY|os.O_DIRECTORY)
++    try:
++        for part in path.parts[1:]:
++            child=os.open(part,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=fd)
++            os.close(fd);fd=child
++            st=os.fstat(fd)
++            # Sticky root /tmp is allowed for isolated fixtures; final anchors
++            # must have the exact required mode and can never be writable.
++            sticky=st.st_uid==0 and stat.S_IMODE(st.st_mode)==0o1777
++            if st.st_uid!=0 or st.st_gid!=0 or (st.st_mode&0o022 and not sticky): raise refused()
++        st=os.fstat(fd)
++        if stat.S_IMODE(st.st_mode)!=mode or st.st_nlink==0: raise refused()
++        return fd
++    except BaseException:
++        os.close(fd);raise
++
++
++def read(fd,name,mode=0o644):
++    file=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)
++    with os.fdopen(file,'rb') as stream:
++        st=os.fstat(stream.fileno())
++        if not stat.S_ISREG(st.st_mode) or st.st_uid!=0 or st.st_gid!=0 or st.st_nlink!=1 or stat.S_IMODE(st.st_mode)!=mode or st.st_size>LIMIT: raise refused()
++        raw=stream.read(LIMIT+1)
++    if len(raw)>LIMIT: raise refused()
++    def pairs(items):
++        result={}
++        for k,v in items:
++            if k in result: raise refused()
++            result[k]=v
++        return result
++    return json.loads(raw,object_pairs_hook=pairs,parse_constant=lambda _:(_ for _ in ()).throw(refused()))
++
++
++def guard_snapshot(path,p):
++    """Publisher validates an existing trusted grant; never creates a grant."""
++    fd=directory(path,0o755)
++    try:
++        first=read(fd,'guard.json');grant=read(fd,'grant.json');second=read(fd,'guard.json')
++        if (not isinstance(first,dict) or not isinstance(grant,dict) or set(first)!=GUARD_FIELDS or set(grant)!=GRANT_FIELDS
++                or first!=second or any(grant[k]!=first[k] for k in GUARD_FIELDS)
++                or type(first['schema']) is not int or first['schema']!=1
++                or not hex64(first['generation']) or first['boot_id']!=p['boot_id']
++                or first['policy_sha256']!=p['policy_review_sha256']
++                or any(type(grant[k]) is not int or grant[k]<=0 for k in ('netns_dev','netns_ino'))
++                or [grant['netns_dev'],grant['netns_ino']]!=p['netns']): raise refused()
++        return first['generation']
++    finally: os.close(fd)
++
++
++class Reader:
++    def __init__(self,directory=PUBLIC,guard='/guard-status'):
++        self.directory=Path(directory);self.guard=guard;self.anchor=None
++
++    def read(self,key):
++        try:
++            if not hex64(key): raise refused()
++            fd=directory(self.directory,0o755)
++            try:
++                st=os.fstat(fd);identity=(st.st_dev,st.st_ino)
++                if self.anchor is not None and identity!=self.anchor: raise refused()
++                self.anchor=identity
++                value=read(fd,key+'.json')
++                # Detect host current-path replacement during this read.
++                current=directory(self.directory,0o755)
++                try:
++                    st=os.fstat(current)
++                    if (st.st_dev,st.st_ino)!=identity: raise refused()
++                finally: os.close(current)
++            finally: os.close(fd)
++            if not isinstance(value,dict) or set(value)!=RECORD_FIELDS or type(value['schema']) is not int or value['schema']!=1: raise refused()
++            if not hex64(value['generation']) or not hex64(value['guard_generation']): raise refused()
++            if any(type(value[k]) is not int or value[k]<=0 for k in ('anchor_dev','anchor_ino')) or (value['anchor_dev'],value['anchor_ino'])!=identity: raise refused()
++            p=validate(value['policy'],key,True);now=time.time()
++            if not number(value['issued_epoch']) or not value['issued_epoch']<=now<p['expires_epoch']<=value['issued_epoch']+LEASE: raise refused()
++            ns=Path('/proc/self/ns/net').stat()
++            if p['netns']!=[ns.st_dev,ns.st_ino]: raise refused()
++            r=Readiness(self.guard,p['policy_review_sha256'])
++            if r.check()!=value['guard_generation']: raise refused()
++            # Generations participate in each job's existing equality check.
++            return {**p,'review_reference':'trusted_public_projection','authorization_generation':value['generation'],'guard_generation':value['guard_generation']}
++        except Exception: raise refused() from None
+--- /dev/null
 +++ b/core/provider_readiness.py
 @@ -0,0 +1,75 @@
 +"""Unprivileged, bounded current-path authorization snapshot; never kernel attestation."""
@@ -1767,11 +1946,11 @@
 +        return first['generation']
 --- /dev/null
 +++ b/core/provider_security.py
-@@ -0,0 +1,350 @@
+@@ -0,0 +1,319 @@
 +"""Offline candidate: trusted AirVPN-only native metadata contract, no media.
 +
-+Installed as core.provider_security in a separately reviewed image. Root policy
-+and guard-status read-only mounts are prerequisites, never created by this code.
++Installed as core.provider_security in a separately reviewed image. Root-published authorization
++and guard-status read-only mounts are prerequisites, never created by workers.
 +"""
 +import contextlib
 +import contextvars
@@ -1793,14 +1972,15 @@
 +from urllib.parse import urlencode, urlsplit, quote
 +from .provider_transport import MetadataHTTPS, Refused, private_read, digest, decode, xmltv_ids, url
 +from .provider_readiness import Readiness
++from .provider_policy import Reader
 +
 +CONTRACT = 'dispatcharr-native-airvpn-v1'
-+ROOT = Path('/run/dispatcharr-provider')
++AUTHORIZATION = Reader()
 +GUARD = '/guard-status'
 +MAX_BYTES = 16 * 1024 * 1024
 +TOTAL = 30.0
 +IDLE = 5.0
-+FEATURES = ['artwork_stripped','bounded_io','guard_grant','manual_jobs','no_auto_dvr','no_redirect','no_retry','public_ipv4_pinning','tls','xml_no_dtd']
++FEATURES = ['artwork_stripped','bounded_io','guard_grant','manual_jobs','no_auto_dvr','no_redirect','no_retry','public_ipv4_pinning','public_policy_lease','tls','xml_no_dtd']
 +CURRENT = contextvars.ContextVar('provider_job',default=None)
 +SLOTS = threading.BoundedSemaphore(2)
 +
@@ -1810,39 +1990,7 @@
 +
 +
 +def policy(key):
-+    if not re.fullmatch('[a-f0-9]{64}',str(key)): raise Denied()
-+    try:
-+        # Refuse untrusted ancestors rather than following a substituted mount.
-+        import stat
-+        for parent in [ROOT,*ROOT.parents]:
-+            st=parent.lstat()
-+            if stat.S_ISLNK(st.st_mode) or st.st_uid!=0 or st.st_mode & 0o022: raise Denied()
-+        st=ROOT.stat()
-+        if stat.S_IMODE(st.st_mode)!=0o700: raise Denied()
-+        path=ROOT/(key+'.json')
-+        if path.lstat().st_size>65536: raise Denied()
-+        p=private_read(path,root=True)
-+        fields={'server_contract','provider_key','network_owner','purpose','schema','review_reference','boot_id','netns','host_netns','expires_epoch','vpn_interface','policy_review_sha256','endpoints','operations','epg_url_sha256'}
-+        if set(p)!=fields or type(p['schema']) is not int: raise Denied()
-+        if (p.get('server_contract')!=CONTRACT or p.get('provider_key')!=key or p.get('network_owner')!='AirVPN'
-+                or p.get('purpose')!='IPTV_METADATA_ONLY' or p.get('schema')!=1
-+                or not isinstance(p.get('operations'),list) or len(p['operations'])>3 or len(set(p['operations']))!=len(p['operations']) or not set(p['operations']) <= {'discover','refresh','epg'}
-+                or not time.time()<p.get('expires_epoch',0)<=time.time()+86400): raise Denied()
-+        if not re.fullmatch('[a-f0-9]{64}',str(p['epg_url_sha256'])): raise Denied()
-+        endpoints=p['endpoints']
-+        if not isinstance(endpoints,list) or not 1<=len(endpoints)<=16: raise Denied()
-+        seen=set()
-+        for entry in endpoints:
-+            if not isinstance(entry,dict) or set(entry)!={'host','path','ipv4'}: raise Denied()
-+            normalized=urlsplit(url('https://'+entry['host']+entry['path']))
-+            pair=(entry['host'],entry['path'])
-+            if pair in seen or normalized.hostname!=entry['host'] or normalized.path!=entry['path'] or normalized.query: raise Denied()
-+            seen.add(pair);ips=entry['ipv4']
-+            if not isinstance(ips,list) or not 1<=len(ips)<=16 or len(set(ips))!=len(ips): raise Denied()
-+            if any(not ipaddress.IPv4Address(ip).is_global or str(ipaddress.IPv4Address(ip))!=ip for ip in ips): raise Denied()
-+        ns=Path('/proc/self/ns/net').stat()
-+        if p.get('netns')!=[ns.st_dev,ns.st_ino] or p.get('boot_id')!=Path('/proc/sys/kernel/random/boot_id').read_text().strip(): raise Denied()
-+        return p
++    try: return AUTHORIZATION.read(key)
 +    except Exception: raise Denied() from None
 +
 +
@@ -1939,7 +2087,7 @@
 +    if state['requests']>32 or not SLOTS.acquire(blocking=False): raise Denied()
 +    sock=None;response=None;deadline=time.monotonic()+TOTAL
 +    try:
-+        transport=MetadataHTTPS(ROOT/(state['key']+'.json'))
++        transport=MetadataHTTPS(None, approval_reader=lambda: policy(state['key']))
 +        u,ip=transport.authorize(target)
 +        check()
 +        if time.monotonic()>=deadline: raise Denied()
@@ -2140,7 +2288,7 @@
 +    except Denied: return Response({'error':'provider_security_unavailable'},status=403)
 --- /dev/null
 +++ b/core/provider_transport.py
-@@ -0,0 +1,174 @@
+@@ -0,0 +1,177 @@
 +"""Vendored bounded metadata primitives from provider CLI 04e8295; server scope wraps these. No live credentials included."""
 +import datetime as dt
 +
@@ -2244,8 +2392,9 @@
 +    Approval is an administrative assertion, not continuous firewall attestation.
 +    This class does not enter/create a namespace or alter a network/security rule.
 +    """
-+    def __init__(self, approval):
++    def __init__(self, approval, *, approval_reader=None):
 +        self.approval_path = approval
++        self.approval_reader = approval_reader
 +        self.context = ssl.create_default_context()
 +    @staticmethod
 +    def context_checks(a):
@@ -2274,7 +2423,7 @@
 +                raise Refused('metadata_route_must_use_existing_tun0')
 +        except (OSError,subprocess.TimeoutExpired): raise Refused('route_verification_failed') from None
 +    def authorize(self, target):
-+        a = private_read(self.approval_path, root=True)
++        a = self.approval_reader() if self.approval_reader is not None else private_read(self.approval_path, root=True)
 +        ns = Path('/proc/self/ns/net').stat()
 +        if (a.get('schema') != 1 or a.get('purpose') != 'IPTV_METADATA_ONLY'
 +                or not a.get('review_reference')
@@ -2285,7 +2434,9 @@
 +            raise Refused('metadata_path_approval_missing_stale_or_wrong_namespace')
 +        self.context_checks(a)
 +        u = urlsplit(url(target)); matches = [e for e in a.get('endpoints', [])
-+                if e.get('host') == u.hostname and e.get('path') == u.path]
++                if e.get('host') == u.hostname and (
++                    (self.approval_reader is None and e.get('path') == u.path) or
++                    (self.approval_reader is not None and e.get('path_sha256') == digest(u.path)))]
 +        if len(matches) != 1: raise Refused('metadata_destination_not_approved')
 +        ips = matches[0].get('ipv4', [])
 +        if not 1 <= len(ips) <= 16: raise Refused('approved_IP_set_invalid')
@@ -2317,7 +2468,7 @@
 +from .provider_dns import resolve
 --- /dev/null
 +++ b/core/provider_contract_hashes.json
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,16 @@
 +{
 +  "apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
 +  "apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
@@ -2327,9 +2478,10 @@
 +  "apps/m3u/tasks.py": "4294d180806627da4029af9b955a3c40f5ac13869da23adc25b4bec7293085ac",
 +  "core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
 +  "core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
++  "core/provider_policy.py": "2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639",
 +  "core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
-+  "core/provider_security.py": "8f0195161771e25dc47b39a41b5cf81230d618529c5c9cce2f00ecc2fbfd845f",
++  "core/provider_security.py": "b63d7c4af215d7b135110667c1b37166ddc9b19c3456a4c6703618042d30af16",
 +  "core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
-+  "core/provider_transport.py": "f2540f50bad331dede6fc457a35db23e91bd121db3a1a977ff1617f2274e15a0",
++  "core/provider_transport.py": "4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39",
 +  "core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
 +}

@@ -24,7 +24,7 @@ from unittest.mock import patch,MagicMock
 BASE=Path(__file__).resolve().parents[1]
 ROOT=BASE.parents[2]
 package=types.ModuleType('fixture_core');package.__path__=[str(BASE/'runtime')];sys.modules['fixture_core']=package
-from fixture_core import provider_security as s,provider_transport as t,provider_dns as dns
+from fixture_core import provider_security as s,provider_transport as t,provider_dns as dns,provider_policy as policy_interface
 spec=importlib.util.spec_from_file_location('prepare_native',BASE/'prepare.py');prepare=importlib.util.module_from_spec(spec);spec.loader.exec_module(prepare)
 
 
@@ -180,20 +180,18 @@ class Policy(unittest.TestCase):
         self.example=json.loads((BASE/'policy.example.json').read_text())
         ns=Path('/proc/self/ns/net').stat();self.key='a'*64
         self.example.update(provider_key=self.key,netns=[ns.st_dev,ns.st_ino],
-            boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),expires_epoch=time.time()+300)
+            boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),host_netns=[1,1],expires_epoch=time.time()+300)
         for endpoint in self.example['endpoints']:endpoint['ipv4']=['93.184.216.34']
-        self.root=MagicMock();self.root.parents=[]
-        self.root.lstat.return_value=types.SimpleNamespace(st_uid=0,st_mode=0o40700)
-        self.root.stat.return_value=types.SimpleNamespace(st_uid=0,st_mode=0o40700)
-        self.root.__truediv__.return_value.lstat.return_value.st_size=1000
     def call(self):
-        with patch.object(s,'ROOT',self.root),patch.object(s,'private_read',return_value=self.example):return s.policy(self.key)
+        try:return policy_interface.validate(self.example,self.key)
+        except Exception:raise s.Denied() from None
     def test_trusted_policy_shape_and_current_namespace(self):self.assertEqual(self.call(),self.example)
     def test_untrusted_owner_or_writable_anchor_refused(self):
-        for owner,mode in [(1000,0o40700),(0,0o40777),(0,0o40755)]:
-            self.root.lstat.return_value=types.SimpleNamespace(st_uid=owner,st_mode=mode)
-            self.root.stat.return_value=types.SimpleNamespace(st_uid=owner,st_mode=mode)
-            with self.assertRaises(s.Denied):self.call()
+        # Actual UID1000/ownership/mode access is exercised in run-permissions.sh.
+        for owner,mode in [(1000,0o40755),(0,0o40777),(0,0o40700)]:
+            st=types.SimpleNamespace(st_uid=owner,st_gid=0,st_mode=mode,st_nlink=2)
+            with patch.object(policy_interface.os,'open',return_value=123),patch.object(policy_interface.os,'close'),patch.object(policy_interface.os,'fstat',return_value=st):
+                with self.assertRaises(Exception):policy_interface.directory('/synthetic',0o755)
     def test_policy_expiration_wrong_provider_owner_and_boot_refused(self):
         for field,value in [('expires_epoch',0),('provider_key','f'*64),('network_owner','WAN'),('boot_id','old')]:
             original=self.example[field];self.example[field]=value
@@ -211,11 +209,13 @@ class Policy(unittest.TestCase):
             with self.assertRaises(s.Denied):self.call()
 
     def test_policy_directory_symlink_or_large_file_refused(self):
-        self.root.lstat.return_value=types.SimpleNamespace(st_uid=0,st_mode=0o120700)
-        with self.assertRaises(s.Denied):self.call()
-        self.root.lstat.return_value=types.SimpleNamespace(st_uid=0,st_mode=0o40700)
-        self.root.__truediv__.return_value.lstat.return_value.st_size=65537
-        with self.assertRaises(s.Denied):self.call()
+        # No-follow/open errors and size limits remain fail-closed at the reader.
+        with patch.object(policy_interface,'directory',side_effect=OSError('synthetic symlink')):
+            with self.assertRaises(t.Refused):policy_interface.Reader('/synthetic').read(self.key)
+        st=types.SimpleNamespace(st_mode=0o100644,st_uid=0,st_gid=0,st_nlink=1,st_size=65537)
+        stream=MagicMock();stream.__enter__.return_value=stream;stream.fileno.return_value=123
+        with patch.object(policy_interface.os,'open',return_value=123),patch.object(policy_interface.os,'fdopen',return_value=stream),patch.object(policy_interface.os,'fstat',return_value=st):
+            with self.assertRaises(t.Refused):policy_interface.read(123,'synthetic')
 
 
 class Destination(unittest.TestCase):

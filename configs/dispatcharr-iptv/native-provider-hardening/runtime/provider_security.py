@@ -1,7 +1,7 @@
 """Offline candidate: trusted AirVPN-only native metadata contract, no media.
 
-Installed as core.provider_security in a separately reviewed image. Root policy
-and guard-status read-only mounts are prerequisites, never created by this code.
+Installed as core.provider_security in a separately reviewed image. Root-published authorization
+and guard-status read-only mounts are prerequisites, never created by workers.
 """
 import contextlib
 import contextvars
@@ -23,14 +23,15 @@ import time
 from urllib.parse import urlencode, urlsplit, quote
 from .provider_transport import MetadataHTTPS, Refused, private_read, digest, decode, xmltv_ids, url
 from .provider_readiness import Readiness
+from .provider_policy import Reader
 
 CONTRACT = 'dispatcharr-native-airvpn-v1'
-ROOT = Path('/run/dispatcharr-provider')
+AUTHORIZATION = Reader()
 GUARD = '/guard-status'
 MAX_BYTES = 16 * 1024 * 1024
 TOTAL = 30.0
 IDLE = 5.0
-FEATURES = ['artwork_stripped','bounded_io','guard_grant','manual_jobs','no_auto_dvr','no_redirect','no_retry','public_ipv4_pinning','tls','xml_no_dtd']
+FEATURES = ['artwork_stripped','bounded_io','guard_grant','manual_jobs','no_auto_dvr','no_redirect','no_retry','public_ipv4_pinning','public_policy_lease','tls','xml_no_dtd']
 CURRENT = contextvars.ContextVar('provider_job',default=None)
 SLOTS = threading.BoundedSemaphore(2)
 
@@ -40,39 +41,7 @@ class Denied(Refused):
 
 
 def policy(key):
-    if not re.fullmatch('[a-f0-9]{64}',str(key)): raise Denied()
-    try:
-        # Refuse untrusted ancestors rather than following a substituted mount.
-        import stat
-        for parent in [ROOT,*ROOT.parents]:
-            st=parent.lstat()
-            if stat.S_ISLNK(st.st_mode) or st.st_uid!=0 or st.st_mode & 0o022: raise Denied()
-        st=ROOT.stat()
-        if stat.S_IMODE(st.st_mode)!=0o700: raise Denied()
-        path=ROOT/(key+'.json')
-        if path.lstat().st_size>65536: raise Denied()
-        p=private_read(path,root=True)
-        fields={'server_contract','provider_key','network_owner','purpose','schema','review_reference','boot_id','netns','host_netns','expires_epoch','vpn_interface','policy_review_sha256','endpoints','operations','epg_url_sha256'}
-        if set(p)!=fields or type(p['schema']) is not int: raise Denied()
-        if (p.get('server_contract')!=CONTRACT or p.get('provider_key')!=key or p.get('network_owner')!='AirVPN'
-                or p.get('purpose')!='IPTV_METADATA_ONLY' or p.get('schema')!=1
-                or not isinstance(p.get('operations'),list) or len(p['operations'])>3 or len(set(p['operations']))!=len(p['operations']) or not set(p['operations']) <= {'discover','refresh','epg'}
-                or not time.time()<p.get('expires_epoch',0)<=time.time()+86400): raise Denied()
-        if not re.fullmatch('[a-f0-9]{64}',str(p['epg_url_sha256'])): raise Denied()
-        endpoints=p['endpoints']
-        if not isinstance(endpoints,list) or not 1<=len(endpoints)<=16: raise Denied()
-        seen=set()
-        for entry in endpoints:
-            if not isinstance(entry,dict) or set(entry)!={'host','path','ipv4'}: raise Denied()
-            normalized=urlsplit(url('https://'+entry['host']+entry['path']))
-            pair=(entry['host'],entry['path'])
-            if pair in seen or normalized.hostname!=entry['host'] or normalized.path!=entry['path'] or normalized.query: raise Denied()
-            seen.add(pair);ips=entry['ipv4']
-            if not isinstance(ips,list) or not 1<=len(ips)<=16 or len(set(ips))!=len(ips): raise Denied()
-            if any(not ipaddress.IPv4Address(ip).is_global or str(ipaddress.IPv4Address(ip))!=ip for ip in ips): raise Denied()
-        ns=Path('/proc/self/ns/net').stat()
-        if p.get('netns')!=[ns.st_dev,ns.st_ino] or p.get('boot_id')!=Path('/proc/sys/kernel/random/boot_id').read_text().strip(): raise Denied()
-        return p
+    try: return AUTHORIZATION.read(key)
     except Exception: raise Denied() from None
 
 
@@ -169,7 +138,7 @@ def fetch(target):
     if state['requests']>32 or not SLOTS.acquire(blocking=False): raise Denied()
     sock=None;response=None;deadline=time.monotonic()+TOTAL
     try:
-        transport=MetadataHTTPS(ROOT/(state['key']+'.json'))
+        transport=MetadataHTTPS(None, approval_reader=lambda: policy(state['key']))
         u,ip=transport.authorize(target)
         check()
         if time.monotonic()>=deadline: raise Denied()

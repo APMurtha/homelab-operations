@@ -39,6 +39,12 @@ def prepare(source,output,evidence):
             shutil.copyfile(overlay/name,target)
         shutil.copyfile(overlay/'core/provider_contract_hashes.json',output/'app/core/provider_contract_hashes.json')
         shutil.copyfile(HERE/'Dockerfile',output/'Dockerfile')
+        # Public code modes must not inherit private transport umask. Docker's
+        # reviewed COPY --chown=0:0 supplies image ownership; no chmod of secrets.
+        for directory in [output/'app',*[p for p in (output/'app').rglob('*') if p.is_dir()]]:
+            directory.chmod(0o755)
+        for file in output.rglob('*'):
+            if file.is_file(): file.chmod(0o644)
     files={str(p.relative_to(output)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(output.rglob('*')) if p.is_file()}
     (output/'context-hashes.json').write_text(json.dumps(files,indent=2,sort_keys=True)+'\n')
     return files

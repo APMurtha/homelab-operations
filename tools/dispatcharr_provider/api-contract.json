@@ -112,6 +112,7 @@
     "refresh_extension": "manual refresh/import API enqueues operator_requested=true; default/periodic worker calls deny remote work",
     "EPG_programmes": "after channel mappings, a second explicitly journaled EPG import replaces the denied automatic remote per-channel parse task",
     "network": "existing AirVPN namespace and kernel protections plus root-approved HTTPS/443 public-IP/path pinning; no additional egress grant",
-    "media": "not authorized or enabled; broadcaster-specific relay unchanged"
+    "media": "not authorized or enabled; broadcaster-specific relay unchanged",
+    "provider_policy_interface": "Root-published /run/dispatcharr-provider-status read-only directory; exact root 0755/0644 ownership; minimized path hashes; fresh generation; maximum 300-second lease; guard-generation and namespace binding; public_policy_lease feature and exact output hashes required; no root-private policy mount in AIO"
   }
 }

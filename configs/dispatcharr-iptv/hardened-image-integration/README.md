@@ -7,6 +7,11 @@ Built immutable ID:
 `sha256:26c93e71dd431127ef72c651bfe0ad3f7431cef7c135749002833f1fc1524c78`.
 It is a retained review artifact, not a deployable release. Production is unchanged.
 
+The [subsequent offline policy/packaging fix](../../../docs/dispatcharr-provider-policy-permission-fix.md)
+updates the future source candidate and packaging tests only. The image identity
+and verification-results.json here remain the historical failed-build evidence.
+No replacement image has been built.
+
 - `inspect_image.py`: hash-only base-layer inspection, including whiteouts.
 - `prepare_context.py`: verify eight source inputs, four inherited readiness files,
   approved patch bytes and 13 output hashes; no build/deploy operation.

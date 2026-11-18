@@ -50,6 +50,16 @@ def source_hashes(image,expected,name):
         docker(['rm',pk])
 
 
+PUBLIC_CONTEXT_FILES = {'Dockerfile','app/core/provider_contract_hashes.json'} | {
+    'app/'+name for name in (
+        'apps/epg/api_views.py','apps/epg/signals.py','apps/epg/tasks.py',
+        'apps/m3u/api_views.py','apps/m3u/signals.py','apps/m3u/tasks.py',
+        'core/api_urls.py','core/xtream_codes.py','core/provider_dns.py',
+        'core/provider_readiness.py','core/provider_security.py',
+        'core/provider_security_view.py','core/provider_transport.py','core/provider_policy.py')
+}
+
+
 def write_context(context,files):
     """Future-rebuild correction: private transport root, public source dirs.
 
@@ -58,7 +68,7 @@ def write_context(context,files):
     """
     context.mkdir(mode=0o700)
     for name,obj in files.items():
-        if name.startswith('/') or '..' in Path(name).parts:raise RuntimeError('unsafe_context_path')
+        if name not in PUBLIC_CONTEXT_FILES or name.startswith('/') or '..' in Path(name).parts:raise RuntimeError('unsafe_context_path')
         data=base64.b64decode(obj['data'],validate=True)
         if hashlib.sha256(data).hexdigest()!=obj['sha256']:raise RuntimeError('context_hash_mismatch')
         path=context/name;path.parent.mkdir(parents=True,exist_ok=True)

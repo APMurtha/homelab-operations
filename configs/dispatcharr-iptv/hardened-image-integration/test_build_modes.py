@@ -22,6 +22,11 @@ class Modes(unittest.TestCase):
                 self.assertEqual((root/name).stat().st_mode&0o777,0o755)
             self.assertEqual((root/'app/apps/m3u/tasks.py').stat().st_mode&0o777,0o644)
             self.assertEqual((root/'app/apps/m3u/tasks.py').read_bytes(),data)
+    def test_private_inputs_never_become_public_image_files(self):
+        data=b'synthetic private content';item={'data':base64.b64encode(data).decode(),'sha256':hashlib.sha256(data).hexdigest()}
+        for name in ['app/core/policy.json','app/private/credentials','private.key']:
+            with tempfile.TemporaryDirectory() as tmp,self.assertRaises(RuntimeError):
+                build.write_context(Path(tmp)/'context',{name:item})
     def test_unsafe_paths_and_content_drift_are_refused(self):
         for name,item in [('../escape',{'data':'','sha256':hashlib.sha256(b'').hexdigest()}),('app/core/a.py',{'data':'','sha256':'0'*64})]:
             with tempfile.TemporaryDirectory() as tmp,self.assertRaises(RuntimeError):

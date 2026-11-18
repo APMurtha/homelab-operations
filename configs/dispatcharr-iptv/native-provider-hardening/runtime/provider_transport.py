@@ -101,8 +101,9 @@ class MetadataHTTPS:
     Approval is an administrative assertion, not continuous firewall attestation.
     This class does not enter/create a namespace or alter a network/security rule.
     """
-    def __init__(self, approval):
+    def __init__(self, approval, *, approval_reader=None):
         self.approval_path = approval
+        self.approval_reader = approval_reader
         self.context = ssl.create_default_context()
     @staticmethod
     def context_checks(a):
@@ -131,7 +132,7 @@ class MetadataHTTPS:
                 raise Refused('metadata_route_must_use_existing_tun0')
         except (OSError,subprocess.TimeoutExpired): raise Refused('route_verification_failed') from None
     def authorize(self, target):
-        a = private_read(self.approval_path, root=True)
+        a = self.approval_reader() if self.approval_reader is not None else private_read(self.approval_path, root=True)
         ns = Path('/proc/self/ns/net').stat()
         if (a.get('schema') != 1 or a.get('purpose') != 'IPTV_METADATA_ONLY'
                 or not a.get('review_reference')
@@ -142,7 +143,9 @@ class MetadataHTTPS:
             raise Refused('metadata_path_approval_missing_stale_or_wrong_namespace')
         self.context_checks(a)
         u = urlsplit(url(target)); matches = [e for e in a.get('endpoints', [])
-                if e.get('host') == u.hostname and e.get('path') == u.path]
+                if e.get('host') == u.hostname and (
+                    (self.approval_reader is None and e.get('path') == u.path) or
+                    (self.approval_reader is not None and e.get('path_sha256') == digest(u.path)))]
         if len(matches) != 1: raise Refused('metadata_destination_not_approved')
         ips = matches[0].get('ipv4', [])
         if not 1 <= len(ips) <= 16: raise Refused('approved_IP_set_invalid')

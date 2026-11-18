@@ -3,13 +3,14 @@
 This bundle is **not installed** and does not enable live provider onboarding.
 Production remains release `227122d`; the image base contract remains the verified
 patched AIO `sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21`.
-See [the review report](../../../docs/dispatcharr-native-provider-hardening.md).
+Original baseline: [hardening report](../../../docs/dispatcharr-native-provider-hardening.md).
+Current offline revision: [policy/packaging fix](../../../docs/dispatcharr-provider-policy-permission-fix.md).
 
-`server.patch` modifies eight exact upstream source files and adds five runtime
+`server.patch` modifies eight exact upstream source files and adds six runtime
 modules plus an image-local hash manifest. `source-pins.json` identifies the eight
 inputs at Dispatcharr `2fa13a6707bdf0dae87e0c494bcd3ca282cdeb3e`.
 `audit-source-pins.json` records additional source inspected for side effects.
-`output-hashes.json` identifies the resulting 13 Python files. The hash manifest
+`output-hashes.json` identifies the resulting 14 Python files. The hash manifest
 excludes itself. Neither script builds, pulls, installs or deploys an image.
 
 Prepare from an existing local checkout of that pinned source, with a **new**
@@ -31,6 +32,7 @@ No source tree or runtime state from Rivendell is needed for these tests.
 DISPATCHARR_PINNED_SOURCE=/PATH/TO/PINNED/SOURCE \
   python3 -B -m unittest discover -s configs/dispatcharr-iptv/native-provider-hardening/tests -v
 sh configs/dispatcharr-iptv/native-provider-hardening/tests/run-isolated.sh
+sh configs/dispatcharr-iptv/native-provider-hardening/tests/run-permissions.sh
 python3 -B -m unittest discover -s tools/tests -v
 ```
 
@@ -46,7 +48,9 @@ part of this bundle.
 
 Future installation requires a separately reviewed immutable image, complete
 protected image/source-contract transition and read-only mounts. The AIO needs
-`/guard-status` and a root-private policy directory at `/run/dispatcharr-provider`;
+`/guard-status` and root-published authorization at `/run/dispatcharr-provider-status`;
+never mount the root-private source policy into the application. Root keeps the
+original `/run/dispatcharr-provider` private. Only `publish_policy.py` reads it;
 the relay's current mounts and broadcaster allowlist remain unchanged. This task
 provides no Compose, systemd or firewall change. Do not add mounts to production
 without that coordinated review and deployment authorization.
@@ -55,8 +59,13 @@ without that coordinated review and deployment authorization.
 or permission grant. A future approved policy must be root-owned 0600 under a
 root-owned 0700 directory, bound to the real host boot, VPN namespace, distinct
 host namespace, guard policy digest, provider key and exact XMLTV URL digest.
-Allowed HTTPS hosts, paths and public A records need explicit approval. Policies
-expire within 24 hours, are read-only in the AIO, and cannot be installed by the CLI.
+Allowed HTTPS hosts, paths and public A records need explicit approval. Private approvals expire within 24 hours and are never readable by AIO workers.
+Explicit trusted publication creates a fresh, at-most-300-second assertion tied
+to the existing guard generation. Public records contain no raw endpoint paths,
+review text, provider credentials or credential-bearing URLs. Workers read the
+public directory through a read-only directory bind and reopen the current file
+on each authorization check. No automatic renewal exists; native work fails
+closed after expiry. The provider CLI cannot publish assertions.
 No trusted status record may be created manually. Policies do not authorize media.
 
 Only HTTPS/443, approved public IPv4 destinations, bounded live XC metadata and
@@ -72,3 +81,19 @@ Simulations supply a marked mock contract; **live execution and removal remain
 unconditionally disabled**. This is ready for source/security review, not a live
 provider test. No new streaming destination is granted to the DW English relay or
 exported to Jellyfin.
+
+The root-only candidate publisher has explicit `init`, `publish KEY`, `revoke KEY`
+and `revoke-all` actions. Keys are opaque hashes, never credentials/URLs.
+`init` requires a new public directory and writes its inode identity privately;
+existing unexplained anchors are refused. Serialized publication withdraws first,
+validates the private policy and trusted grant, atomically writes the minimized
+assertion, then rechecks the grant. Revocation unlinks current paths and fsyncs.
+A failed withdrawal aborts publication; revoke-all attempts every known record.
+
+No publisher is installed or invoked in production. Protected lifecycle hooks,
+exact AIO mount/verifier pins, and explicit approval/publication before manual
+native work still require coordinated review. Crash/revocation cleanup is not
+instantaneous; leases bound retained records to 300 seconds under a trusted clock.
+A stale directory bind cannot observe host-path replacement. Never replace the
+public anchor while workers run; revoke via the original anchor, verify expiry
+or shutdown, then coordinate retirement. No adoption/replacement command exists.
