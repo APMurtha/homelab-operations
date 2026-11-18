@@ -60,7 +60,12 @@
     "configs/dispatcharr-iptv/native-provider-hardening/tests/permission_fixture.py": "a61b2e6b1a4bbfb5c5c8bb149983dcbc77062c88faa6dab82cea6c2c998c18bc",
     "configs/dispatcharr-iptv/hardened-image-integration/Dockerfile": "42dfee8640d31b41bca3db95009f8acd25f97c4909c0f707448c413a00a4dc25",
     "configs/dispatcharr-iptv/hardened-image-integration/build_once.py": "009c0a70be6b41aadcb726de821feba8ec825d0b1be3c76fb266aee772c5d7d6",
-    "configs/dispatcharr-iptv/hardened-image-integration/run_runtime.py": "1cafc87802fc6558d105e9860809a42e24be20cc933a928079efd7fe07e95c64"
+    "configs/dispatcharr-iptv/hardened-image-integration/run_runtime.py": "763839d42e80e933e52918349bd7f34dd816b546b2f2fe0c92b3ff69b326a90e",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_test.py": "56c68d1412984d7b0351bd0ecc4cc6c4862c6a32bccb0eccd412e9500fca6333",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_diagnostics.py": "de5ed39ff92da1002e2f90507511d9dd3cfc878b8e5de55126fb30d467bae432",
+    "configs/dispatcharr-iptv/hardened-image-integration/test_runtime_diagnostics.py": "3cbac9f04bf49805543d9e40f87e1f1c3a27af649f46880e4d221b8153142477",
+    "configs/dispatcharr-iptv/hardened-image-integration/audit_local_fixture.py": "49462fd7e94ec9f1160839b14d742ae4e220c89aa80e9d9566edcf8b94197cb6",
+    "configs/dispatcharr-iptv/hardened-image-integration/run-audit-offline.sh": "bf19aa8d9c2f0ae12c214f87876ce8eb2f8c7f39a49243573664d912fee8145d"
   },
   "installed_files": {
     "/docker/dispatcharr-iptv/Caddyfile": {

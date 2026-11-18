@@ -26,16 +26,21 @@ import traceback
 import unittest
 from unittest.mock import patch
 from urllib.parse import parse_qs,urlsplit,urlencode
+from runtime_diagnostics import Diagnostics,TEST_IDS,safe_stack,safe_exception,load_snapshot
 
 STATE=Path('/test-state')
 PROVIDER_USER='synthetic-provider-private-user'
 PROVIDER_PASSWORD='synthetic-provider-private-password'
 REDIS_PASSWORD='synthetic-isolated-redis-password'
-BOOT={};PROCESSES=[];EXTERNAL_ATTEMPTS=[];RESULT={'bootstrap':BOOT,'boundary':'network-none; synthetic loopback authorization only; no real AirVPN attestation'}
+DIAG=None
+DIAGNOSTIC_FD=None
+ACTUAL_TASKS=0
+BOOT={};PROCESSES=[];RESULT={'bootstrap':BOOT,'boundary':'network-none; synthetic loopback authorization only; no real AirVPN attestation'}
 
 
-def child(command,user=None,log='services.log'):
+def child(command,user=None,log='services.log',diagnostic_fd=None):
     kwargs={}
+    if diagnostic_fd is not None:kwargs['pass_fds']=(diagnostic_fd,)
     if user:
         account=pwd.getpwnam(user)
         def identity():os.setgroups([]);os.setgid(account.pw_gid);os.setuid(account.pw_uid)
@@ -53,12 +58,15 @@ def wait(fn,seconds=30):
 
 
 def audit_network(event,args):
-    if event not in ('socket.connect','socket.getaddrinfo'):return
-    address=args[1] if event=='socket.connect' else args[0]
-    host=address[0] if isinstance(address,tuple) else address
-    if isinstance(host,str) and (host.startswith('/') or host in ('127.0.0.1','::1','localhost')):return
-    EXTERNAL_ATTEMPTS.append('non_loopback_attempt_blocked')
-    os.write(2,b'UNEXPECTED_EXTERNAL_NETWORK_ATTEMPT_BLOCKED\n');os._exit(86)
+    # No socket is opened by the diagnostic writer; denial always exits 86.
+    DIAG.audit(event,args)
+
+
+def completed_task():
+    global ACTUAL_TASKS
+    ACTUAL_TASKS+=1
+    DIAG.complete('task_execution',{'actual_completed_tasks':ACTUAL_TASKS})
+
 
 
 def image_permissions_and_authorization():
@@ -127,11 +135,14 @@ def bootstrap():
     for path in ['/data/pgdata','/data/pgsocket']:
         os.chown(path,account.pw_uid,account.pw_gid);os.chmod(path,0o700)
     pgdir=sorted(Path('/usr/lib/postgresql').glob('*/bin'),key=lambda p:int(p.parent.name))[-1]
+    DIAG.begin('postgresql')
     init=child([str(pgdir/'initdb'),'-D','/data/pgdata','--auth-local=trust','--auth-host=trust','--username=dispatch','--encoding=UTF8','--no-locale'],user='dispatch')
     if init.wait(timeout=45):raise RuntimeError('isolated_initdb_failed')
     child([str(pgdir/'postgres'),'-D','/data/pgdata','-k','/data/pgsocket','-h','127.0.0.1','-p','5432','-c','shared_buffers=32MB','-c','max_connections=30'],user='dispatch')
     wait(lambda:subprocess.run([str(pgdir/'pg_isready'),'-h','127.0.0.1','-p','5432'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0)
     subprocess.run([str(pgdir/'createdb'),'-h','127.0.0.1','-U','dispatch','native_integration'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    DIAG.complete('postgresql',{'postgres_major':int(pgdir.parent.name)})
+    DIAG.begin('redis')
     config=STATE/'redis.conf';config.write_text('bind 127.0.0.1\nport 6379\nsave ""\nappendonly no\nrequirepass '+REDIS_PASSWORD+'\n');config.chmod(0o600)
     child(['redis-server',str(config)])
     import redis
@@ -140,6 +151,7 @@ def bootstrap():
         try:return r.ping()
         except redis.RedisError:return False
     wait(redis_ready)
+    DIAG.complete('redis',{'redis_ping':True})
     BOOT['postgres_version']=pgdir.parent.name;BOOT['redis_ping']=True
     for path in ['/data','/data/logs','/data/media','/data/plugins']:
         os.chown(path,1000,1000)
@@ -164,18 +176,22 @@ def bootstrap():
 def application_bootstrap():
     if os.geteuid()!=1000 or os.getegid()!=1000:raise RuntimeError('deployed_application_uid_not_reproduced')
     os.chdir('/app');sys.path.insert(0,'/app');sys.path.insert(0,'/fixture/client')
+    DIAG.begin('django_setup')
     from django.conf import settings
     settings.MEDIA_ROOT=Path('/data/media')
     sys.addaudithook(audit_network)
     import django
     django.setup();BOOT['django_version']=django.get_version()
+    DIAG.complete('django_setup',{'django_version':django.get_version()})
     from django.core.management import call_command
+    DIAG.begin('migrations')
     call_command('migrate',interactive=False,verbosity=0)
     from django.db import connection
     with connection.cursor() as cursor:
         cursor.execute("SELECT count(*),md5(string_agg(app||'.'||name,',' ORDER BY app,name)) FROM django_migrations")
         count,fingerprint=cursor.fetchone()
     BOOT['migrations']={'count':count,'fingerprint':fingerprint}
+    DIAG.complete('migrations',{'migration_count':count,'migration_fingerprint':fingerprint})
     BOOT['python']=sys.version.split()[0]
 
 
@@ -201,6 +217,7 @@ class Provider(http.server.BaseHTTPRequestHandler):
 class Integration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        DIAG.begin('application_setup')
         from django.contrib.auth import get_user_model
         from rest_framework.test import APIClient
         from apps.channels.models import Channel,Stream,ChannelGroup
@@ -248,7 +265,14 @@ class Integration(unittest.TestCase):
         def queue_probe(value):return {'value':value,'uid':os.geteuid()}
         # Actual Celery consumer + Redis broker, not eager/mocked task execution.
         app.conf.task_always_eager=False
+        DIAG.begin('celery_startup')
         cls.worker=cls.stack.enter_context(start_worker(app,pool='solo',concurrency=1,perform_ping_check=False,queues=['celery','default','dvr'],loglevel='WARNING'))
+        if app.conf.task_always_eager:raise RuntimeError('real_worker_required')
+        DIAG.complete('celery_startup',{'worker_started':True,'eager_disabled':True})
+        DIAG.begin('task_registration')
+        required={'apps.m3u.tasks.refresh_single_m3u_account','apps.epg.tasks.refresh_epg_data','synthetic.runtime.queue_probe'}
+        if not required<=set(app.tasks):raise RuntimeError('required_tasks_not_registered')
+        DIAG.complete('task_registration',{'required_tasks_registered':True,'registered_tasks':len(app.tasks)})
         cls.capture=io.StringIO();cls.handler=logging.StreamHandler(cls.capture)
         for name in ['', 'apps','celery','core.tasks','core.utils']:
             logger=logging.getLogger(name);logger.addHandler(cls.handler);cls.addClassCleanup(logger.removeHandler,cls.handler)
@@ -271,9 +295,9 @@ class Integration(unittest.TestCase):
         from apps.m3u.tasks import refresh_single_m3u_account,refresh_account_profiles
         before=len(self.server.events)
         result=refresh_single_m3u_account.delay(self.silent_id);result.get(timeout=20,propagate=False)
-        self.assertEqual(result.state,'FAILURE')
+        self.assertEqual(result.state,'FAILURE');completed_task()
         profile=refresh_account_profiles.delay(self.silent_id).get(timeout=20)
-        self.assertEqual(profile,'automatic_native_profile_refresh_disabled');self.assertEqual(len(self.server.events),before)
+        self.assertEqual(profile,'automatic_native_profile_refresh_disabled');self.assertEqual(len(self.server.events),before);completed_task()
 
     def test_04_public_authorization_and_private_policy_permissions(self):
         self.assertEqual(os.geteuid(),1000)
@@ -326,6 +350,7 @@ class Integration(unittest.TestCase):
         self.assertEqual(Channel.objects.filter(streams__m3u_account_id=account).distinct().count(),1)
         self.assertTrue(self.server.events)
         self.assertTrue(all(e['path'] in ['/player_api.php','/xmltv.php'] for e in self.server.events))
+        DIAG.complete('xtream_xmltv',{'selected_channels':len(channels),'programmes':ProgramData.objects.filter(epg=guide).count()})
         RESULT['native_workflow']={'actual_supported_API':True,'actual_Xtream_discovery':True,'actual_selected_channels':1,'unselected_not_imported':True,'actual_XMLTV_import_and_programmes':True,'phase':self.ledger.value['phase'],'provider_HTTP_requests':len(self.server.events),'real_AirVPN_grant':False}
 
     def test_07_existing_local_custom_DW_shape_is_unchanged(self):
@@ -338,13 +363,13 @@ class Integration(unittest.TestCase):
         source=EPGSource.objects.create(name='Denied Remote Guide',source_type='xmltv',url='https://provider.example.invalid/xmltv.php',is_active=True,custom_properties={'provider_cli':{'owner':'dispatcharr-provider/v1/native-v1','key':self.p['key'],'registration':'d'*32}})
         before=len(self.server.events)
         result=refresh_epg_data.delay(source.pk,operator_requested=True);result.get(timeout=20,propagate=False)
-        self.assertEqual(result.state,'FAILURE');self.assertEqual(len(self.server.events),before)
+        self.assertEqual(result.state,'FAILURE');self.assertEqual(len(self.server.events),before);completed_task()
 
     def test_08b_actual_worker_consumes_default_and_DVR_queues(self):
         from dispatcharr.celery import app
         for queue in ['celery','dvr']:
             result=app.send_task('synthetic.runtime.queue_probe',args=[queue],queue=queue).get(timeout=20)
-            self.assertEqual(result,{'value':queue,'uid':1000})
+            self.assertEqual(result,{'value':queue,'uid':1000});completed_task()
         RESULT['Celery_queues']=['celery','dvr']
 
     def test_08c_actual_uWSGI_readiness_without_media(self):
@@ -367,6 +392,7 @@ class Integration(unittest.TestCase):
             wait(heartbeats,30)
             import urllib.request
             with urllib.request.build_opener(urllib.request.ProxyHandler({})).open('http://127.0.0.1:5656/',timeout=5) as response:self.assertEqual(response.status,200)
+            DIAG.complete('uwsgi',{'actual_workers':2,'HTTP_status':200})
             RESULT['uWSGI']={'actual_workers':2,'fresh_Redis_heartbeats':True,'HTTP_health':200,'stock_application_module':True,'fixture_ini_without_attached_daemons':True}
         finally:
             process.terminate()
@@ -377,39 +403,100 @@ class Integration(unittest.TestCase):
         logs=self.capture.getvalue()
         self.assertNotIn(PROVIDER_PASSWORD,logs);self.assertNotIn(PROVIDER_USER,logs)
         RESULT['redaction']={'provider_password_absent':True,'provider_username_absent':True}
-        self.assertEqual(EXTERNAL_ATTEMPTS,[])
-        RESULT['external_network_attempts']=len(EXTERNAL_ATTEMPTS)
+        # A refused monitored socket event exits immediately; reaching this
+        # assertion is not a measurement of unaudited networking operations.
+        RESULT['socket_audit_refusals_in_successful_process']=0
+
+
+
+def test_identifier(test):
+    value=type(test).__name__+'.'+getattr(test,'_testMethodName','')
+    return value if value in TEST_IDS else 'unassigned'
+
+
+def phase_for(test):
+    name=getattr(test,'_testMethodName','')
+    if name.startswith('test_06_'):return 'xtream_xmltv'
+    if name.startswith(('test_03_','test_08b_')):return 'task_execution'
+    if name.startswith('test_08c_'):return 'uwsgi'
+    return 'native_api'
+
+
+class EvidenceResult(unittest.TextTestResult):
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs);self.passed=set()
+        self.native_tests={name for name in TEST_IDS if not name.startswith(('Integration.test_03_','Integration.test_06_','Integration.test_08b_','Integration.test_08c_'))}
+    def getDescription(self,test):return test_identifier(test)
+    def startTest(self,test):
+        DIAG.context(phase_for(test),test_identifier(test));DIAG.record('test_started')
+        super().startTest(test)
+    def addSuccess(self,test):
+        DIAG.context(phase_for(test),test_identifier(test));DIAG.record('test_passed');self.passed.add(test_identifier(test))
+        if self.native_tests<=self.passed:DIAG.complete('native_api',{'completed_tests':len(self.native_tests)})
+        super().addSuccess(test)
+    def addFailure(self,test,err):
+        DIAG.context(phase_for(test),test_identifier(test));DIAG.record('test_failed',reason='test_failure',stack=safe_stack(err[2]),error=err[1])
+        super().addFailure(test,err)
+    def addError(self,test,err):
+        DIAG.context(phase_for(test),test_identifier(test));DIAG.record('test_failed',reason='test_error',stack=safe_stack(err[2]),error=err[1])
+        super().addError(test,err)
+    def addSkip(self,test,reason):super().addSkip(test,'skip_details_withheld')
+    def _exc_info_to_string(self,err,test):
+        return json.dumps({'error_class':safe_exception(err[1]),'stack':safe_stack(err[2])})
 
 
 def app_main():
-    global STATE
+    global STATE,DIAG
     STATE=Path('/test-state/app')
+    fd=int(os.environ['DISPATCHARR_TEST_DIAGNOSTIC_FD'])
+    DIAG=Diagnostics(STATE/'diagnostics','application',emit_fd=fd,tests=TEST_IDS)
     try:
         application_bootstrap()
-        runner=unittest.TextTestRunner(stream=(STATE/'unittest.log').open('w'),verbosity=2,failfast=True)
+        runner=unittest.TextTestRunner(stream=(STATE/'unittest.log').open('w'),verbosity=2,failfast=True,descriptions=False,resultclass=EvidenceResult)
         result=runner.run(unittest.defaultTestLoader.loadTestsFromTestCase(Integration))
-        RESULT.update(tests_run=result.testsRun,failures=len(result.failures),errors=len(result.errors),tests_success=result.wasSuccessful(),application_uid=os.geteuid(),application_gid=os.getegid())
-        if result.failures or result.errors:
-            RESULT['failure_detail']=(result.failures+result.errors)[0][1][-6000:]
-    except Exception as error:RESULT.update(tests_success=False,bootstrap_error=type(error).__name__,failure_detail=traceback.format_exc()[-6000:])
-    for secret in [PROVIDER_USER,PROVIDER_PASSWORD,REDIS_PASSWORD]:
-        if 'failure_detail' in RESULT:RESULT['failure_detail']=RESULT['failure_detail'].replace(secret,'[synthetic-secret-redacted]')
+        successful=result.wasSuccessful() and not result.skipped
+        RESULT.update(tests_run=result.testsRun,failures=len(result.failures),errors=len(result.errors),skips=len(result.skipped),tests_success=successful,application_uid=os.geteuid(),application_gid=os.getegid())
+        if successful:DIAG.complete('application_suite',{'success':True,'tests_run':result.testsRun,'failures':0,'errors':0,'skips':0})
+    except Exception as error:
+        DIAG.exception(error,tb=error.__traceback__);RESULT.update(tests_success=False,bootstrap_error=safe_exception(error))
     RESULT['success']=RESULT.get('tests_success',False) and RESULT.get('deployment_compatible',True)
+    RESULT['diagnostics']=load_snapshot(STATE/'diagnostics',os.geteuid())
     (STATE/'result.json').write_text(json.dumps(RESULT))
     return 0 if RESULT.get('tests_success') else 1
 
 
+
+def final_acceptance_ready(value):
+    required={'django_setup','migrations','celery_startup','task_registration',
+        'task_execution','native_api','xtream_xmltv','uwsgi','application_suite'}
+    completed=value.get('application_diagnostics',{}).get('completed',{})
+    return (value.get('success') is True and value.get('tests_success') is True
+        and value.get('application_exit_code')==0
+        and all(completed.get('application:'+phase,{}).get('kind')=='checkpoint' for phase in required))
+
+
 def main():
+    global DIAG,DIAGNOSTIC_FD
+    DIAGNOSTIC_FD=os.dup(1)  # A write-only evidence channel to Docker stdout.
+    DIAG=Diagnostics(STATE/'supervisor-diagnostics','supervisor',emit_fd=DIAGNOSTIC_FD)
     try:
         bootstrap()
-        os.environ.update(USER='dispatch',LOGNAME='dispatch',HOME='/test-state/app')
-        app=child([sys.executable,'-B',__file__,'--app'],user='dispatch',log='application.log')
-        app.wait(timeout=180)
+        DIAG.begin('application_setup')
+        os.environ.update(USER='dispatch',LOGNAME='dispatch',HOME='/test-state/app',DISPATCHARR_TEST_DIAGNOSTIC_FD=str(DIAGNOSTIC_FD))
+        app=child([sys.executable,'-B',__file__,'--app'],user='dispatch',log='application.log',diagnostic_fd=DIAGNOSTIC_FD)
+        app.wait(timeout=180);RESULT['application_exit_code']=app.returncode
+        # tmpfs evidence survives the child even when it calls os._exit().
+        try:RESULT['application_diagnostics']=load_snapshot(STATE/'app/diagnostics',1000)
+        except Exception:RESULT['application_diagnostics']={'last_checkpoint':None,'last_failure':None,'evidence_status':'missing_or_invalid'}
         result_path=STATE/'app/result.json'
         if result_path.exists():
             result=json.loads(result_path.read_text());result['services_bootstrap']=BOOT;RESULT.update(result)
-        else:RESULT.update(success=False,bootstrap_error='application_result_missing',failure_detail=(STATE/'application.log').read_text()[-4000:])
-    except Exception as error:RESULT.update(success=False,bootstrap_error=type(error).__name__,failure_detail=traceback.format_exc()[-4000:])
+        else:
+            RESULT.update(success=False,bootstrap_error='application_result_missing')
+            DIAG.record('incomplete',reason='application_process_abnormal')
+    except Exception as error:
+        DIAG.exception(error,reason='supervisor_exception',tb=error.__traceback__)
+        RESULT.update(success=False,bootstrap_error=safe_exception(error))
     finally:
         for process in reversed(PROCESSES):
             if process.poll() is None:
@@ -418,7 +505,12 @@ def main():
                 except subprocess.TimeoutExpired:process.kill();process.wait(timeout=5)
         try:RESULT['memory_peak_bytes']=int(Path('/sys/fs/cgroup/memory.peak').read_text())
         except (OSError,ValueError):pass
+        if final_acceptance_ready(RESULT):
+            DIAG.complete('final_acceptance',{'success':True,'tests_run':RESULT.get('tests_run',0),'failures':0,'errors':0,'skips':0})
+        else:RESULT['success']=False
+        RESULT['supervisor_diagnostics']=load_snapshot(STATE/'supervisor-diagnostics',os.geteuid())
         print(json.dumps(RESULT))
-    return 0 if RESULT.get('tests_success') else 1
+        os.close(DIAGNOSTIC_FD)
+    return 0 if RESULT.get('success') else 1
 
 if __name__=='__main__':raise SystemExit(app_main() if '--app' in sys.argv else main())

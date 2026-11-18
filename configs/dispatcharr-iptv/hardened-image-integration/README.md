@@ -3,7 +3,7 @@
 Current corrected build: `sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be`.
 Packaging and UID1000 policy checks passed; application acceptance stopped on an
 unclassified socket-audit event. **NO-GO for binding; do not automatically rerun
-the current test harness.** See [runtime acceptance](../../../docs/dispatcharr-hardened-image-runtime-acceptance.md)
+the historical test harness.** See [runtime acceptance](../../../docs/dispatcharr-hardened-image-runtime-acceptance.md)
 and `runtime-acceptance-results.json`. The material below retains prior checkpoint
 provenance; its 26c93e… image is historical and was not reused.
 
@@ -67,3 +67,45 @@ refuses the failed/base image and has no default image. Its public synthetic cod
 fixture directories use 0755 inside a private transport parent. The updated harness was later executed once; its socket-audit guard aborted
 before a complete application result was retained. Later test bodies remain
 unaccepted; see the runtime acceptance report for the exact evidence boundary.
+
+## Offline socket-audit diagnostics
+
+The corrected harness is reviewed separately in
+[the diagnostics report](../../../docs/dispatcharr-runtime-audit-diagnostics.md).
+It has not been rerun against the retained image. Application acceptance remains
+NO-GO; one further isolated diagnostic run requires separate authorization.
+
+`runtime_diagnostics.py` is a required public fixture payload alongside
+`runtime_test.py`. It classifies socket operations without logging destination
+values and preserves the existing literal local allowlist. Unknown, private and
+public destinations still cause immediate exit 86. Local-looking byte/abstract
+addresses are classified but are not newly permitted.
+
+Phase completion is recorded only after the associated assertions pass. A
+root-private or UID-private fsynced snapshot and a bounded inherited stdout
+channel preserve sanitized records independently of the final result JSON.
+`run_runtime.py` saves each future run under a new `runtime-attempt-*` directory
+beside the existing build receipt, preserving older evidence. No new writable
+bind is introduced. Its temporary container log has a per-container 1 MiB × 2
+rotation bound; collection is limited to 1,000 lines / 2 MiB. Missing final JSON
+is an explicit failure with recovered checkpoints, never implicit acceptance.
+
+Run the pure event, redaction and crash-checkpoint tests:
+
+```sh
+python3 -B -m unittest discover \
+  -s configs/dispatcharr-iptv/hardened-image-integration \
+  -p test_runtime_diagnostics.py -v
+```
+
+Run those tests plus real Unix/loopback/refused-public socket fixtures in a
+fresh unrouted user/network namespace (no Docker):
+
+```sh
+sh configs/dispatcharr-iptv/hardened-image-integration/run-audit-offline.sh
+```
+
+If isolated namespaces are unavailable, report the fixture gap; do not run the
+public-address fixture in the host network namespace. The audit is diagnostic
+coverage for Python connect/getaddrinfo events, not a substitute for network-none
+isolation or evidence of a real AirVPN namespace grant.
