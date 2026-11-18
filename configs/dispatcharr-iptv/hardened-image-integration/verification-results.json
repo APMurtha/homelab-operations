@@ -20,7 +20,21 @@
   },
   "base_onbuild": null,
   "baseline_tests": 497,
-  "build_attempts": 0,
+  "blockers": [
+    "COPY preserved root-private app/apps and app/core directories from umask 077; UID1000 cannot initialize Django",
+    "Approved native policy reader demands root-owned 0700/0600 files; actual Django/Celery workers are UID1000; no approved readable policy interface"
+  ],
+  "build_attempts": 1,
+  "build_recipe_status": "build_once.executed.py generated failed image; build_once.py includes future directory-mode correction, NOT REBUILT",
+  "build_resources": {
+    "disk_free": 7781158912,
+    "load": [
+      0.4765625,
+      0.32421875,
+      0.2314453125
+    ],
+    "memory_available": 3537104896
+  },
   "context_files": {
     "Dockerfile": "ce726b756f63f42f90d24d447ec18aaf245781f0491738f238945f4a9e1a58ad",
     "app/apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
@@ -39,25 +53,204 @@
     "app/core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
   },
   "errors": 0,
+  "executed_build_recipe_sha256": "e09671f1063e9f939a07dce9bf647b8660af8bc750b752597ca65895919aa74e",
+  "executed_recipe_export": "appended public payload excluded; final newline normalized",
   "failures": 0,
-  "log_sha256": {
-    "dispatcharr-image-design.log": "0252b93f10bc25ac4abe361ec5d309bac61de09f196997c3919d7f6c15f58554",
-    "dispatcharr-image-hardening.log": "868da75e8b6d96a021b03f0a21696e03ef4a12ecd9e1402eacd1b9ff84b84297",
-    "dispatcharr-image-historical.log": "7bbd284e9252c05cc3598dab72baf590bd30e374697c11fafc496ddd79cf2d6f",
-    "dispatcharr-image-input-tests.log": "65d0b75a43fcebd577452e9ab436dbe4e891d1ca0746dd46c9c504d1526d782d",
-    "dispatcharr-image-main.log": "98d58746a2960733ddd549075088cecd0825b9b9036c0c0ad8593e3be68f03a9",
-    "dispatcharr-image-network.log": "36cbbc7bca430ccebd1fe854807dece889540cc21c25aaa3cfc371681644c18a",
-    "dispatcharr-image-prior.log": "f5b6e05dc930bab788cafd4315cfaa42d7a51df0f262b9a442b7b516529c6cfc",
-    "dispatcharr-image-tools.log": "195cf2268bec64eefd7186a7ec7972a51bdf61743a8c9b03e5726cdbe307981b"
+  "final": {
+    "all_existing_containers_unchanged": true,
+    "existing_container_count": 33,
+    "image": {
+      "created": "2026-11-18T00:20:21.163271177Z",
+      "id": "sha256:26c93e71dd431127ef72c651bfe0ad3f7431cef7c135749002833f1fc1524c78",
+      "size": 4249021342
+    },
+    "owned_test_containers_remaining": [],
+    "private_build_log_sha256": "fc1af4a33dea08ba38c8440162a1c8ede06416d7a33c39cb15f0976870026aca",
+    "services": {
+      "dispatcharr": {
+        "health": "healthy",
+        "id": "7dbfca3d171deb05638fcea6c21a7719ff07fd9d46f2afacc3485617c094c3be",
+        "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+        "name": "/dispatcharr",
+        "restarts": 0,
+        "started": "2026-11-17T05:41:15.134262504Z",
+        "status": "running"
+      },
+      "jellyfin": {
+        "health": "healthy",
+        "id": "6798247b9099bc791892f7118f598aa48d0b7c21ecfc616bbbebfee43c22763b",
+        "image": "sha256:baba630419915985442f315f08b0cf46d9f4c8a0cc4bd38e94a6d35751dd5ef5",
+        "name": "/jellyfin",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.260706697Z",
+        "status": "running"
+      },
+      "rivendell-iptv-gateway": {
+        "health": "healthy",
+        "id": "448ceeb80a51e6660a04cda3449a140052c2cb0984040d727824894413606199",
+        "image": "sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9",
+        "name": "/rivendell-iptv-gateway",
+        "restarts": 0,
+        "started": "2026-11-17T05:41:52.932663045Z",
+        "status": "running"
+      },
+      "rivendell-iptv-relay": {
+        "health": "healthy",
+        "id": "3aa41213fdc8cacb88f18ce20136bec082e55490baf58d79f2e01d55ba85be27",
+        "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+        "name": "/rivendell-iptv-relay",
+        "restarts": 0,
+        "started": "2026-11-17T05:41:14.956545338Z",
+        "status": "running"
+      },
+      "rivendell-iptv-vpn": {
+        "health": "healthy",
+        "id": "1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e",
+        "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+        "name": "/rivendell-iptv-vpn",
+        "restarts": 0,
+        "started": "2026-11-17T05:41:08.022164729Z",
+        "status": "running"
+      }
+    }
   },
-  "new_image_id": null,
-  "new_input_verifier_tests": 5,
-  "new_test_containers_created": 0,
+  "image_logical_size_increase_bytes": 634269,
+  "image_pulls": 0,
+  "installed_hashes": {
+    "apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
+    "apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
+    "apps/epg/tasks.py": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
+    "apps/m3u/api_views.py": "61c9289fa4c6bc9ecc275d39386c6ff0081a551535ce95d44353fe92c51e4e3f",
+    "apps/m3u/signals.py": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
+    "apps/m3u/tasks.py": "4294d180806627da4029af9b955a3c40f5ac13869da23adc25b4bec7293085ac",
+    "apps/proxy/live_proxy/input/buffer.py": "17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810",
+    "apps/proxy/live_proxy/input/manager.py": "ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf",
+    "apps/proxy/live_proxy/output/ts/generator.py": "db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b",
+    "apps/proxy/live_proxy/readiness.py": "fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b",
+    "core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
+    "core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
+    "core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+    "core/provider_security.py": "8f0195161771e25dc47b39a41b5cf81230d618529c5c9cce2f00ecc2fbfd845f",
+    "core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
+    "core/provider_transport.py": "f2540f50bad331dede6fc457a35db23e91bd121db3a1a977ff1617f2274e15a0",
+    "core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
+  },
+  "log_sha256": {
+    "dispatcharr-image-build-tests.log": "f91f32b2e35bd366ad5ce0c13d14e1d5e7edec6043a029cb06384dfd6cd8cf85",
+    "dispatcharr-image-design.log": "44ebbe2abcfbd2d2c4cf42c506e9f7f7196c83b0799eebc302e2e6ed0cfff4c5",
+    "dispatcharr-image-hardening.log": "2256b9c575e78bb0db80843a7adbedbfb452144894eb679e224cc1130daa879a",
+    "dispatcharr-image-historical.log": "f6b80e29ff862bdc2c339b6da09ea5050375ea40b86dc01b410397f8a626c275",
+    "dispatcharr-image-main.log": "100fc58fc7fe8c09e7eb061350aab797ef9d6d9df558dffecce808c00fa7ea98",
+    "dispatcharr-image-network.log": "6b26227cef9d9548769b479a1028cb37857a8c13de338707eefa00ce4e30cac4",
+    "dispatcharr-image-prior.log": "d63558ce9d3fff393dab4b6fac42ed811791dd83827c22a118483f0d8f20c4f7",
+    "dispatcharr-image-tools.log": "db833c0d17a5e5cc6cb105fcdfaac7faa3e27de0b8389da6a5e39a36e485cc0d"
+  },
+  "mode_comparison": {
+    "base": {
+      "/app": {
+        "gid": 0,
+        "mode": "0o755",
+        "uid": 0
+      },
+      "/app/apps": {
+        "gid": 0,
+        "mode": "0o755",
+        "uid": 0
+      },
+      "/app/apps/api": {
+        "gid": 0,
+        "mode": "0o755",
+        "uid": 0
+      },
+      "/app/core": {
+        "gid": 0,
+        "mode": "0o755",
+        "uid": 0
+      }
+    },
+    "built": {
+      "/app": {
+        "gid": 0,
+        "mode": "0o755",
+        "uid": 0
+      },
+      "/app/apps": {
+        "gid": 0,
+        "mode": "0o700",
+        "uid": 0
+      },
+      "/app/apps/api": {
+        "gid": 0,
+        "mode": "0o755",
+        "uid": 0
+      },
+      "/app/core": {
+        "gid": 0,
+        "mode": "0o700",
+        "uid": 0
+      },
+      "/app/core/provider_security.py": {
+        "gid": 0,
+        "mode": "0o644",
+        "uid": 0
+      }
+    }
+  },
+  "new_image": {
+    "created": "2026-11-18T00:20:21.163271177Z",
+    "id": "sha256:26c93e71dd431127ef72c651bfe0ad3f7431cef7c135749002833f1fc1524c78",
+    "size": 4249021342
+  },
+  "new_image_id": "sha256:26c93e71dd431127ef72c651bfe0ad3f7431cef7c135749002833f1fc1524c78",
+  "new_input_verifier_tests": 7,
+  "permission_probe": {
+    "app_api_readable": false,
+    "celery": "5.6.3",
+    "core_policy_module_readable": false,
+    "django": "6.0.9",
+    "gid": 1000,
+    "openssl": "OpenSSL 3.0.13 30 Jan 2024",
+    "python": "3.13.17",
+    "root_private_policy_readable": false,
+    "root_public_marker_readable": true,
+    "uid": 1000
+  },
   "production_changed": false,
-  "real_Django_Celery_integration": "NOT_RUN",
+  "real_Django_Celery_integration": "FAIL_DJANGO_SETUP_UID1000; migrations/Celery/API matrix NOT_RUN",
+  "runtime": {
+    "airvpn_attestation": "NOT_TESTED_NO_REAL_GRANT",
+    "ceiling": {
+      "cpus": 1,
+      "memory_bytes": 1610612736,
+      "network": "none",
+      "pids": 256,
+      "production_mounts": 0,
+      "published_ports": 0
+    },
+    "celery_worker": "NOT_RUN",
+    "cleaned": true,
+    "django_setup": "ModuleNotFoundError: No module named apps.api",
+    "exit_code": 1,
+    "memory_peak_bytes": 143413248,
+    "migrations": "NOT_RUN",
+    "native_api_matrix": "NOT_RUN",
+    "networks_unchanged": true,
+    "production_unchanged": true,
+    "services_bootstrap": {
+      "isolation": {
+        "docker_socket": false,
+        "external_default_route": false,
+        "interfaces": [
+          "lo"
+        ]
+      },
+      "postgres_version": "17",
+      "redis_ping": true
+    }
+  },
   "skips": 0,
   "source_exported_from_host": false,
-  "status": "PREFLIGHT_PASS_BUILD_BLOCKED_BY_APPROVAL_REVIEW",
+  "status": "BUILD_COMPLETE_RUNTIME_FAIL_NO_GO",
   "suites": {
     "design": [
       28
@@ -69,7 +262,7 @@
       26
     ],
     "input-tests": [
-      5
+      7
     ],
     "main": [
       39,
@@ -93,5 +286,5 @@
       139
     ]
   },
-  "verification_method": "read_only_image_save_hashes_only_no_containers"
+  "verification_method": "exact_input_and_output_hashes_plus_isolated_UID1000_runtime"
 }

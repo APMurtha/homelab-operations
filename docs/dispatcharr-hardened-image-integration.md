@@ -1,233 +1,249 @@
-# Hardened Dispatcharr image — verified inputs, execution blocked
+# Hardened Dispatcharr image integration — build complete, runtime failure
 
-2026-11-17. `APMurtha/homelab-operations`, branch
-`docs/udm-pro-max-migration-prep`. Approved hardening:
-`1124d9699097faa5a2b865ad8989da9f5743cfbf`.
-Production remains release `227122dcbe9ebc76be46b8a91231350d6c93bdb4`.
+2026-11-17 US/Eastern (build 2026-11-18 UTC).
+Repository `APMurtha/homelab-operations`, branch `docs/udm-pro-max-migration-prep`.
+Approved hardening `1124d9699097faa5a2b865ad8989da9f5743cfbf`; resumed checkpoint
+`a956d711a1e843f91b6685e3fec9c50c913b09b8` after explicit authorization for temporary
+isolated Docker containers. Production remains `227122dcbe9ebc76be46b8a91231350d6c93bdb4`.
 
-**Input preflight PASS. Build and real application integration NOT RUN. NO-GO for
-deployment.** No new immutable image identity exists. The authorized single build
-attempt has not started. Automatic approval review blocked the proposed temporary
-container execution boundary; clarification is pending. This report is a verified
-preflight checkpoint, not successful image-build or application acceptance evidence.
+**Build completed once. Real Django startup FAIL. NO-GO for deployment or live
+provider onboarding.** No second build, deployment or production modification.
 
-## Build provenance and verified inputs
+## Build provenance and source verification
 
-The exact approved commit and all 24 repository files listed in its hardening
-report matched their recorded hashes. Andrew's existing pinned NEST profile
-verified hostname Rivendell and account murth. No replacement identity, credential
-installation or host-key change was used.
+Base, verified locally on Rivendell:
+`sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21`.
 
-The local Rivendell image is exactly:
+New immutable review image:
+`sha256:26c93e71dd431127ef72c651bfe0ad3f7431cef7c135749002833f1fc1524c78`.
 
-`sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21`
+Review-only tag `local/dispatcharr-native-hardening:1124d96-review`.
+Created `2026-11-18T00:20:21.163271177Z`; linux/amd64. Logical size
+4,249,021,342 bytes, 634,269 bytes above the verified base. This is logical image
+metadata, not a measurement of allocated disk or application overhead.
 
-Observed logical image size: 4,248,387,073 bytes, linux/amd64. Working directory
-/app, root/default image user, entrypoint /app/docker/entrypoint.sh. Config.Volumes
-and Config.OnBuild are null. No production environment or credential file was read.
+Andrew's selected NEST profile verified Rivendell and SSH account murth. No other
+identity, credential installation or host-key change was used. All 24 approved
+hardening repository artifacts, eight original image source inputs, exact
+server.patch and all 13 prepared Python outputs matched their approved hashes.
+All 13 installed outputs and four inherited readiness overlays matched after the
+build. `core/provider_contract_hashes.json` is also included in the verified
+context. Full exact hashes are retained in
+`configs/dispatcharr-iptv/hardened-image-integration/verification-results.json`.
+No approved source/pin was changed or regenerated to accept drift.
 
-Read-only Docker image save was parsed on Rivendell, resolving layer order and
-whiteouts. Only hashes left the host. **All eight source inputs exactly match
-source-pins.json**, and these existing application-readiness modifications match:
+The inherited readiness hashes under `/app/` remain:
 
-| Image source under /app/ | SHA-256 |
+| Source | SHA-256 |
 |---|---|
 | apps/proxy/live_proxy/input/buffer.py | 17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810 |
 | apps/proxy/live_proxy/input/manager.py | ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf |
 | apps/proxy/live_proxy/output/ts/generator.py | db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b |
 | apps/proxy/live_proxy/readiness.py | fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b |
 
-The retained historical build-context tar also matched the prior artifact review's
-04e270ae…6221c1 hash. Its Dockerfile confirms these overlays belong under
-/app/apps/proxy/live_proxy/. No historical image or source was substituted.
+The local base had no ONBUILD actions or declared volumes. Existing Docker 29.9.2
+legacy builder was used because Compose/Buildx are absent. No tooling or package
+was installed. Dockerfile has immutable FROM, label and COPY only. Build flags:
+no pull, network none, no cache, 512 MiB memory/swap ceiling, 0.5 CPU ceiling and
+180-second caller deadline. No RUN, package download, base upgrade or production
+tag replacement. Read-only metadata-format adjustments happened before execution;
+there was exactly **one actual build command**, exit 0.
 
-Four live host **public source-file hashes** also match this repository:
-guard.py, security.py, permanent-streaming/guard_readiness.py and
-boot-admission-phase6b3k/admit.py. No private guard state, policy, credentials,
-PostgreSQL or Redis data was read. This verifies source identity; it is not a fresh
-kernel-rule, tunnel or namespace-grant attestation.
+Fresh capacity gate passed: 7,781,158,912 bytes free on /tmp filesystem,
+3,537,104,896 bytes MemAvailable, load 0.477/0.324/0.231. Runtime gate required
+at least 2 GiB available and load below 2. No admission thresholds were changed.
 
-The approved prepare.py reproduces the exact reviewed server.patch and all 13
-output hashes from retained public source at pinned commit
-2fa13a6707bdf0dae87e0c494bcd3ca282cdeb3e. A COPY-only context contains those 13 files,
-the image-local provider_contract_hashes.json and Dockerfile. It contains no private
-policy, provider data, certificate, runtime state or production configuration.
-The four readiness overlays are outside the COPY set and remain inherited.
+## Actual runtime sequence and failure boundary
 
-Complete observed input/context hashes are in
-configs/dispatcharr-iptv/hardened-image-integration/verification-results.json.
-No approved pin was regenerated to accept drift.
+A first network-none bootstrap stopped because the overridden entrypoint had not
+created the stock `dispatch` account. No Django operation occurred. Inspection
+of the pinned entrypoint and read-only production process IDs established the
+real contract: default PUID/PGID1000; application/Celery/PostgreSQL/Redis workers
+are UID/GID1000. A synthetic passwd/group fixture reproduced that identity without
+reading production passwd, environment or credentials.
 
-## Capacity and existing tooling
+The resulting isolated test initialized the image's **real PostgreSQL 17**, created
+its temporary database, and passed **authenticated real Redis PING**. It forked
+the Django process at UID/GID1000. `django.setup()` then failed:
 
-Rivendell reported four CPUs, load 0.17/0.20/0.18, approximately 3.3 GiB available
-memory, no swap and 7.3 GiB free on the 58 GiB root filesystem. These observations
-support a small COPY-only overlay and a bounded temporary test, subject to a fresh
-capacity check before execution. They are not measurements of actual build/test
-resource consumption. Proposed test ceiling is one CPU and 1.5 GiB memory; no
-production resource-admission threshold or timeout is changed.
+```text
+ModuleNotFoundError: No module named 'apps.api'
+```
 
-Docker 29.9.2 is accessible through the selected profile. Compose and Buildx plugins
-are absent. No package was installed. The existing CLI exposes legacy build help
-with DOCKER_BUILDKIT=0, including no-pull, network, memory/CPU and image-ID-file
-options. Docker documents that fallback for missing Buildx, while marking it
-deprecated. [Docker deprecation documentation](https://docs.docker.com/engine/deprecated/)
-No actual build was attempted, so daemon build success is not established.
+Testing stopped at this confirmed image failure. No migration or native API test
+was reached. A bounded filesystem-only diagnostic confirmed the explanation:
 
-Denethor has ample disk/memory, but its Docker socket is unavailable to the current
-account. One noninteractive sudo check reported that a password is required; it was
-not retried. No local privilege, group membership, daemon or system configuration
-was changed. No other person's credentials were used.
+| Path / check | Base | Built image / UID1000 result |
+|---|---|---|
+| /app | root:root 0755 | root:root 0755 |
+| /app/apps | root:root 0755 | root:root **0700** |
+| /app/apps/api | root:root 0755 | 0755, inaccessible through parent |
+| /app/core | root:root 0755 | root:root **0700** |
+| /app/core/provider_security.py | not present in original base | root:root 0644, inaccessible through parent |
+| Root-private synthetic policy directory/file | 0700/0600 fixture | UID1000 read refused |
+| Separate root-public synthetic marker | 0755/0644 fixture | UID1000 read succeeds |
 
-## Execution blocker and actions not taken
+The build wrapper introduced the directory-mode defect: its private transport
+workspace used umask 077; newly created application directories inherited 0700.
+COPY --chown=0:0 preserved those modes. Hash equality proved source bytes, but did
+not prove runtime readability. This is a packaging failure, not missing apps.api
+source or evidence that dependency installation is needed.
 
-Automatic approval review rejected creating/removing a stopped network-none source
-probe on Rivendell's daemon, classifying any container creation there as a
-production-container change. The command did **not** run. No probe was created.
-The same execution boundary affects temporary application-test containers and
-potential intermediate build containers on that daemon.
+`build_once.executed.py` preserves the executed wrapper without its appended
+source payload, with its final newline normalized. `build_once.py` now contains an offline, unit-tested future recipe
+correction: keep context root 0700, explicitly set public code directories 0755
+and files 0644. **That correction was not built. The immutable image above still
+has the defect.** It is not permission to retry.
 
-Review also rejected an alternative that would return base64 application source,
-classifying it as source-data transfer beyond hash verification. That command did
-**not** run either. The accepted alternative performs remote hash-only inspection;
-no application source contents were transferred from Rivendell.
+A second, independent blocker exists in approved server code:
+`provider_security.policy()` requires root-owned `/run/dispatcharr-provider` mode
+0700, and its reader requires root-private policy files. Actual Django/Celery
+workers are UID1000. Permission-faithful testing confirms they cannot read that
+interface. This was established from pinned source plus real UID access, not a
+successful API execution. No policy permissions were relaxed, no worker elevated,
+and no server patch changed. A separately reviewed minimal unprivileged policy
+interface is required before another candidate can be accepted.
 
-The owner was asked to clarify whether temporary build/test containers on
-Rivendell's existing daemon are authorized, or to identify another approved Docker
-engine. This pending question is not treated as approval. No indirect container
-execution, alternate identity or privileged workaround was attempted.
+Observed installed versions: Python 3.13.17, Django 6.0.9, Celery 5.6.3, OpenSSL
+3.0.13. Library imports/version queries are not application or worker acceptance.
 
-New hardened image ID: **NOT CREATED**.
-Build attempts: **0**. New test containers: **0**. Image pulls: **0**.
-Production container/service/configuration changes: **0**.
+## Isolation, resources and cleanup
 
-## Tests actually executed
+Runtime containers used network=none, only loopback, no default external route,
+no published ports, no production network, volume, credentials, Redis/PostgreSQL
+or Docker socket. No production source was bind-mounted. Three read-only binds
+contained only this test's source and synthetic passwd/group. Root filesystem
+was read-only; all database/runtime writes were bounded tmpfs. Limits: one CPU,
+1.5 GiB memory including swap ceiling, 256 PIDs; no restart policy. Root supervisor
+had only scoped AIO-style capabilities for isolated setup and dropping UID;
+application executed without root. No privileged container or NET_ADMIN.
 
-**All 497 existing tests pass**, with no failures, errors or skips. Five new
-input-verifier tests also pass. These results are **not real Django/Celery image
-integration results**.
+Observed cgroup memory peak for the failed application bootstrap: 143,413,248
+bytes. This is not a steady-state provider workload measurement. No provider,
+broadcaster or media request occurred. The later filesystem probe used only
+SETUID/SETGID to demonstrate actual UID1000 reads. Its public marker explicitly
+said it was not a grant. No real AirVPN/grant acceptance was fabricated.
 
-| Suite | Tests and result |
+Each exact owned test/probe container was removed; temporary databases and broker
+state were tmpfs and disappeared. Final label inventory found no remaining test
+containers. Public-source build context, failed image and private diagnostic
+receipts remain for review in the task scratch directory; there are no permanent
+test networks or volumes. Raw logs/payloads are not in Git.
+
+All **33** pre-existing containers match the before-build ID, image, state,
+StartedAt, restart-count and health snapshot. Test receipts also verified unchanged
+Docker network inventories. This is an identity/health comparison, not a fresh
+kernel firewall or VPN-grant attestation; production networking was not accessed
+or changed for test setup.
+
+## Regression results and application coverage
+
+All **497 existing regressions PASS**, no failures/errors/skips. All **seven**
+image-input/build-mode unit tests PASS. Synthetic isolated TLS/DNS and Caddy tests
+had no external route; Caddy made 91 synthetic fixture requests.
+
+| Existing suite | Passed |
+|---|---:|
+| Provider CLI / native adapter | 139 |
+| Hardening source/policy fixtures | 66 |
+| Isolated TLS/DNS/guard transport fixtures | 14 |
+| Protected stack/security/admission/lifecycle/gateway groups | 210 |
+| Historical persistence | 26 |
+| Prior guard interface | 14 |
+| Guard lifecycle design | 28 |
+
+New tests cover layering, whiteouts, opaque roots, source/hash refusal and the
+future build-context mode correction under real umask 077. They do not repair
+the retained image. Suite counts and exact log hashes are in verification JSON.
+
+| Real image matrix | Outcome |
 |---|---|
-| Existing provider/native-adapter/security-contract tests | 139 PASS |
-| Existing hardening source/policy/application-dependency fixtures | 66 PASS |
-| Existing synthetic TLS/DNS/guard namespace fixtures | 14 PASS |
-| Existing protected stack/security/admission/guard/gateway groups | 39 + 26 + 17 + 7 + 3 + 12 + 28 + 50 + 13 + 15 PASS |
-| Existing historical persistence / guard / lifecycle design | 26 + 14 + 28 PASS |
-| New read-only image/context verifier fixtures | 5 PASS |
+| Bundled PostgreSQL initialization | PASS, isolated PostgreSQL17 |
+| Authenticated bundled Redis | PASS |
+| Actual UID1000 Django initialization | **FAIL**, inaccessible application directories |
+| Migrations, Django routes/serializers/native account creation | NOT RUN |
+| Celery task registration/execution and periodic restrictions | NOT RUN |
+| Native group/stream resolution, bounded import and ownership | NOT RUN |
+| XMLTV import/programmes, exact EPG mapping, interrupted mutations | NOT RUN |
+| DW English runtime compatibility / backend readiness | NOT ACCEPTED; inherited hashes preserved only |
+| Actual AirVPN namespace / provider grant | NOT TESTED; no real grant |
 
-The new verifier checks that source bytes never appear in output, later layers
-win, whiteouts and opaque app roots cannot adopt stale source, and incomplete
-actual-base/readiness evidence refuses before context creation. Existing Caddy
-fixtures made 91 isolated synthetic requests. Network fixtures have no external
-route and did not contact Rivendell, a broadcaster or a real provider.
+The remaining test bodies in runtime_test.py are prepared and **unexecuted,
+unvalidated**. They must not be cited as passing integration evidence. Harness
+review must also address UID1000 traversal of its private fixture directory
+before the fixture client tests are attempted. Existing mocked/source tests
+cannot substitute for this incomplete matrix.
 
-Real migrations, Django initialization/HTTP routes/serializers, installed-image
-Celery registration/execution and native XC/XMLTV API import have **not run**.
-No image runtime/package compatibility result is inferred from mocked dependencies
-or source compilation. Sanitized suite counts/log hashes are recorded in the
-verification-results file; raw private operational state is not committed.
+## Matched deployment and rollback proposal — not installed
 
-## Remaining isolated application test matrix
+There is no deployable matched transition for this failed image. Before proposing
+installation, review a policy-reader interface compatible with UID1000, authorize
+a new single build with corrected code-directory modes and reviewed server pins,
+then complete the real Django/Celery/API matrix above.
 
-After the execution boundary is resolved and source/capacity checks remain valid:
+For a future accepted image, the coordinated proposal must:
 
-1. Build once from the verified local image, without pull/package/RUN instructions,
-   with a new non-production tag, no network, bounded resources and an image-ID
-   receipt. Refuse an existing target tag/context or uncertain prior attempt.
-   Inspect the resulting immutable ID and all 13 installed hashes before testing.
-2. Use one explicitly owned, temporary test container with network=none, no
-   published ports, no production networks, volumes, credentials or Docker socket.
-   Override the normal entrypoint. Use isolated tmpfs/application data and bundled
-   PostgreSQL/Redis binaries, not production daemons or newly pulled images.
-3. Run actual migrations and Django setup against that database. Verify routes,
-   serializers, default/custom records, default source flags and admin permission
-   handling. Create a separate local/custom DW-shaped fixture at channel 9001;
-   preserve its identities and profile/mapping fields throughout native imports.
-4. Execute the actual Celery worker/task code with the isolated broker, testing
-   default/periodic denial, explicit jobs, account-create discovery, stream/group
-   selection, owned import, XMLTV programme processing and safe uncertain outcomes.
-   Do not substitute Celery eager/mocked functions for worker-execution evidence.
-5. First verify the unmodified security endpoint/client refuses missing or
-   non-AirVPN policy/grant state. The namespace has no real AirVPN owner. Happy
-   synthetic cases may use clearly labeled in-memory transport/policy fixtures,
-   but must report that boundary and cannot claim a production-ready grant.
-   No host guard/VPN/DNS configuration is reused or modified.
-6. Capture only safe test IDs, status/counts and redaction results. Compare bundled
-   readiness/worker behavior, local/custom stream semantics and all original
-   source/image contracts. Do not initiate media playback. Preserve diagnostics
-   on failure; do not fix approved source and rebuild without review.
-7. Remove only identified temporary test resources. Recheck the production
-   identities/health and confirm no port, network, volume or tag changes there.
+1. Replace **AIO only** with a newly accepted immutable image. Keep VPN, relay and
+   gateway pins unchanged. Split verify.py's currently shared PATCHED identity
+   so the relay stays on 14c837…ad21 when AIO changes.
+2. Update exact server source/API contracts, AIO image expectations and affected
+   manifests together. Preserve all four readiness hashes, admission thresholds,
+   timeouts, managed ordering and disabled historical controller.
+3. Add the AIO's exact read-only public guard-status mount and a separately
+   reviewed UID1000-readable provider-policy interface. The formerly proposed
+   root-only policy mount is **not usable**; its replacement requires review.
+   Preserve existing private guard consumers and all relay/gateway restrictions.
+4. Preserve VPN owner, Docker network, published ports, nftables policy, DNS/IPv6,
+   namespaces and resource caps. No new service or infrastructure is proposed.
+5. Keep native live registration/removal gated until server acceptance, exact
+   destination approval and separate owner authorization. DW relay is unchanged
+   and is not a generic Xtream media transport. No Jellyfin export of new providers.
 
-A tested application-runtime harness is still required. This checkpoint does not
-include an unexecuted harness and label it accepted integration coverage.
+Future rollback must first establish known API/journal outcomes, withdraw native
+provider approval, disable relevant sources/schedules and reconcile in-flight
+provider jobs. Never restore an unhardened image with uncertain jobs capable of
+network access. Restore the complete prior AIO image/source/mount/verifier set
+through the reviewed managed lifecycle, preserving firewall, VPN owner, relay,
+gateway and application data. Do not purge unrelated queues or force deletion.
+This task required no production rollback because nothing was deployed.
 
-## Matched deployment proposal — not installed
+## Final production state and recommendation
 
-The proposal cannot be finalized with an immutable AIO pin until the build and
-real application matrix pass. It is deliberately not an executable Compose
-change or installer.
+| Service | Preserved container ID prefix | Final health / restarts |
+|---|---|---|
+| Dispatcharr | 7dbfca3d171d | healthy / 0 |
+| Dedicated VPN | 1b9d20c93194 | healthy / 0 |
+| Relay | 3aa41213fdc8 | healthy / 0 |
+| Gateway | 448ceeb80a51 | healthy / 0 |
+| Jellyfin | 6798247b9099 | healthy / 0 |
 
-- Replace only the AIO image with its actual new immutable identity. Keep the VPN,
-  relay and gateway image identities unchanged. In particular, verify.py currently
-  shares PATCHED between AIO and relay: split their expected identities so updating
-  the AIO does not silently upgrade or repin the relay.
-- Update the AIO source/API image pins, all 13 hardened runtime expectations and
-  affected candidate/lifecycle/transition manifest hashes as one reviewed set.
-  Preserve original readiness hashes and keep the historical controller disabled.
-- Add exactly two AIO read-only inputs: existing /run/dispatcharr-guard-status to
-  /guard-status, and a separately approved root-private provider-policy directory
-  to /run/dispatcharr-provider. Extend exact mount verification accordingly;
-  continue rejecting extra, writable, duplicated or unsafe mounts. Preserve the
-  existing private /guard mount and every relay mount, privilege and resource cap.
-- Keep the existing VPN owner, Docker network, ports, DNS/IPv6, nftables, kernel
-  policy, systemd lifecycle/drop-in ordering, timeouts and admission thresholds.
-  No new daemon, port, bridge, secret store or privileged relay is needed.
-- Review actual resource measurements. Source adds bounded transport/policy code
-  and disables automatic remote provider scheduling; it adds no worker service.
-  The image layer is expected to be small, but no built size or measured runtime
-  overhead is claimed yet.
-- Keep live native registration and removal disabled. Image deployment alone does
-  not authorize provider destinations, credentials, media, Jellyfin or playback.
+No production container creation/recreation/start/stop/removal, application-data or
+credential access, systemd change, firewall/VPN/DNS change, package installation,
+image pull, playback or real-provider request. Working production tag and image
+are unchanged.
 
-Before a future scoped rollback, withdraw provider approval and establish known
-API/journal outcomes, inactive provider/source records, disabled schedules and
-reconciled provider jobs. Do not restore the unhardened image while uncertain
-native work can execute. Restore the complete previous AIO image/source/mount
-verifier set through the approved managed lifecycle, retaining the firewall/VPN
-owner and unrelated services. Do not purge unrelated queues, reset data or force
-ownership deletion. No production rollback was needed or attempted in this task.
+**NO-GO for deployment or real-provider onboarding.** The single approved build
+produced a precisely identified but unusable image. Required next review:
+packaging-mode correction, unprivileged provider-policy design/implementation,
+separately authorized new build, then complete real application acceptance.
+Stop here; production remains healthy and unchanged.
 
-## Current production observations and recommendation
+## Artifact hashes
 
-The four protected services and Jellyfin were healthy with restart count zero
-before/after read-only verification. Container IDs remained:
+The following table covers this task's implementation/evidence files. The report
+itself is identified by its enclosing Git commit to avoid a self-hash cycle.
 
-| Service | Container ID prefix |
+| File under configs/dispatcharr-iptv/hardened-image-integration/ | SHA-256 |
 |---|---|
-| Dispatcharr | 7dbfca3d171d |
-| Dedicated VPN | 1b9d20c93194 |
-| Managed relay | 3aa41213fdc8 |
-| Gateway | 448ceeb80a51 |
-| Jellyfin | 6798247b9099 |
-
-No production database, Redis, credentials, playback, systemd, firewall, VPN, DNS,
-network or container lifecycle operation occurred. No image was built or retagged.
-
-**NO-GO for deployment and live onboarding.** Inputs pass and a reproducible
-build context is ready, but no hardened image identity or real application
-acceptance exists. Resolve the temporary-container execution boundary, then
-resume the single authorized build and isolated integration matrix. This is an
-execution-approval blocker, not evidence that the approved patch failed.
-
-## Checkpoint artifact hashes
-
-| File in configs/dispatcharr-iptv/hardened-image-integration/ | SHA-256 |
-|---|---|
-| `Dockerfile` | `ce726b756f63f42f90d24d447ec18aaf245781f0491738f238945f4a9e1a58ad` |
-| `README.md` | `4a194a113da12b1c8935d880cc687d7025cb87b8cdaac4c2787511ef4c113f4e` |
-| `inspect_image.py` | `04018eb2fba2e89eb920120646dcf476258441e659edc375c20ce60574ee8c85` |
-| `prepare_context.py` | `3a62b3316a9f609ac6c9fd1c202c8e5f66bea30ff46eab5873d653dc63ce2463` |
-| `test_inputs.py` | `4486c489ca2b4bc2eade87d22f996fe0f9f4b8faf8d49d5f4c7775436e660889` |
-| `verification-results.json` | `ed5bb89b00ea86a1afb0a45b390ef70008b44728b79a685e27e2b8395fb9e299` |
+| Dockerfile | ce726b756f63f42f90d24d447ec18aaf245781f0491738f238945f4a9e1a58ad |
+| README.md | 3406bbb03474f3f298f9d1c34ce34d69fd3d4d55db4ae2437d256ccab47d9ac6 |
+| build_once.executed.py | e09671f1063e9f939a07dce9bf647b8660af8bc750b752597ca65895919aa74e |
+| build_once.py | 7e48d8844227dcc2c4ddb1ab274f5f882ecd7a3c84cb83f3b7662f588f9f48fb |
+| inspect_image.py | 04018eb2fba2e89eb920120646dcf476258441e659edc375c20ce60574ee8c85 |
+| permission_probe.py | 62a7917e37cecff941dfa0404a0598bac6e0e68fe1bf4a9a9edf93ed338ff122 |
+| prepare_context.py | 3a62b3316a9f609ac6c9fd1c202c8e5f66bea30ff46eab5873d653dc63ce2463 |
+| run_runtime.py | 14e443151ba46db5b905560a3728c189f543639aa0e7f0f6173c9e9c7e5925dd |
+| runtime_test.py | 06f55562e7f314fef4ebed2baa52369dcaf2692c3c7ff18bc16de650f4715a2c |
+| test_build_modes.py | f88eaa83c4a855fbf3afc2a93b8c01d4bebdca835f45f0176778451d27014a51 |
+| test_inputs.py | 4486c489ca2b4bc2eade87d22f996fe0f9f4b8faf8d49d5f4c7775436e660889 |
+| verification-results.json | 042a16eac25b00e28840d1025832c91084b5c6ab3395904cda03a4dfb3b8939c |
