@@ -1,0 +1,97 @@
+{
+  "GO_NO_GO": "GO_OFFLINE_TRANSPORT_REVIEW; LIVE_RUN_REQUIRES_SEPARATE_AUTHORIZATION_AND_EXISTING_HOST_SESSION_POLICY_PREFLIGHT; NO_GO_IMAGE_BINDING",
+  "actual_application_test_launched": false,
+  "baseline_commit": "8ac8d182e288aed6f688dbad0ccd86bd22949862",
+  "docker_operations": 0,
+  "existing_tests": 644,
+  "failures": 0,
+  "files_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/README.md": "fe8fdde788c268d5e8994f738ff113d51a8e711e911fe09c2aa0129d9a521cd3",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_transport.py": "fb69c44a15977ca424a897665836de1047b28fd6df65e44fc8dd04023455833a",
+    "configs/dispatcharr-iptv/hardened-image-integration/test_runtime_transport.py": "b06ba16a3704ade9331925617475cb4d638c953f4f21172007c88819cf5d1b3d",
+    "configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json": "aa6747b538335f81644b05acf0ed8c8a155e5c6650cbbc44faa627b8bbdc766b"
+  },
+  "installed_target_mappings_unchanged": 80,
+  "live_detachment_policy_verified": false,
+  "new_transport_tests": 30,
+  "production_access": false,
+  "real_POSIX_fixture_tests": [
+    "detached launch parent SIGHUP",
+    "supervisor SIGKILL while worker finishes",
+    "abnormal worker exit",
+    "deadline TERM/KILL on own synthetic process group",
+    "concurrent duplicate launch refusal",
+    "status polling without file writes or process launch"
+  ],
+  "regression_logs": {
+    "design": {
+      "sha256": "919d9d43756cab07207662402d1d39466513b11181cf31df627b1b4123307137",
+      "tests": 28
+    },
+    "guard": {
+      "sha256": "6609598ec2ab99308376431c4f284770003bba5950cccc3a2dd5f85284348433",
+      "tests": 14
+    },
+    "harness": {
+      "sha256": "363e1644b37971dc97d0893b543102ecba25a57ad8d6c56750815a4987af3203",
+      "tests": 109
+    },
+    "native": {
+      "sha256": "ac5b3239cea17cc7e57f189854868b32469a3988b55e2d9e554fcf095176b59c",
+      "tests": 91
+    },
+    "native-isolated": {
+      "sha256": "9d70c25c3142248352a50a4ac830f32ea9258ff84a46caa488a96bf20ea52954",
+      "tests": 14
+    },
+    "permanent": {
+      "sha256": "ab3214c9efd2cd10afa7cf8b7bcba882ebfd01193fe26f803164deb7e65f241e",
+      "tests": 210
+    },
+    "permissions": {
+      "sha256": "cddb48396f4d046dee3013c1a44d20947118878e34bfb12ca6c4625451d6a6ac",
+      "tests": 40
+    },
+    "persistence": {
+      "sha256": "771a1a9d840f346bc664b124dbe45d79f8dec5d77bffcb585c15971b2f191f0b",
+      "tests": 26
+    },
+    "sockets": {
+      "additional_distinct_tests": 3,
+      "sha256": "595c33c7bd1624899c4c9412e433e5ebfe38d59fef7204975a08e8d11aa57e3f",
+      "tests": 38
+    },
+    "tools": {
+      "sha256": "897c489617b67265ce019cdef074a9574baac538b81da22c12c63c0cf5b15446",
+      "tests": 139
+    },
+    "trusted-final": {
+      "additional_distinct_tests": 0,
+      "sha256": "b7e42011660ac032c078f12a0096f50b600c38c5641726c0fccddce1bab4cd33",
+      "tests": 50
+    }
+  },
+  "runner_or_admission_changes": false,
+  "schema": 1,
+  "status": "OFFLINE_TRANSPORT_PASS",
+  "total_distinct_tests": 674,
+  "transport": {
+    "TERM_grace_seconds": 10,
+    "heartbeat_seconds": 5,
+    "private_directory_mode": "0700",
+    "private_file_mode": "0600",
+    "snapshot_JSON_max_bytes": 8388608,
+    "stale_status_seconds": 20,
+    "startup_reservation_max_seconds": 60,
+    "temporary_supervisor_seconds": 1200,
+    "terminal_read_only_query_budget_seconds": 30,
+    "transport_log_max_bytes": 8192
+  },
+  "unchanged_runner_source_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/inspect_image.py": "67549e04e19b0239229c878984f61a6b44f5e944dc1c4a5950f678e2b1872822",
+    "configs/dispatcharr-iptv/hardened-image-integration/run_runtime.py": "c5aeadca482d51d4beb61c8b9396fe613dad6ab00304ce3ee6404762ec7090e7",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_admission.py": "c7bec3b64de82afcfee3d85861480b542d93947943cd9c87802be9293573d314",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_diagnostics.py": "de5ed39ff92da1002e2f90507511d9dd3cfc878b8e5de55126fb30d467bae432",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_test.py": "56c68d1412984d7b0351bd0ecc4cc6c4862c6a32bccb0eccd412e9500fca6333"
+  }
+}

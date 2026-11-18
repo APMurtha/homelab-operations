@@ -150,3 +150,27 @@ Run sequencing and existing harness tests without Docker or real sleeping:
 python3 -B -m unittest discover \
   -s configs/dispatcharr-iptv/hardened-image-integration -p 'test_*.py' -v
 ```
+
+## Detached one-attempt transport (offline review only)
+
+`runtime_transport.py` provides `launch` and read-only `status` around the exact
+8ac8d18 runner. See [the transport plan](../../../docs/dispatcharr-runtime-test-transport.md)
+for reviewed staging prerequisites, launch/monitor commands and failure recovery.
+It was tested only with local synthetic runners; no application test was launched.
+
+Launch reserves `transport-attempt-<id>` exclusively and double-forks a temporary
+host supervisor independent of the SSH streams/session. The supervisor has a
+20-minute overall budget, a five-second heartbeat and scoped process-group timeout
+handling. The runner's verification, fixed 120-second stabilization, load/RAM/disk
+thresholds, 240-second runtime watchdog and Docker isolation are unchanged.
+
+Status never spawns work. It checks PID/start-time/boot identity and private
+receipts; terminal status uses bounded read-only Docker queries for the exact
+name, attempt label and known ID, plus original production/network/volume
+fingerprints. Missing or conflicting evidence returns `uncertain`. A lost SSH
+response must be followed only by status for the same ID, never another launch.
+
+No permanent daemon, service, timer, listener or remote installer is supplied.
+POSIX disconnect tests pass; existing host SSH/logind/cgroup teardown policy must
+still be checked read-only before a separately authorized live launch. Do not
+change that policy to make the transport work.
