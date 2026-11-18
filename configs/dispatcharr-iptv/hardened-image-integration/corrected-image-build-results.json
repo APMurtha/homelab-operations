@@ -1,0 +1,1344 @@
+{
+  "Dockerfile_sha256": "42dfee8640d31b41bca3db95009f8acd25f97c4909c0f707448c413a00a4dc25",
+  "GO_NO_GO": "GO_FOR_SEPARATELY_AUTHORIZED_ISOLATED_RUNTIME_TEST_REVIEW_ONLY; NO_DEPLOYMENT_OR_IMAGE_BINDING",
+  "SSH_account": "murth",
+  "SSH_host": "rivendell",
+  "application_runtime_tests": 0,
+  "approved_recipe_sha256": "009c0a70be6b41aadcb726de821feba8ec825d0b1be3c76fb266aee772c5d7d6",
+  "approved_source_commit": "8764cfdaff97b8d94102f03d9b367f1e1de6c317",
+  "automatic_retries": 0,
+  "base_image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+  "base_verification": {
+    "directory_metadata": {
+      "app": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/epg": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/m3u": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy/live_proxy": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy/live_proxy/input": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy/live_proxy/output": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy/live_proxy/output/ts": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/core": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      }
+    },
+    "elapsed_seconds": 78.42262816400034,
+    "export_exit_code": 0,
+    "hashes": {
+      "apps/epg/api_views.py": "df6ebcd84afe9237cb8ca2989d572170a2c8a325b85f8781d1d8becb217e2e4f",
+      "apps/epg/signals.py": "541c1157f01b794d05cf74b58eeaab521fa161273ce3430bb705955b94153e7a",
+      "apps/epg/tasks.py": "deb4792a39ed93c57da435ecc2a4fcdf5b4dad8f4e087d3afdb5d4f2b7932ff9",
+      "apps/m3u/api_views.py": "1299f6d86af5bd86ca04087f3ca70120ee1b04686c182ea0682560f0b7165d63",
+      "apps/m3u/signals.py": "854c44f190e57a262e474e0d24a237c004a557a036a7dc527f05b1381ecd4bd3",
+      "apps/m3u/tasks.py": "921e0fea7273c0ce7d1b1380a4f675718fbc5cdb3bb0d38005cdae2b73cce981",
+      "apps/proxy/live_proxy/input/buffer.py": "17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810",
+      "apps/proxy/live_proxy/input/manager.py": "ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf",
+      "apps/proxy/live_proxy/output/ts/generator.py": "db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b",
+      "apps/proxy/live_proxy/readiness.py": "fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b",
+      "core/api_urls.py": "aa780f16f02f7bcffe5fdf26aa3f658a0e91190e84377540c75ec73b1dbce81e",
+      "core/xtream_codes.py": "702aa9eae38cc3fce733a2f42e66f5b2b68458a22fd95d57ed0dc14a9231c76d"
+    },
+    "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+    "provider_runtime_state_absent": true,
+    "source_metadata": {
+      "apps/epg/api_views.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "df6ebcd84afe9237cb8ca2989d572170a2c8a325b85f8781d1d8becb217e2e4f",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/epg/signals.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "541c1157f01b794d05cf74b58eeaab521fa161273ce3430bb705955b94153e7a",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/epg/tasks.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "deb4792a39ed93c57da435ecc2a4fcdf5b4dad8f4e087d3afdb5d4f2b7932ff9",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/m3u/api_views.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "1299f6d86af5bd86ca04087f3ca70120ee1b04686c182ea0682560f0b7165d63",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/m3u/signals.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "854c44f190e57a262e474e0d24a237c004a557a036a7dc527f05b1381ecd4bd3",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/m3u/tasks.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "921e0fea7273c0ce7d1b1380a4f675718fbc5cdb3bb0d38005cdae2b73cce981",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/proxy/live_proxy/input/buffer.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/proxy/live_proxy/input/manager.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/proxy/live_proxy/output/ts/generator.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/proxy/live_proxy/readiness.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b",
+        "type": "file",
+        "uid": 0
+      },
+      "core/api_urls.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "aa780f16f02f7bcffe5fdf26aa3f658a0e91190e84377540c75ec73b1dbce81e",
+        "type": "file",
+        "uid": 0
+      },
+      "core/xtream_codes.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "702aa9eae38cc3fce733a2f42e66f5b2b68458a22fd95d57ed0dc14a9231c76d",
+        "type": "file",
+        "uid": 0
+      }
+    },
+    "verification": "streamed image layers; no containers or application execution",
+    "verified_epoch": 1794984234.0207944
+  },
+  "build": {
+    "capacity": {
+      "disk_available_bytes": 7896494080,
+      "epoch": 1794984481.78331,
+      "load": [
+        0.23193359375,
+        0.6865234375,
+        0.52734375
+      ],
+      "memory_available_bytes": 3558633472,
+      "passed": true
+    },
+    "command": [
+      "docker",
+      "-H",
+      "unix:///var/run/docker.sock",
+      "build",
+      "--pull=false",
+      "--network=none",
+      "--no-cache",
+      "--memory=512m",
+      "--memory-swap=512m",
+      "--cpu-period=100000",
+      "--cpu-quota=50000",
+      "--label",
+      "org.opencontainers.image.revision=8764cfdaff97b8d94102f03d9b367f1e1de6c317",
+      "--iidfile",
+      "/tmp/dispatcharr-build-corrected-8764cfd-b061c11e/image.id",
+      "-t",
+      "local/dispatcharr-native-hardening:corrected-8764cfd-b061c11e",
+      "/tmp/dispatcharr-build-corrected-8764cfd-b061c11e/context"
+    ],
+    "elapsed_seconds": 145.21970277299988,
+    "exit_code": 0,
+    "image_id": "sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439",
+    "state": "built"
+  },
+  "build_attempts": 1,
+  "context_files_sha256": {
+    "Dockerfile": "42dfee8640d31b41bca3db95009f8acd25f97c4909c0f707448c413a00a4dc25",
+    "app/apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
+    "app/apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
+    "app/apps/epg/tasks.py": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
+    "app/apps/m3u/api_views.py": "6c48c35abc821efbb428a74c832e7c8c018eef472d6f987505169cd83d902936",
+    "app/apps/m3u/signals.py": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
+    "app/apps/m3u/tasks.py": "75a6eb9276ec96b0e5de2ae2b1274a63ffe47ef89cc8d6c1620a89e049467fb1",
+    "app/core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
+    "app/core/provider_contract_hashes.json": "dc861e4615419508a43c16613f36bad1eca549980814fbbc51efb726566a4dd4",
+    "app/core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
+    "app/core/provider_policy.py": "2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639",
+    "app/core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+    "app/core/provider_security.py": "8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004",
+    "app/core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
+    "app/core/provider_transport.py": "4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39",
+    "app/core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
+  },
+  "docker_create_start_exec_verification_commands": 0,
+  "input_source_sha256": {
+    "apps/epg/api_views.py": "df6ebcd84afe9237cb8ca2989d572170a2c8a325b85f8781d1d8becb217e2e4f",
+    "apps/epg/signals.py": "541c1157f01b794d05cf74b58eeaab521fa161273ce3430bb705955b94153e7a",
+    "apps/epg/tasks.py": "deb4792a39ed93c57da435ecc2a4fcdf5b4dad8f4e087d3afdb5d4f2b7932ff9",
+    "apps/m3u/api_views.py": "1299f6d86af5bd86ca04087f3ca70120ee1b04686c182ea0682560f0b7165d63",
+    "apps/m3u/signals.py": "854c44f190e57a262e474e0d24a237c004a557a036a7dc527f05b1381ecd4bd3",
+    "apps/m3u/tasks.py": "921e0fea7273c0ce7d1b1380a4f675718fbc5cdb3bb0d38005cdae2b73cce981",
+    "core/api_urls.py": "aa780f16f02f7bcffe5fdf26aa3f658a0e91190e84377540c75ec73b1dbce81e",
+    "core/xtream_codes.py": "702aa9eae38cc3fce733a2f42e66f5b2b68458a22fd95d57ed0dc14a9231c76d"
+  },
+  "limitations": [
+    "Image modes/ownership and no ACL metadata establish DAC readability; application import was not run.",
+    "No provider private/public runtime state is baked into the image. No actual production policy was read or runtime policy mount tested.",
+    "No Django/Celery/API/XMLTV/EPG execution, provider authorization, AirVPN attestation or playback was performed.",
+    "Legacy builder internally created/removed metadata containers; no manual disposable verification container was created."
+  ],
+  "new_image_id": "sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439",
+  "offline_inspection_tests": {
+    "failures": 0,
+    "harness_log_sha256": "ad080ea14504da65b00a4dd715b2d90927bbf0109cf745751536df5d6de01344",
+    "harness_total": 125,
+    "new_tests": 9,
+    "standalone_log_sha256": "8df808815610c2c5314542d89399d2eaf4d3f7781a1d7ff90c9000499156ce05"
+  },
+  "old_image": "sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be",
+  "orchestration_source_sha256": "f6eabc9ecdb699bfa81a2a15580bf69248ba25ab2fe8b825d84a17aafa9c8068",
+  "preflight": {
+    "base": {
+      "config_sha256": "158d13dc9079d42bd4019529472e8967251af55a9ef1fd03e19195a24790ee9b",
+      "created": "2026-10-24T00:46:42Z",
+      "id": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+      "layers": [
+        "sha256:72813780dd6c49c1c616ef655c38a5c459bb0d972e740421525a6224935e0cd0",
+        "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+        "sha256:0f670f4a1b344d72ad8aca586df01dab7311542b49d8b41f8a87965ab95f16e2",
+        "sha256:443e593a78c2bcdbd5d39e56e2fe2a3b3404dd17b2ff04af703c49fa5efa9cff",
+        "sha256:351fa58c886219d15ee0fb3340592f41590b49cdfb16560011e6ad439f28d6ff",
+        "sha256:ec42237f29d5709aa5f50a593ad43bc15f64df9e4b52c281a52df17305a1c2c6",
+        "sha256:02463e55da70c5d5f87d681dbc8f7aa4c29c0cb0b71761fd0a19132b0e7a2ea2",
+        "sha256:48448147f8914aba15aa5dbc3d9d839d9f17a6e63e482c5e256e63ebf2c1ff8a",
+        "sha256:b0308597fcb7200fdd1e8ce6e87055e8218eff0658254782f4c74c760919fa90",
+        "sha256:2208537a4476efa86bf3ed5b00f8830e57ef3a26e45b94b7f106bfbd8b8d791e",
+        "sha256:f60cab1e117a9ef40eae85e0a76b89f0e6c18085fb4817453aa99443da012f37",
+        "sha256:8bd294b2ce36b6856cb68edee08fb1c2f63b02424464f1c5cc85d5a08572e814",
+        "sha256:cf369bd913f76df16706ab14bec117c956827ccbbf9ba9c98411177752e40d9f",
+        "sha256:fc3d7106351cc0070884aadc2586b6738684c329f30a0c204ea0ab1a0c370dcf",
+        "sha256:b4cf10b3cb94c4dd54fb807a22571c74991349ff469255b8f04111a8ba379864",
+        "sha256:86be81058be60406227ef4d0e62dbd305eadceb101232d76ad240d2224e0a453",
+        "sha256:530b571e07ff78a5b02215b7c5e71d87fe8558b0e72813f78ed4298f6f9d90a8",
+        "sha256:b72d2aaedd68c4400a876d31efe8d4f21bf0b6c52eae048954aa4f7babbfb5fb",
+        "sha256:61575c8be61d85eaef9cab5380e66165daeb0ddfe6920c20ff8fc396887ab3cc",
+        "sha256:06dc74d8806e54d605abb6a6e6c19b027587be7fa4436694fc882c38d4757cb6",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:49116854426b0b8a1c1f8fe89f25844066717c53cb8d1fda1c3d7d3216fe344e",
+        "sha256:1944e12821d5374d15e4d25dff16b36db43a67d2c54b2673eb40396b281b239b",
+        "sha256:c04a1203a6fefb6182d26d81050c447c64c9e343a5a11ad862e1674f7875cf2d",
+        "sha256:bcf935a1f1a0978c8f82a7e6f70507ed23b916f6da32d4ec809364df1a7791af",
+        "sha256:cde7ac63b77310501e6f0e97cbea1314ac88b956b416242eaccd1ad39a7418a2",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:c5131a9d2e6f6d788dee5870e176ea0268f9544ba81a6a39961d841294f0d8f7",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+      ],
+      "onbuild": null,
+      "revision": "e71bd6cd50931e1381f85521b7f914c47f9528b7",
+      "size": 4248387073,
+      "tags": [
+        "local/dispatcharr-readiness:phase4h-r2-a",
+        "local/dispatcharr-readiness:phase4h-r2-b"
+      ],
+      "volumes": null
+    },
+    "capacity": {
+      "disk_available_bytes": 7898841088,
+      "epoch": 1794984155.1219573,
+      "load": [
+        0.38818359375,
+        0.23974609375,
+        0.248046875
+      ],
+      "memory_available_bytes": 3541164032,
+      "passed": true
+    },
+    "old_image": {
+      "config_sha256": "87b7d87ab2084f1c35925ae618fee55cf8f6758b0f4321ff4aff0459dc393e81",
+      "created": "2026-11-18T02:04:37.281233096Z",
+      "id": "sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be",
+      "layers": [
+        "sha256:72813780dd6c49c1c616ef655c38a5c459bb0d972e740421525a6224935e0cd0",
+        "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+        "sha256:0f670f4a1b344d72ad8aca586df01dab7311542b49d8b41f8a87965ab95f16e2",
+        "sha256:443e593a78c2bcdbd5d39e56e2fe2a3b3404dd17b2ff04af703c49fa5efa9cff",
+        "sha256:351fa58c886219d15ee0fb3340592f41590b49cdfb16560011e6ad439f28d6ff",
+        "sha256:ec42237f29d5709aa5f50a593ad43bc15f64df9e4b52c281a52df17305a1c2c6",
+        "sha256:02463e55da70c5d5f87d681dbc8f7aa4c29c0cb0b71761fd0a19132b0e7a2ea2",
+        "sha256:48448147f8914aba15aa5dbc3d9d839d9f17a6e63e482c5e256e63ebf2c1ff8a",
+        "sha256:b0308597fcb7200fdd1e8ce6e87055e8218eff0658254782f4c74c760919fa90",
+        "sha256:2208537a4476efa86bf3ed5b00f8830e57ef3a26e45b94b7f106bfbd8b8d791e",
+        "sha256:f60cab1e117a9ef40eae85e0a76b89f0e6c18085fb4817453aa99443da012f37",
+        "sha256:8bd294b2ce36b6856cb68edee08fb1c2f63b02424464f1c5cc85d5a08572e814",
+        "sha256:cf369bd913f76df16706ab14bec117c956827ccbbf9ba9c98411177752e40d9f",
+        "sha256:fc3d7106351cc0070884aadc2586b6738684c329f30a0c204ea0ab1a0c370dcf",
+        "sha256:b4cf10b3cb94c4dd54fb807a22571c74991349ff469255b8f04111a8ba379864",
+        "sha256:86be81058be60406227ef4d0e62dbd305eadceb101232d76ad240d2224e0a453",
+        "sha256:530b571e07ff78a5b02215b7c5e71d87fe8558b0e72813f78ed4298f6f9d90a8",
+        "sha256:b72d2aaedd68c4400a876d31efe8d4f21bf0b6c52eae048954aa4f7babbfb5fb",
+        "sha256:61575c8be61d85eaef9cab5380e66165daeb0ddfe6920c20ff8fc396887ab3cc",
+        "sha256:06dc74d8806e54d605abb6a6e6c19b027587be7fa4436694fc882c38d4757cb6",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:49116854426b0b8a1c1f8fe89f25844066717c53cb8d1fda1c3d7d3216fe344e",
+        "sha256:1944e12821d5374d15e4d25dff16b36db43a67d2c54b2673eb40396b281b239b",
+        "sha256:c04a1203a6fefb6182d26d81050c447c64c9e343a5a11ad862e1674f7875cf2d",
+        "sha256:bcf935a1f1a0978c8f82a7e6f70507ed23b916f6da32d4ec809364df1a7791af",
+        "sha256:cde7ac63b77310501e6f0e97cbea1314ac88b956b416242eaccd1ad39a7418a2",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:c5131a9d2e6f6d788dee5870e176ea0268f9544ba81a6a39961d841294f0d8f7",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:9bc877c3fec116790b3f6f60eca33858e426a2fb86481d35b4cc3d37984a9dae"
+      ],
+      "onbuild": null,
+      "revision": "0b8ac7d326a89c9607654d426eb0270f65e41136",
+      "size": 4249031329,
+      "tags": [
+        "local/dispatcharr-native-hardening:policy-lifecycle-review-v2"
+      ],
+      "volumes": null
+    },
+    "snapshot": {
+      "containers": {
+        "audiobookshelf": {
+          "configuration_sha256": "aca96b6d340f540426b07306bbf51ce6eb6663b66ed021b01b17d51146f3dacb",
+          "health": null,
+          "id": "e73dc188981868b84ce3aee6a74e0c8ba06a6e30ce754532d6e60a693c8b2b81",
+          "image": "sha256:180acad33d69c99ed208676465d8edcb268fa46967735579a7810859885b1a8e",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.224299034Z",
+          "status": "running"
+        },
+        "audiobookshelf-trial": {
+          "configuration_sha256": "b5ab16caafab9069a6ce375eb58506eaa6482efa3c97b8f91c38049bf11d366a",
+          "health": null,
+          "id": "118ffa920acdad0cd5349d83169576b094c8bf43fc92d684070e2bd9dc1a40b1",
+          "image": "sha256:180acad33d69c99ed208676465d8edcb268fa46967735579a7810859885b1a8e",
+          "restarts": 0,
+          "started": "2026-11-01T20:44:54.94432778Z",
+          "status": "exited"
+        },
+        "bazarr": {
+          "configuration_sha256": "542cef5d90c0d2ff6d3442a2c186d5a91f638eac5a18c595f63246bf528d97c2",
+          "health": null,
+          "id": "5bf744ab82c6b753279f0337655ab5f81f1cec9fc66178e781f7623d15acaede",
+          "image": "sha256:84b6f05a7a4194fafe5a0bec062d32f6ae9ea74db33d43d678cb9a3191f31c24",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.401723516Z",
+          "status": "running"
+        },
+        "chaptarr": {
+          "configuration_sha256": "cd68b64214ddb8c16f70beb72719b02dbbfbefd0a7ade1d778b5bb9747a678e4",
+          "health": null,
+          "id": "745612b8baafb0a9114e41acba58c0957b2db43cc6d37080542849707e42b9ab",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.872079651Z",
+          "status": "running"
+        },
+        "chaptarr-import-review": {
+          "configuration_sha256": "078b11d370b5fa432c64e108045b7adb9a001746c4eeed2454a1b87c0fca8263",
+          "health": null,
+          "id": "2a7b362e56d2886606e231bfba1e0fb490dbcbff63674eae99463a4065e2b279",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T00:56:11.626114678Z",
+          "status": "exited"
+        },
+        "chaptarr-restore-check": {
+          "configuration_sha256": "97f2ed0926dbde8ebb0785ee53c425c7647a1d52a0093e81e533fc168f386512",
+          "health": null,
+          "id": "b0da11b391a7ece1e042fae1284d76f9503fcec37438440ab474edff5164d0ea",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T05:30:12.593957567Z",
+          "status": "exited"
+        },
+        "chaptarr-search-check": {
+          "configuration_sha256": "cde7342af2074b566521063ed7fd4d81caf652f16fcb2d2d096364e37426c026",
+          "health": null,
+          "id": "5e3c0448fc95a95489eace99c307f238c797a258ffeab6fc0470bf5285b8a8dd",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T21:57:31.776712122Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-batch": {
+          "configuration_sha256": "32cda3f85bbc6ba224548a97f96502562a3dbcfa6d4529bd9ea50121cc89885c",
+          "health": null,
+          "id": "6dc80f64f902f2bda42e291c129002e2450945a541e150ca1338f12ca959fd0a",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T02:10:49.239791631Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-full": {
+          "configuration_sha256": "00cd9469cce50ff433fbb2fbee7c9d1ec2af2dab6bd1b7dc04442aa982d75ae9",
+          "health": null,
+          "id": "02b92bf90c67632f1b9a7f2d0d8b78581fece7a97d06e4e92b0a1536958423b7",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T04:14:43.396806278Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-rebuild-check": {
+          "configuration_sha256": "73e3fa9d86a531a8ec32c9a894744d2ea8bc2caedcbfde54682c3111acbc3d5a",
+          "health": null,
+          "id": "5d495a0dfd6923a913fcbfdcdfdcd1447b17da02f4ae4cd087993a554cd2c549",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T05:13:02.464690376Z",
+          "status": "exited"
+        },
+        "chaptarr-trial": {
+          "configuration_sha256": "4a97a0b4f8fe49a00cca7c6223ede69e5e19369a1acac3e3236f97085bda4a76",
+          "health": null,
+          "id": "fa01bb4227669a43059a5b2dfebcf8e0641210647755d57b312246b0a68b0a7a",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-01T20:54:32.894807834Z",
+          "status": "exited"
+        },
+        "chaptarr-west-regression": {
+          "configuration_sha256": "c56c38dc174a1494857fc260013f2c350434aeda5f0bae11bbdfeb240d14a9d9",
+          "health": null,
+          "id": "ef1eb6151ad366dba319b29a9b30102ad11c19676e090810457a974cceea1e89",
+          "image": "sha256:b182902dc2a7a3f8df6b1774cb4c2aacbb49111f698f9ac15608b36f94079508",
+          "restarts": 0,
+          "started": "2026-11-02T01:41:33.027640983Z",
+          "status": "exited"
+        },
+        "chaptarr-west-regression-v2": {
+          "configuration_sha256": "cc6e0329ea3fa259382a1fe047933848b5063ccd076f1b8c40a1b3457ca4adf0",
+          "health": null,
+          "id": "a1dbf8bbc83f6dec4a70467a5fff8861719ef457b46c51a6a419834fe385dc6c",
+          "image": "sha256:b182902dc2a7a3f8df6b1774cb4c2aacbb49111f698f9ac15608b36f94079508",
+          "restarts": 0,
+          "started": "2026-11-02T01:47:48.830279316Z",
+          "status": "exited"
+        },
+        "deunhealth": {
+          "configuration_sha256": "25663743a522d547c4db3a3e8af091e489246ae966aa5bbcf694cc0a54255a5f",
+          "health": "healthy",
+          "id": "4494379057b5b50612529f9ccad48ee211e8f46db2766b391a276a60b1c28e17",
+          "image": "sha256:db1e4fcd3aceeb0da34a83f7a8a5432df586e6d0388ddb6ad8dd7b479e4aa25d",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.103179554Z",
+          "status": "running"
+        },
+        "dispatcharr": {
+          "configuration_sha256": "8b0d1ddf62d3d1c67b5b82b9e0de2c5c8514c722e988e338f7fff3a88f2cd1be",
+          "health": "healthy",
+          "id": "7dbfca3d171deb05638fcea6c21a7719ff07fd9d46f2afacc3485617c094c3be",
+          "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:15.134262504Z",
+          "status": "running"
+        },
+        "gluetun": {
+          "configuration_sha256": "c7df9eccf807238f161f20258ab31379c2ab85bcadceb52287f5a2b70cfa8229",
+          "health": "healthy",
+          "id": "1d1c69791f681528ed021bbd9af1ca15d0461602c79b8eb17298ef1f3a04ef7b",
+          "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.124486724Z",
+          "status": "running"
+        },
+        "jellyfin": {
+          "configuration_sha256": "ffc0f9acb8f959637893770a3223685cfb2bd3f4ff3fde80729b3ccf2ec3fa8c",
+          "health": "healthy",
+          "id": "6798247b9099bc791892f7118f598aa48d0b7c21ecfc616bbbebfee43c22763b",
+          "image": "sha256:baba630419915985442f315f08b0cf46d9f4c8a0cc4bd38e94a6d35751dd5ef5",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.260706697Z",
+          "status": "running"
+        },
+        "lidarr": {
+          "configuration_sha256": "a474d2526972bd9246e2a2ea428d1f13e73226f96478693e38ba6e52234633da",
+          "health": null,
+          "id": "2e677d5112ba8dcfff62c3843318ea52eb46416861f4b919a687c4c7646b1328",
+          "image": "sha256:8ab0fd370b604ae034d9a9c261a9d8d873bece33d9736852e7ce4f3566e4a35d",
+          "restarts": 0,
+          "started": "2026-10-20T22:51:54.249627307Z",
+          "status": "exited"
+        },
+        "n8n": {
+          "configuration_sha256": "2f9b6b251577fb1072468014bb7aeeb552602df9d5f175a498d6d31269cee5e4",
+          "health": null,
+          "id": "2a4bdfbf8a82339f2c44023f704ba9e9aa2de15579c8e7e12252985ade4cfbbb",
+          "image": "sha256:a293b89bac876872a0c1ef0fbbb7ce056aa2d215f62917acf032ecb8010199af",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.314322466Z",
+          "status": "running"
+        },
+        "nzbget": {
+          "configuration_sha256": "1c8f38521c255ae8b11dae18986c39f79cac7ce3b79973d7e7614c3be3e09716",
+          "health": null,
+          "id": "1c6fa534fe68e4b71c9c26aa3c5f48dc13e4fc0bab967022dfa8755c69514354",
+          "image": "sha256:24951ff9689ddbc0843e309ed16db74409a077541a8aeaecca606ae3565768f2",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.280703714Z",
+          "status": "running"
+        },
+        "pairdrop": {
+          "configuration_sha256": "78d692f260c9f3942fb1ce98ae6e80ac27db1bdf5680a4a0a5b16da260b78c05",
+          "health": null,
+          "id": "041b220217e2328e70f8716bfc6ba85ea72fa97e3e35c2e1e7b77d2ddfd44bc2",
+          "image": "sha256:830bd38a0bff0befbb5353c44a30d366f8ed692e68318a03939041e624b30c58",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.19244424Z",
+          "status": "running"
+        },
+        "profilarr": {
+          "configuration_sha256": "20833fc35c476cd5005840b1b62ca420459f3e7dc651a78a763a29eb3e9afa8b",
+          "health": "healthy",
+          "id": "a3ae6b9d9451b277adde23cff8a1ba6e6a7bf478c046bb40934d0c8b51fa4372",
+          "image": "sha256:ddcdd0f340043c2ec0a85ca74b9a6be9be42b1c0288c75fc36a26a43f695860b",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.294765911Z",
+          "status": "running"
+        },
+        "profilarr-parser": {
+          "configuration_sha256": "bf91f1dc12b16e180c28173b8e08e3632a77ea0927d005dc32a2eb50f4d6e8f1",
+          "health": "starting",
+          "id": "aaf7f660a136487042f3e4aae94d633702af4d0db466becbc950e1e067696a0d",
+          "image": "sha256:3cd3f8c4979ee66304a518462cc6c5b59825bae6b25e7dfa51b30178b9265df7",
+          "restarts": 0,
+          "started": "2026-10-20T22:50:07.974132314Z",
+          "status": "exited"
+        },
+        "prowlarr": {
+          "configuration_sha256": "22167536d628d2b5e4ab2d7715b9764512caaee02fa3f63fb06d8e5ba72d29fb",
+          "health": null,
+          "id": "c483390b08bab2e18d26a8977582d01dd52d8dfbc587e27757260ad58d4119b4",
+          "image": "sha256:c7502a75b021d964481c129c84590b9cbc40f83aadd4e553f173871bc0deaa3c",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.117978599Z",
+          "status": "running"
+        },
+        "qbittorrent": {
+          "configuration_sha256": "44119d65e26be4c01d1d2016549ffd039651b6de2fafa1df3a6669c2ac58c658",
+          "health": "healthy",
+          "id": "512885aff720a4582e3ac02550a8fe58f620a75df5f9ccc336e0c7744cf150db",
+          "image": "sha256:2be038f3421f60f62e8e4bf201f66f385b68e4fbc9ed3ab79051069ea22e2650",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.313296914Z",
+          "status": "running"
+        },
+        "radarr": {
+          "configuration_sha256": "34c680fa59c2da595e4f92e40666c95faeebb5f3168084c2a45001108b466a36",
+          "health": null,
+          "id": "d721f472d63be4d6187d35ee1a9bcdd1bf250dd50ad847032aae6c4e11d85f59",
+          "image": "sha256:fe051413dfd91b383ba04910552e83fb0306895fefee275c48dafe7bb90807dc",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.278303434Z",
+          "status": "running"
+        },
+        "rivendell-iptv-gateway": {
+          "configuration_sha256": "6e8909c4d8cb00f8d3fac0c61c42a67694a755a5ddb813107560d40c54f9a63e",
+          "health": "healthy",
+          "id": "448ceeb80a51e6660a04cda3449a140052c2cb0984040d727824894413606199",
+          "image": "sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:52.932663045Z",
+          "status": "running"
+        },
+        "rivendell-iptv-relay": {
+          "configuration_sha256": "5644a36879499badd036c989926439e1c42699304e524c120b516270b7e40918",
+          "health": "healthy",
+          "id": "3aa41213fdc8cacb88f18ce20136bec082e55490baf58d79f2e01d55ba85be27",
+          "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:14.956545338Z",
+          "status": "running"
+        },
+        "rivendell-iptv-vpn": {
+          "configuration_sha256": "24e276151455d9e35e4ad260a88f82639e551ea424d8755f20ce3ac58190c68c",
+          "health": "healthy",
+          "id": "1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e",
+          "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:08.022164729Z",
+          "status": "running"
+        },
+        "seedboxapi": {
+          "configuration_sha256": "756427cb67d62bf7a36c34db483c67d49380035e72b8dce3595265f0b033036a",
+          "health": null,
+          "id": "752af963b61000c253c8a8d1734c84d71272499e06f95987db830788b1429dbf",
+          "image": "sha256:4712ede49e8c17ca1aee4cf61a145e249ddbb9498390b469c64b0b3086628259",
+          "restarts": 2,
+          "started": "2026-11-16T20:40:00.266906105Z",
+          "status": "running"
+        },
+        "seerr": {
+          "configuration_sha256": "6bcdcbb31e76b16d3338f5ed18bc9a8442ef8262b68dc977d152c0e04778fbb1",
+          "health": null,
+          "id": "67133cc6e4fc70b66c3beb3b19c55cdb111753d2dc5802f29657df6e24daaae2",
+          "image": "sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.303752701Z",
+          "status": "running"
+        },
+        "shelfarr": {
+          "configuration_sha256": "ee2f8d0e53d3c6927b186507d2d89fd09ecfb56fd074c2fe17269cac92c98899",
+          "health": "unhealthy",
+          "id": "f7a4f452b947478301ca5e1bf8925c2f3c0031f2f76fe5bc2bdacc9d70a79be9",
+          "image": "sha256:942ba37d51b4ed7fe08a25a58d2f69e354bd5baa3c3b7fa6655650c7cf57d9c2",
+          "restarts": 0,
+          "started": "2026-10-20T22:52:14.18489768Z",
+          "status": "exited"
+        },
+        "sonarr": {
+          "configuration_sha256": "d2b350570b5cb723d7e132d21436b0aa96c14f82d68a808faff9d7eb26d8301d",
+          "health": null,
+          "id": "f438ff1017bbf08e157da6061dc8d6436e77be0b04b7d7c7efbca72e442fd51c",
+          "image": "sha256:82172b363f9eddc02aca544f880a044f2ceb9aaf190bc87e4454e2f705eb91d0",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:35.993518009Z",
+          "status": "running"
+        }
+      },
+      "networks_sha256": "51839910ef1955c6811a500972dea224445df3b93c5d4dc9a5afaafe49278192",
+      "volumes_sha256": "62bba3105a84730f80f6a2027aab8ef6bda044be99c2d5375c5f8e98b9d2248a"
+    },
+    "transport": {
+      "actual_UID1000_traversal_denied": true,
+      "gid": 0,
+      "mode": "0700",
+      "uid": 0
+    }
+  },
+  "private_receipts_sha256": {
+    "acceptance.json": "98b1db49b21c638a8376028b217213f3b584576e81d627e0f1f1de9b4eaccebb",
+    "base-verification.json": "9179f5a63e2c9d345288c3314414e7233438a32525e4fae9e3fa79ea89c85fba",
+    "build-capacity.json": "f362f5ffb0f03bd55fd7449c7f43fa969772ac8a5b9b7d9c5c273fecaf99a10c",
+    "build-intent.json": "ed0ee9b970bb9722adcc2d31da677ede3633e10634c8fecd86c197427f31e762",
+    "build-result.json": "f6a0192c9a21fdd8ae0664a1ed706466fe750ed5e8fb7aa0bb8c6376381de1aa",
+    "image-verification.json": "cf4459fdd1d0595d008b241838b00b7c10f6c045c09b39e5b3d6e576a46ffa0c",
+    "preflight-complete.json": "55da19b100bca0560826392e0e6894c2d6b6036e39f783e3d3c64ebf7c53d1bb",
+    "preflight.json": "7c8a9354b69fcbb8aec84a8e322352c2a68ba20699264e710bf8dce9d882bd6a"
+  },
+  "production_acceptance": {
+    "build_log_sha256": "6a555768beebb9688999a7b5e641b47ce5da67dcc1a3674dce8f34e1d82ab39b",
+    "image": {
+      "config_sha256": "edab0a98f55abcf5836f204e2b07f57187a46dbe7c0d645ab086a9042740e204",
+      "created": "2026-11-18T06:50:26.991110821Z",
+      "id": "sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439",
+      "layers": [
+        "sha256:72813780dd6c49c1c616ef655c38a5c459bb0d972e740421525a6224935e0cd0",
+        "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+        "sha256:0f670f4a1b344d72ad8aca586df01dab7311542b49d8b41f8a87965ab95f16e2",
+        "sha256:443e593a78c2bcdbd5d39e56e2fe2a3b3404dd17b2ff04af703c49fa5efa9cff",
+        "sha256:351fa58c886219d15ee0fb3340592f41590b49cdfb16560011e6ad439f28d6ff",
+        "sha256:ec42237f29d5709aa5f50a593ad43bc15f64df9e4b52c281a52df17305a1c2c6",
+        "sha256:02463e55da70c5d5f87d681dbc8f7aa4c29c0cb0b71761fd0a19132b0e7a2ea2",
+        "sha256:48448147f8914aba15aa5dbc3d9d839d9f17a6e63e482c5e256e63ebf2c1ff8a",
+        "sha256:b0308597fcb7200fdd1e8ce6e87055e8218eff0658254782f4c74c760919fa90",
+        "sha256:2208537a4476efa86bf3ed5b00f8830e57ef3a26e45b94b7f106bfbd8b8d791e",
+        "sha256:f60cab1e117a9ef40eae85e0a76b89f0e6c18085fb4817453aa99443da012f37",
+        "sha256:8bd294b2ce36b6856cb68edee08fb1c2f63b02424464f1c5cc85d5a08572e814",
+        "sha256:cf369bd913f76df16706ab14bec117c956827ccbbf9ba9c98411177752e40d9f",
+        "sha256:fc3d7106351cc0070884aadc2586b6738684c329f30a0c204ea0ab1a0c370dcf",
+        "sha256:b4cf10b3cb94c4dd54fb807a22571c74991349ff469255b8f04111a8ba379864",
+        "sha256:86be81058be60406227ef4d0e62dbd305eadceb101232d76ad240d2224e0a453",
+        "sha256:530b571e07ff78a5b02215b7c5e71d87fe8558b0e72813f78ed4298f6f9d90a8",
+        "sha256:b72d2aaedd68c4400a876d31efe8d4f21bf0b6c52eae048954aa4f7babbfb5fb",
+        "sha256:61575c8be61d85eaef9cab5380e66165daeb0ddfe6920c20ff8fc396887ab3cc",
+        "sha256:06dc74d8806e54d605abb6a6e6c19b027587be7fa4436694fc882c38d4757cb6",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:49116854426b0b8a1c1f8fe89f25844066717c53cb8d1fda1c3d7d3216fe344e",
+        "sha256:1944e12821d5374d15e4d25dff16b36db43a67d2c54b2673eb40396b281b239b",
+        "sha256:c04a1203a6fefb6182d26d81050c447c64c9e343a5a11ad862e1674f7875cf2d",
+        "sha256:bcf935a1f1a0978c8f82a7e6f70507ed23b916f6da32d4ec809364df1a7791af",
+        "sha256:cde7ac63b77310501e6f0e97cbea1314ac88b956b416242eaccd1ad39a7418a2",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:c5131a9d2e6f6d788dee5870e176ea0268f9544ba81a6a39961d841294f0d8f7",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:190bba14c9ac68db23b2eb359a5e3d465b078e9f06876033cb38056b8accec2e"
+      ],
+      "onbuild": null,
+      "revision": "8764cfdaff97b8d94102f03d9b367f1e1de6c317",
+      "size": 4249036311,
+      "tags": [
+        "local/dispatcharr-native-hardening:corrected-8764cfd-b061c11e"
+      ],
+      "volumes": null
+    },
+    "old_image_preserved": true,
+    "postflight": {
+      "containers": {
+        "audiobookshelf": {
+          "configuration_sha256": "aca96b6d340f540426b07306bbf51ce6eb6663b66ed021b01b17d51146f3dacb",
+          "health": null,
+          "id": "e73dc188981868b84ce3aee6a74e0c8ba06a6e30ce754532d6e60a693c8b2b81",
+          "image": "sha256:180acad33d69c99ed208676465d8edcb268fa46967735579a7810859885b1a8e",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.224299034Z",
+          "status": "running"
+        },
+        "audiobookshelf-trial": {
+          "configuration_sha256": "b5ab16caafab9069a6ce375eb58506eaa6482efa3c97b8f91c38049bf11d366a",
+          "health": null,
+          "id": "118ffa920acdad0cd5349d83169576b094c8bf43fc92d684070e2bd9dc1a40b1",
+          "image": "sha256:180acad33d69c99ed208676465d8edcb268fa46967735579a7810859885b1a8e",
+          "restarts": 0,
+          "started": "2026-11-01T20:44:54.94432778Z",
+          "status": "exited"
+        },
+        "bazarr": {
+          "configuration_sha256": "542cef5d90c0d2ff6d3442a2c186d5a91f638eac5a18c595f63246bf528d97c2",
+          "health": null,
+          "id": "5bf744ab82c6b753279f0337655ab5f81f1cec9fc66178e781f7623d15acaede",
+          "image": "sha256:84b6f05a7a4194fafe5a0bec062d32f6ae9ea74db33d43d678cb9a3191f31c24",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.401723516Z",
+          "status": "running"
+        },
+        "chaptarr": {
+          "configuration_sha256": "cd68b64214ddb8c16f70beb72719b02dbbfbefd0a7ade1d778b5bb9747a678e4",
+          "health": null,
+          "id": "745612b8baafb0a9114e41acba58c0957b2db43cc6d37080542849707e42b9ab",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.872079651Z",
+          "status": "running"
+        },
+        "chaptarr-import-review": {
+          "configuration_sha256": "078b11d370b5fa432c64e108045b7adb9a001746c4eeed2454a1b87c0fca8263",
+          "health": null,
+          "id": "2a7b362e56d2886606e231bfba1e0fb490dbcbff63674eae99463a4065e2b279",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T00:56:11.626114678Z",
+          "status": "exited"
+        },
+        "chaptarr-restore-check": {
+          "configuration_sha256": "97f2ed0926dbde8ebb0785ee53c425c7647a1d52a0093e81e533fc168f386512",
+          "health": null,
+          "id": "b0da11b391a7ece1e042fae1284d76f9503fcec37438440ab474edff5164d0ea",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T05:30:12.593957567Z",
+          "status": "exited"
+        },
+        "chaptarr-search-check": {
+          "configuration_sha256": "cde7342af2074b566521063ed7fd4d81caf652f16fcb2d2d096364e37426c026",
+          "health": null,
+          "id": "5e3c0448fc95a95489eace99c307f238c797a258ffeab6fc0470bf5285b8a8dd",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T21:57:31.776712122Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-batch": {
+          "configuration_sha256": "32cda3f85bbc6ba224548a97f96502562a3dbcfa6d4529bd9ea50121cc89885c",
+          "health": null,
+          "id": "6dc80f64f902f2bda42e291c129002e2450945a541e150ca1338f12ca959fd0a",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T02:10:49.239791631Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-full": {
+          "configuration_sha256": "00cd9469cce50ff433fbb2fbee7c9d1ec2af2dab6bd1b7dc04442aa982d75ae9",
+          "health": null,
+          "id": "02b92bf90c67632f1b9a7f2d0d8b78581fece7a97d06e4e92b0a1536958423b7",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T04:14:43.396806278Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-rebuild-check": {
+          "configuration_sha256": "73e3fa9d86a531a8ec32c9a894744d2ea8bc2caedcbfde54682c3111acbc3d5a",
+          "health": null,
+          "id": "5d495a0dfd6923a913fcbfdcdfdcd1447b17da02f4ae4cd087993a554cd2c549",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T05:13:02.464690376Z",
+          "status": "exited"
+        },
+        "chaptarr-trial": {
+          "configuration_sha256": "4a97a0b4f8fe49a00cca7c6223ede69e5e19369a1acac3e3236f97085bda4a76",
+          "health": null,
+          "id": "fa01bb4227669a43059a5b2dfebcf8e0641210647755d57b312246b0a68b0a7a",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-01T20:54:32.894807834Z",
+          "status": "exited"
+        },
+        "chaptarr-west-regression": {
+          "configuration_sha256": "c56c38dc174a1494857fc260013f2c350434aeda5f0bae11bbdfeb240d14a9d9",
+          "health": null,
+          "id": "ef1eb6151ad366dba319b29a9b30102ad11c19676e090810457a974cceea1e89",
+          "image": "sha256:b182902dc2a7a3f8df6b1774cb4c2aacbb49111f698f9ac15608b36f94079508",
+          "restarts": 0,
+          "started": "2026-11-02T01:41:33.027640983Z",
+          "status": "exited"
+        },
+        "chaptarr-west-regression-v2": {
+          "configuration_sha256": "cc6e0329ea3fa259382a1fe047933848b5063ccd076f1b8c40a1b3457ca4adf0",
+          "health": null,
+          "id": "a1dbf8bbc83f6dec4a70467a5fff8861719ef457b46c51a6a419834fe385dc6c",
+          "image": "sha256:b182902dc2a7a3f8df6b1774cb4c2aacbb49111f698f9ac15608b36f94079508",
+          "restarts": 0,
+          "started": "2026-11-02T01:47:48.830279316Z",
+          "status": "exited"
+        },
+        "deunhealth": {
+          "configuration_sha256": "25663743a522d547c4db3a3e8af091e489246ae966aa5bbcf694cc0a54255a5f",
+          "health": "healthy",
+          "id": "4494379057b5b50612529f9ccad48ee211e8f46db2766b391a276a60b1c28e17",
+          "image": "sha256:db1e4fcd3aceeb0da34a83f7a8a5432df586e6d0388ddb6ad8dd7b479e4aa25d",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.103179554Z",
+          "status": "running"
+        },
+        "dispatcharr": {
+          "configuration_sha256": "8b0d1ddf62d3d1c67b5b82b9e0de2c5c8514c722e988e338f7fff3a88f2cd1be",
+          "health": "healthy",
+          "id": "7dbfca3d171deb05638fcea6c21a7719ff07fd9d46f2afacc3485617c094c3be",
+          "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:15.134262504Z",
+          "status": "running"
+        },
+        "gluetun": {
+          "configuration_sha256": "c7df9eccf807238f161f20258ab31379c2ab85bcadceb52287f5a2b70cfa8229",
+          "health": "healthy",
+          "id": "1d1c69791f681528ed021bbd9af1ca15d0461602c79b8eb17298ef1f3a04ef7b",
+          "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.124486724Z",
+          "status": "running"
+        },
+        "jellyfin": {
+          "configuration_sha256": "ffc0f9acb8f959637893770a3223685cfb2bd3f4ff3fde80729b3ccf2ec3fa8c",
+          "health": "healthy",
+          "id": "6798247b9099bc791892f7118f598aa48d0b7c21ecfc616bbbebfee43c22763b",
+          "image": "sha256:baba630419915985442f315f08b0cf46d9f4c8a0cc4bd38e94a6d35751dd5ef5",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.260706697Z",
+          "status": "running"
+        },
+        "lidarr": {
+          "configuration_sha256": "a474d2526972bd9246e2a2ea428d1f13e73226f96478693e38ba6e52234633da",
+          "health": null,
+          "id": "2e677d5112ba8dcfff62c3843318ea52eb46416861f4b919a687c4c7646b1328",
+          "image": "sha256:8ab0fd370b604ae034d9a9c261a9d8d873bece33d9736852e7ce4f3566e4a35d",
+          "restarts": 0,
+          "started": "2026-10-20T22:51:54.249627307Z",
+          "status": "exited"
+        },
+        "n8n": {
+          "configuration_sha256": "2f9b6b251577fb1072468014bb7aeeb552602df9d5f175a498d6d31269cee5e4",
+          "health": null,
+          "id": "2a4bdfbf8a82339f2c44023f704ba9e9aa2de15579c8e7e12252985ade4cfbbb",
+          "image": "sha256:a293b89bac876872a0c1ef0fbbb7ce056aa2d215f62917acf032ecb8010199af",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.314322466Z",
+          "status": "running"
+        },
+        "nzbget": {
+          "configuration_sha256": "1c8f38521c255ae8b11dae18986c39f79cac7ce3b79973d7e7614c3be3e09716",
+          "health": null,
+          "id": "1c6fa534fe68e4b71c9c26aa3c5f48dc13e4fc0bab967022dfa8755c69514354",
+          "image": "sha256:24951ff9689ddbc0843e309ed16db74409a077541a8aeaecca606ae3565768f2",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.280703714Z",
+          "status": "running"
+        },
+        "pairdrop": {
+          "configuration_sha256": "78d692f260c9f3942fb1ce98ae6e80ac27db1bdf5680a4a0a5b16da260b78c05",
+          "health": null,
+          "id": "041b220217e2328e70f8716bfc6ba85ea72fa97e3e35c2e1e7b77d2ddfd44bc2",
+          "image": "sha256:830bd38a0bff0befbb5353c44a30d366f8ed692e68318a03939041e624b30c58",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.19244424Z",
+          "status": "running"
+        },
+        "profilarr": {
+          "configuration_sha256": "20833fc35c476cd5005840b1b62ca420459f3e7dc651a78a763a29eb3e9afa8b",
+          "health": "healthy",
+          "id": "a3ae6b9d9451b277adde23cff8a1ba6e6a7bf478c046bb40934d0c8b51fa4372",
+          "image": "sha256:ddcdd0f340043c2ec0a85ca74b9a6be9be42b1c0288c75fc36a26a43f695860b",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.294765911Z",
+          "status": "running"
+        },
+        "profilarr-parser": {
+          "configuration_sha256": "bf91f1dc12b16e180c28173b8e08e3632a77ea0927d005dc32a2eb50f4d6e8f1",
+          "health": "starting",
+          "id": "aaf7f660a136487042f3e4aae94d633702af4d0db466becbc950e1e067696a0d",
+          "image": "sha256:3cd3f8c4979ee66304a518462cc6c5b59825bae6b25e7dfa51b30178b9265df7",
+          "restarts": 0,
+          "started": "2026-10-20T22:50:07.974132314Z",
+          "status": "exited"
+        },
+        "prowlarr": {
+          "configuration_sha256": "22167536d628d2b5e4ab2d7715b9764512caaee02fa3f63fb06d8e5ba72d29fb",
+          "health": null,
+          "id": "c483390b08bab2e18d26a8977582d01dd52d8dfbc587e27757260ad58d4119b4",
+          "image": "sha256:c7502a75b021d964481c129c84590b9cbc40f83aadd4e553f173871bc0deaa3c",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.117978599Z",
+          "status": "running"
+        },
+        "qbittorrent": {
+          "configuration_sha256": "44119d65e26be4c01d1d2016549ffd039651b6de2fafa1df3a6669c2ac58c658",
+          "health": "healthy",
+          "id": "512885aff720a4582e3ac02550a8fe58f620a75df5f9ccc336e0c7744cf150db",
+          "image": "sha256:2be038f3421f60f62e8e4bf201f66f385b68e4fbc9ed3ab79051069ea22e2650",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.313296914Z",
+          "status": "running"
+        },
+        "radarr": {
+          "configuration_sha256": "34c680fa59c2da595e4f92e40666c95faeebb5f3168084c2a45001108b466a36",
+          "health": null,
+          "id": "d721f472d63be4d6187d35ee1a9bcdd1bf250dd50ad847032aae6c4e11d85f59",
+          "image": "sha256:fe051413dfd91b383ba04910552e83fb0306895fefee275c48dafe7bb90807dc",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.278303434Z",
+          "status": "running"
+        },
+        "rivendell-iptv-gateway": {
+          "configuration_sha256": "6e8909c4d8cb00f8d3fac0c61c42a67694a755a5ddb813107560d40c54f9a63e",
+          "health": "healthy",
+          "id": "448ceeb80a51e6660a04cda3449a140052c2cb0984040d727824894413606199",
+          "image": "sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:52.932663045Z",
+          "status": "running"
+        },
+        "rivendell-iptv-relay": {
+          "configuration_sha256": "5644a36879499badd036c989926439e1c42699304e524c120b516270b7e40918",
+          "health": "healthy",
+          "id": "3aa41213fdc8cacb88f18ce20136bec082e55490baf58d79f2e01d55ba85be27",
+          "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:14.956545338Z",
+          "status": "running"
+        },
+        "rivendell-iptv-vpn": {
+          "configuration_sha256": "24e276151455d9e35e4ad260a88f82639e551ea424d8755f20ce3ac58190c68c",
+          "health": "healthy",
+          "id": "1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e",
+          "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:08.022164729Z",
+          "status": "running"
+        },
+        "seedboxapi": {
+          "configuration_sha256": "756427cb67d62bf7a36c34db483c67d49380035e72b8dce3595265f0b033036a",
+          "health": null,
+          "id": "752af963b61000c253c8a8d1734c84d71272499e06f95987db830788b1429dbf",
+          "image": "sha256:4712ede49e8c17ca1aee4cf61a145e249ddbb9498390b469c64b0b3086628259",
+          "restarts": 2,
+          "started": "2026-11-16T20:40:00.266906105Z",
+          "status": "running"
+        },
+        "seerr": {
+          "configuration_sha256": "6bcdcbb31e76b16d3338f5ed18bc9a8442ef8262b68dc977d152c0e04778fbb1",
+          "health": null,
+          "id": "67133cc6e4fc70b66c3beb3b19c55cdb111753d2dc5802f29657df6e24daaae2",
+          "image": "sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.303752701Z",
+          "status": "running"
+        },
+        "shelfarr": {
+          "configuration_sha256": "ee2f8d0e53d3c6927b186507d2d89fd09ecfb56fd074c2fe17269cac92c98899",
+          "health": "unhealthy",
+          "id": "f7a4f452b947478301ca5e1bf8925c2f3c0031f2f76fe5bc2bdacc9d70a79be9",
+          "image": "sha256:942ba37d51b4ed7fe08a25a58d2f69e354bd5baa3c3b7fa6655650c7cf57d9c2",
+          "restarts": 0,
+          "started": "2026-10-20T22:52:14.18489768Z",
+          "status": "exited"
+        },
+        "sonarr": {
+          "configuration_sha256": "d2b350570b5cb723d7e132d21436b0aa96c14f82d68a808faff9d7eb26d8301d",
+          "health": null,
+          "id": "f438ff1017bbf08e157da6061dc8d6436e77be0b04b7d7c7efbca72e442fd51c",
+          "image": "sha256:82172b363f9eddc02aca544f880a044f2ceb9aaf190bc87e4454e2f705eb91d0",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:35.993518009Z",
+          "status": "running"
+        }
+      },
+      "networks_sha256": "51839910ef1955c6811a500972dea224445df3b93c5d4dc9a5afaafe49278192",
+      "volumes_sha256": "62bba3105a84730f80f6a2027aab8ef6bda044be99c2d5375c5f8e98b9d2248a"
+    },
+    "production_unchanged": true,
+    "source_hashes": {
+      "apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
+      "apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
+      "apps/epg/tasks.py": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
+      "apps/m3u/api_views.py": "6c48c35abc821efbb428a74c832e7c8c018eef472d6f987505169cd83d902936",
+      "apps/m3u/signals.py": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
+      "apps/m3u/tasks.py": "75a6eb9276ec96b0e5de2ae2b1274a63ffe47ef89cc8d6c1620a89e049467fb1",
+      "apps/proxy/live_proxy/input/buffer.py": "17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810",
+      "apps/proxy/live_proxy/input/manager.py": "ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf",
+      "apps/proxy/live_proxy/output/ts/generator.py": "db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b",
+      "apps/proxy/live_proxy/readiness.py": "fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b",
+      "core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
+      "core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
+      "core/provider_policy.py": "2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639",
+      "core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+      "core/provider_security.py": "8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004",
+      "core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
+      "core/provider_transport.py": "4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39",
+      "core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
+    },
+    "state": "verified",
+    "transport": {
+      "actual_UID1000_traversal_denied": true,
+      "gid": 0,
+      "mode": "0700",
+      "uid": 0
+    }
+  },
+  "quiet_interval_elapsed_seconds": 247.76251554489136,
+  "release_contract_sha256": "891b115e0ad7b6e154aab9f1967fca6009e60e8ae6ba6996b14a980ef9573af1",
+  "review_tag": "local/dispatcharr-native-hardening:corrected-8764cfd-b061c11e",
+  "root_access": "existing sudo -n; temporary source workspace only",
+  "schema": 1,
+  "selected_NEST_person": "andrew",
+  "selected_NEST_system": "andrew-media",
+  "source_commit_files_unchanged": true,
+  "status": "BUILD_AND_READ_ONLY_VERIFICATION_PASS",
+  "temporary_build_transport_owner": "root:root 0700",
+  "verification": {
+    "directory_metadata": {
+      "app": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/epg": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/m3u": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy/live_proxy": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy/live_proxy/input": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy/live_proxy/output": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/apps/proxy/live_proxy/output/ts": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      },
+      "app/core": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o755",
+        "type": "directory",
+        "uid": 0
+      }
+    },
+    "elapsed_seconds": 94.58418251300463,
+    "export_exit_code": 0,
+    "hashes": {
+      "apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
+      "apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
+      "apps/epg/tasks.py": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
+      "apps/m3u/api_views.py": "6c48c35abc821efbb428a74c832e7c8c018eef472d6f987505169cd83d902936",
+      "apps/m3u/signals.py": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
+      "apps/m3u/tasks.py": "75a6eb9276ec96b0e5de2ae2b1274a63ffe47ef89cc8d6c1620a89e049467fb1",
+      "apps/proxy/live_proxy/input/buffer.py": "17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810",
+      "apps/proxy/live_proxy/input/manager.py": "ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf",
+      "apps/proxy/live_proxy/output/ts/generator.py": "db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b",
+      "apps/proxy/live_proxy/readiness.py": "fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b",
+      "core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
+      "core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
+      "core/provider_policy.py": "2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639",
+      "core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+      "core/provider_security.py": "8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004",
+      "core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
+      "core/provider_transport.py": "4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39",
+      "core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"
+    },
+    "image": "sha256:71eba6fe9e62b0fd1ec632a3ceeecdbc54f278058500e567dd2be6a9fc96b439",
+    "provider_runtime_state_absent": true,
+    "source_metadata": {
+      "apps/epg/api_views.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/epg/signals.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/epg/tasks.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/m3u/api_views.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "6c48c35abc821efbb428a74c832e7c8c018eef472d6f987505169cd83d902936",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/m3u/signals.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/m3u/tasks.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "75a6eb9276ec96b0e5de2ae2b1274a63ffe47ef89cc8d6c1620a89e049467fb1",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/proxy/live_proxy/input/buffer.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "17d77baba54923ef3414a7051eebed9c27a891eb1479dd9c68a299e0d5f89810",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/proxy/live_proxy/input/manager.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "ce2400eb4bcdaec43ee571b7982f85ca2cd719eec9acb0282976edb3684245cf",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/proxy/live_proxy/output/ts/generator.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "db9200e53419a9ca3acb19ad05df49d3a4c9c06567d3e659c26214cecf5e312b",
+        "type": "file",
+        "uid": 0
+      },
+      "apps/proxy/live_proxy/readiness.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "fb4882ba579b14b0a2f7aec7306c8f31e1c7bb5f6c3acacce1a40dc62de1143b",
+        "type": "file",
+        "uid": 0
+      },
+      "core/api_urls.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
+        "type": "file",
+        "uid": 0
+      },
+      "core/provider_dns.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
+        "type": "file",
+        "uid": 0
+      },
+      "core/provider_policy.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639",
+        "type": "file",
+        "uid": 0
+      },
+      "core/provider_readiness.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+        "type": "file",
+        "uid": 0
+      },
+      "core/provider_security.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004",
+        "type": "file",
+        "uid": 0
+      },
+      "core/provider_security_view.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
+        "type": "file",
+        "uid": 0
+      },
+      "core/provider_transport.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39",
+        "type": "file",
+        "uid": 0
+      },
+      "core/xtream_codes.py": {
+        "acl_present": false,
+        "gid": 0,
+        "mode": "0o644",
+        "sha256": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa",
+        "type": "file",
+        "uid": 0
+      }
+    },
+    "verification": "streamed image layers; no containers or application execution",
+    "verified_epoch": 1794984773.3975961
+  }
+}
