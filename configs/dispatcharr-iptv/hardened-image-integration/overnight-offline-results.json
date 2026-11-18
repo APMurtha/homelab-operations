@@ -1,0 +1,17 @@
+{
+  "baseline": "3f1b2c08d684e08c356cb82930b9a04d655a66f8",
+  "offline_distinct_tests": 677,
+  "failures": 0,
+  "new_tests": 3,
+  "upstream_commit": "2fa13a6707bdf0dae87e0c494bcd3ca282cdeb3e",
+  "upstream_plugin_apps_git_blob": "2257ebe8ee9d8b607121cffbb0196e9203ec3476",
+  "changed_files_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_test.py": "4cf4f1af9f1ac8c7d2a38590ffb3b07dd6b574d18e25558c551b62d144649438",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_transport.py": "dcaae3cdd5605593d42d4d022b3047ba0bf9c4d74d012875ff6ae7e739d45fc2",
+    "configs/dispatcharr-iptv/hardened-image-integration/test_plugin_fixture.py": "a822a6f55af7270ad43476d9391b962476471162a705b1fb0700b947d99b183c",
+    "configs/dispatcharr-iptv/hardened-image-integration/fixtures/plugin-apps-upstream.py": "27b3b52fad5c8ca2aaf1912ac4165b1b5c58ac438cb489ce1d6182c55ef32679",
+    "configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json": "5b3b4e4eb880ee15e3129fb14c30c118f01c38b13bba123f2cea8dc09d4557f6"
+  },
+  "protected_installed_target_mappings_unchanged": true,
+  "runner_and_socket_audit_unchanged": true
+}

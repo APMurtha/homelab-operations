@@ -127,7 +127,7 @@ def bootstrap():
     if interfaces!={'lo'} or any(line.split()[1]=='00000000' for line in Path('/proc/net/route').read_text().splitlines()[1:]):raise RuntimeError('uncertain_network_isolation')
     if Path('/var/run/docker.sock').exists() or Path('/run/dispatcharr-guard').exists():raise RuntimeError('forbidden_host_resource')
     BOOT['isolation']={'interfaces':sorted(interfaces),'external_default_route':False,'docker_socket':False}
-    os.environ.clear();os.environ.update({'PATH':'/dispatcharrpy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin','HOME':str(STATE),'LANG':'C.UTF-8','DJANGO_SETTINGS_MODULE':'dispatcharr.settings','DJANGO_SECRET_KEY':'synthetic-integration-key-not-a-production-secret-000000000000000','DISPATCHARR_DEBUG':'False','DISPATCHARR_ENV':'aio','DISPATCHARR_LOG_LEVEL':'warning','POSTGRES_HOST':'127.0.0.1','POSTGRES_PORT':'5432','POSTGRES_DB':'native_integration','POSTGRES_USER':'dispatch','POSTGRES_PASSWORD':'','REDIS_HOST':'127.0.0.1','REDIS_PORT':'6379','REDIS_PASSWORD':REDIS_PASSWORD,'PYTHONDONTWRITEBYTECODE':'1'})
+    os.environ.clear();os.environ.update({'PATH':'/dispatcharrpy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin','HOME':str(STATE),'LANG':'C.UTF-8','DJANGO_SETTINGS_MODULE':'dispatcharr.settings','DJANGO_SECRET_KEY':'synthetic-integration-key-not-a-production-secret-000000000000000','DISPATCHARR_DEBUG':'False','DISPATCHARR_SKIP_PLUGIN_AUTODISCOVERY':'1','DISPATCHARR_ENV':'aio','DISPATCHARR_LOG_LEVEL':'warning','POSTGRES_HOST':'127.0.0.1','POSTGRES_PORT':'5432','POSTGRES_DB':'native_integration','POSTGRES_USER':'dispatch','POSTGRES_PASSWORD':'','REDIS_HOST':'127.0.0.1','REDIS_PORT':'6379','REDIS_PASSWORD':REDIS_PASSWORD,'PYTHONDONTWRITEBYTECODE':'1'})
     os.chdir('/app');sys.path.insert(0,'/app');sys.path.insert(0,'/fixture/client')
     for path in ['/data/logs','/data/media','/data/plugins','/data/pgdata','/data/pgsocket']:
         Path(path).mkdir(parents=True,exist_ok=True)
@@ -272,6 +272,13 @@ class Integration(unittest.TestCase):
         DIAG.begin('task_registration')
         required={'apps.m3u.tasks.refresh_single_m3u_account','apps.epg.tasks.refresh_epg_data','synthetic.runtime.queue_probe'}
         if not required<=set(app.tasks):raise RuntimeError('required_tasks_not_registered')
+        # Disposable fixture excludes unrelated plugin maintenance via the
+        # application's supported startup opt-out; native tasks remain registered.
+        from django_celery_beat.models import PeriodicTask
+        if os.environ.get('DISPATCHARR_SKIP_PLUGIN_AUTODISCOVERY')!='1':raise RuntimeError('fixture_plugin_optout_missing')
+        if PeriodicTask.objects.filter(task='apps.plugins.tasks.refresh_plugin_repos').exists():raise RuntimeError('unrelated_plugin_schedule_present')
+        if 'apps.plugins.tasks.refresh_plugin_repos' not in app.tasks:raise RuntimeError('plugin_task_registration_lost')
+        RESULT['plugin_fixture']={'startup_autodiscovery_optout':True,'plugin_periodic_schedule_absent':True,'plugin_task_still_registered':True,'native_tasks_unchanged':True}
         DIAG.complete('task_registration',{'required_tasks_registered':True,'registered_tasks':len(app.tasks)})
         cls.capture=io.StringIO();cls.handler=logging.StreamHandler(cls.capture)
         for name in ['', 'apps','celery','core.tasks','core.utils']:
