@@ -1,0 +1,92 @@
+{
+  "actual_application_runtime": "NOT_EXECUTED",
+  "admission_limits": {
+    "disk_min_bytes": 1073741824,
+    "load1_max": 2,
+    "memory_min_bytes": 2147483648
+  },
+  "application_source_or_image_contract_changed": false,
+  "baseline_commit": "beced1187137ede15b43ea1680c1dbeb8e19fbd2",
+  "container_limits": {
+    "cpu_max": 1,
+    "memory_max_bytes": 1610612736,
+    "pids_max": 256
+  },
+  "docker_operations": 0,
+  "existing_tests_preserved": 608,
+  "failures": 0,
+  "files_sha256": {
+    "configs/dispatcharr-iptv/hardened-image-integration/README.md": "68f0de83bf30ff1ff984983cb9dd7f8a2c1381b18a5b091a4df941a960e117b5",
+    "configs/dispatcharr-iptv/hardened-image-integration/inspect_image.py": "67549e04e19b0239229c878984f61a6b44f5e944dc1c4a5950f678e2b1872822",
+    "configs/dispatcharr-iptv/hardened-image-integration/run_runtime.py": "c5aeadca482d51d4beb61c8b9396fe613dad6ab00304ce3ee6404762ec7090e7",
+    "configs/dispatcharr-iptv/hardened-image-integration/runtime_admission.py": "c7bec3b64de82afcfee3d85861480b542d93947943cd9c87802be9293573d314",
+    "configs/dispatcharr-iptv/hardened-image-integration/test_runtime_admission.py": "9848ea54a5baa514e205abba9b032b2e8e55609dc5db9dccfa3b46984d4e8090",
+    "configs/dispatcharr-iptv/hardened-image-integration/test_runtime_diagnostics.py": "b209a0e2289263dfa5d546eb5738dcc6e544f4de8ba03352c2960215a9d0bbe4",
+    "configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json": "819b63dd17c1b3a3a19877171229d1c8c21e6151c23f7ff7bc14bb593f64638b"
+  },
+  "go_no_go": "GO_FOR_SEPARATELY_AUTHORIZED_ISOLATED_TEST_WITH_REVIEWED_TRANSPORT_TIMING; NO_GO_IMAGE_BINDING_OR_DEPLOYMENT",
+  "installed_target_mappings_unchanged": 80,
+  "new_sequencing_tests": 36,
+  "production_access": false,
+  "real_stabilization_sleep_seconds": 0,
+  "regression_logs": {
+    "design": {
+      "sha256": "44ebbe2abcfbd2d2c4cf42c506e9f7f7196c83b0799eebc302e2e6ed0cfff4c5",
+      "tests": 28
+    },
+    "guard": {
+      "sha256": "d63558ce9d3fff393dab4b6fac42ed811791dd83827c22a118483f0d8f20c4f7",
+      "tests": 14
+    },
+    "harness": {
+      "sha256": "c0e70e1accb24cf15f9129a8d864bcde5f8d89b98ac222f9cac0164115845eba",
+      "tests": 79
+    },
+    "native": {
+      "sha256": "ec89f6ee5c228a7f3e68e0ee3094430e2ec1a0876fcb0559cc01f08a157bf404",
+      "tests": 91
+    },
+    "native-isolated": {
+      "sha256": "e03cdb8cd475ab9392a4f29e218c97eef7f333ea7660ca01652385d4b5034866",
+      "tests": 14
+    },
+    "permanent": {
+      "sha256": "f79080a71f1738299f9142db9e93d895175db1bf0ddeb15007bd19d880afb8d2",
+      "tests": 210
+    },
+    "permissions": {
+      "sha256": "d6abd353902711748a8c20105b505cc40e7582fb4e03d35137addfcd0371d941",
+      "tests": 40
+    },
+    "persistence": {
+      "sha256": "771a1a9d840f346bc664b124dbe45d79f8dec5d77bffcb585c15971b2f191f0b",
+      "tests": 26
+    },
+    "sockets": {
+      "additional_distinct_tests": 3,
+      "sha256": "6ec2ba3d463de24c539ed3f6d402a25390eb2c5aef0fb4659cdb032895d3b6e0",
+      "tests": 38
+    },
+    "tools": {
+      "sha256": "23f37d17248ee609ad5243422ff1f70e8f02bb74ad1e699be041780cb8fb38a3",
+      "tests": 139
+    },
+    "trusted-final": {
+      "additional_distinct_tests": 0,
+      "sha256": "252a9a2e5137ee0aa5d1422c47b7d0f939c2599d80947825ea4d30c59cfef643",
+      "tests": 50
+    }
+  },
+  "retained_image_reference": "sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be",
+  "schema": 1,
+  "socket_audit_module_or_runtime_test_changed": false,
+  "stabilization": {
+    "final_admission_decisions_per_attempt": 1,
+    "fixed_seconds": 120,
+    "hard_ceiling_seconds": 180,
+    "high_load_does_not_extend_wait": true,
+    "observation_period_seconds": 15
+  },
+  "status": "OFFLINE_SEQUENCING_PASS",
+  "total_distinct_tests": 644
+}

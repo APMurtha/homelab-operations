@@ -109,3 +109,44 @@ If isolated namespaces are unavailable, report the fixture gap; do not run the
 public-address fixture in the host network namespace. The audit is diagnostic
 coverage for Python connect/getaddrinfo events, not a substitute for network-none
 isolation or evidence of a real AirVPN namespace grant.
+
+## Bounded admission sequencing (offline implementation)
+
+See [the sequencing review](../../../docs/dispatcharr-runtime-admission-sequencing.md)
+before any separately authorized run. No image or application test was executed
+while implementing this procedure.
+
+The new runner requires an explicit unused `attempt_id` keyword and two reviewed
+host-only payload entries, `host/runtime_admission.py` and `host/inspect_image.py`.
+Their bytes must match `run_runtime.HOST_HELPERS`. The host entries are excluded
+from the container fixture. Existing synthetic fixture hashes must also be
+verified against the reviewed checkout; `expected-source-hashes.json` must match
+all 18 pinned sources. The original verified build receipt is still required.
+
+The runner now owns the complete sequence: reserve `runtime-attempt-<attempt_id>`
+exclusively, verify the retained immutable image and all 18 source hashes once,
+reap the export process, observe a fixed 120-second stabilization interval,
+then make one final admission decision. Observations occur every 15 seconds;
+load fluctuations never shorten or extend the interval. The hard ceiling is
+180 seconds; timeout, stale evidence or interruption refuses creation. No
+capacity gate is retried. Load ≤ 2, RAM ≥ 2 GiB and free disk ≥ 1 GiB remain
+mandatory. The container limits and all socket-audit denial behavior are unchanged.
+
+`admission.jsonl` is private, fsynced evidence of verification completion,
+stabilization start/end, actual elapsed time, every capacity sample and the single
+final decision. Image/production drift stops the sequence using cheap metadata
+checks, without another image-layer scan. A failed or interrupted attempt consumes
+its identity; never clear or reuse it. Old attempt receipts remain untouched.
+
+A future authorized operator must reconcile transport/watchdog timing: image
+verification + stabilization + the existing 240-second runtime deadline can exceed
+a synchronous five-minute SSH helper call. Use a separately reviewed receipt-safe
+execution/monitoring procedure; a transport timeout is not permission to invoke
+`main` again. No transport timeout or runtime deadline is changed here.
+
+Run sequencing and existing harness tests without Docker or real sleeping:
+
+```sh
+python3 -B -m unittest discover \
+  -s configs/dispatcharr-iptv/hardened-image-integration -p 'test_*.py' -v
+```

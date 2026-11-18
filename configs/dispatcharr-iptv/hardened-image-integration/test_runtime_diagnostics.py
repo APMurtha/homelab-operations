@@ -170,7 +170,7 @@ v.audit('socket.connect',(types.SimpleNamespace(family=socket.AF_INET),('8.8.8.8
         source=(HERE/'runtime_test.py').read_text();self.assertIn("kwargs['pass_fds']",source);self.assertNotIn("(STATE/'application.log').read_text()",source)
         self.assertIn("DIAG.complete('migrations'",source);self.assertIn("DIAG.complete('celery_startup'",source)
     def test_runner_preserves_prior_attempt_and_has_bounded_log_recovery(self):
-        source=(HERE/'run_runtime.py').read_text();self.assertIn('runtime-attempt-',source);self.assertIn('diagnostics.recover_records(logs)',source);self.assertIn("'--log-opt=max-size=1m'",source)
+        source=(HERE/'run_runtime.py').read_text();self.assertIn('runtime-attempt-',(HERE/'runtime_admission.py').read_text());self.assertIn('admission.Journal(work,attempt_id)',source);self.assertIn('diagnostics.recover_records(logs)',source);self.assertIn("'--log-opt=max-size=1m'",source)
         self.assertIn("parsed['success']=False",source)
 
 if __name__=='__main__':unittest.main()

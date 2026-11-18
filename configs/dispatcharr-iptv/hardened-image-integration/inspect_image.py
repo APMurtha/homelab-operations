@@ -16,10 +16,13 @@ class Prefix:
         return out+self.rest.read(n-len(out)) if len(out)<n else out
 
 
-def main():
-    image=json.loads(subprocess.check_output(DOCKER+['image','inspect',IMAGE,'--format','{"id":{{json .Id}},"size":{{json .Size}}}']))
-    if image['id']!=IMAGE:raise RuntimeError('image_identity_mismatch')
-    process=subprocess.Popen(DOCKER+['image','save',IMAGE],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+def verify(image_id=None,expected=None):
+    image_id=IMAGE if image_id is None else image_id
+    expected={**PINS,**READINESS} if expected is None else expected
+    selected_names=SELECTED if set(expected)==set(PINS)|set(READINESS) else set(expected)
+    image=json.loads(subprocess.check_output(DOCKER+['image','inspect',image_id,'--format','{"id":{{json .Id}},"size":{{json .Size}}}']))
+    if image['id']!=image_id:raise RuntimeError('image_identity_mismatch')
+    process=subprocess.Popen(DOCKER+['image','save',image_id],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
     layers={};manifest=None
     try:
         with tarfile.open(fileobj=process.stdout,mode='r|') as outer:
@@ -38,7 +41,7 @@ def main():
                                 if pathlib.PurePosixPath(name).name=='.wh..wh..opq':opaque.append(str(pathlib.PurePosixPath(name).parent))
                                 elif pathlib.PurePosixPath(name).name.startswith('.wh.'):
                                     deleted.append(str(pathlib.PurePosixPath(name).with_name(pathlib.PurePosixPath(name).name[4:])))
-                                elif name in SELECTED:
+                                elif name in selected_names:
                                     if not item.isfile() or item.size>2*1024*1024:raise RuntimeError('unexpected_source_type_or_size')
                                     found[name]=hashlib.sha256(layer.extractfile(item).read()).hexdigest()
                             if len(layer.members)>1000:layer.members.clear()
@@ -56,9 +59,13 @@ def main():
         for key in list(selected):
             if key in deleted or any(d in ('.','') or key.startswith(d.rstrip('/')+'/') for d in opaque):del selected[key]
         selected.update(found)
-    for name,wanted in {**PINS,**READINESS}.items():
+    for name,wanted in expected.items():
         if name not in selected:raise RuntimeError('missing_source:'+name)
         if selected[name]!=wanted:raise RuntimeError('source_drift_stop:'+name+':'+selected[name])
-    print(json.dumps({'base':image,'hashes':selected,'mode':'read_only_image_save_hashes_only_no_containers'}))
+    return {'base':image,'hashes':selected,'process_exited':True,'exit_code':0,'mode':'read_only_image_save_hashes_only_no_containers'}
+
+
+def main():
+    print(json.dumps(verify()))
 
 if __name__=='__main__':main()
