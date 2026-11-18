@@ -1,5 +1,14 @@
 # Hardened image build and isolated integration evidence
 
+Current corrected build: `sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be`.
+Packaging and UID1000 policy checks passed; application acceptance stopped on an
+unclassified socket-audit event. **NO-GO for binding; do not automatically rerun
+the current test harness.** See [runtime acceptance](../../../docs/dispatcharr-hardened-image-runtime-acceptance.md)
+and `runtime-acceptance-results.json`. The material below retains prior checkpoint
+provenance; its 26c93e… image is historical and was not reused.
+
+## Earlier checkpoint evidence
+
 **One image built; application acceptance FAIL; NO-GO for deployment.**
 See [the integration report](../../../docs/dispatcharr-hardened-image-integration.md).
 
@@ -10,7 +19,8 @@ It is a retained review artifact, not a deployable release. Production is unchan
 The [subsequent offline policy/packaging fix](../../../docs/dispatcharr-provider-policy-permission-fix.md)
 updates the future source candidate and packaging tests only. The image identity
 and verification-results.json here remain the historical failed-build evidence.
-No replacement image has been built.
+At that checkpoint no replacement image had been built; the current runtime
+acceptance report records the later single corrected build.
 
 - `inspect_image.py`: hash-only base-layer inspection, including whiteouts.
 - `prepare_context.py`: verify eight source inputs, four inherited readiness files,
@@ -54,6 +64,6 @@ The final offline integration selects a new future review tag
 Dockerfile labels the unchanged approved application sources at 0b8ac7d.
 `run_runtime.py` now requires an explicit new image ID matching its build receipt,
 refuses the failed/base image and has no default image. Its public synthetic code
-fixture directories use 0755 inside a private transport parent. No updated harness
-has been executed in Docker. Later real Django/Celery/API test bodies remain
-unvalidated; see the final integration report for the required matrix.
+fixture directories use 0755 inside a private transport parent. The updated harness was later executed once; its socket-audit guard aborted
+before a complete application result was retained. Later test bodies remain
+unaccepted; see the runtime acceptance report for the exact evidence boundary.

@@ -12,6 +12,10 @@ import logging
 import os
 from pathlib import Path
 import pwd
+import copy
+import importlib
+import shutil
+import stat
 import socket
 import ssl
 import subprocess
@@ -27,7 +31,7 @@ STATE=Path('/test-state')
 PROVIDER_USER='synthetic-provider-private-user'
 PROVIDER_PASSWORD='synthetic-provider-private-password'
 REDIS_PASSWORD='synthetic-isolated-redis-password'
-BOOT={};PROCESSES=[];RESULT={'bootstrap':BOOT,'boundary':'network-none; synthetic loopback authorization only; no real AirVPN attestation'}
+BOOT={};PROCESSES=[];EXTERNAL_ATTEMPTS=[];RESULT={'bootstrap':BOOT,'boundary':'network-none; synthetic loopback authorization only; no real AirVPN attestation'}
 
 
 def child(command,user=None,log='services.log'):
@@ -46,6 +50,67 @@ def wait(fn,seconds=30):
         if fn():return
         time.sleep(.2)
     raise AssertionError('bounded_fixture_readiness_deadline')
+
+
+def audit_network(event,args):
+    if event not in ('socket.connect','socket.getaddrinfo'):return
+    address=args[1] if event=='socket.connect' else args[0]
+    host=address[0] if isinstance(address,tuple) else address
+    if isinstance(host,str) and (host.startswith('/') or host in ('127.0.0.1','::1','localhost')):return
+    EXTERNAL_ATTEMPTS.append('non_loopback_attempt_blocked')
+    os.write(2,b'UNEXPECTED_EXTERNAL_NETWORK_ATTEMPT_BLOCKED\n');os._exit(86)
+
+
+def image_permissions_and_authorization():
+    expected=json.loads(Path('/fixture/expected-source-hashes.json').read_text())
+    modes={}
+    for name,wanted in expected.items():
+        path=Path('/app')/name;st=path.lstat()
+        if hashlib.sha256(path.read_bytes()).hexdigest()!=wanted:raise RuntimeError('image_source_drift')
+        if not stat.S_ISREG(st.st_mode) or st.st_uid!=0 or st.st_gid!=0 or stat.S_IMODE(st.st_mode)!=0o644:raise RuntimeError('image_source_mode_drift')
+        modes[name]={'uid':st.st_uid,'gid':st.st_gid,'mode':oct(stat.S_IMODE(st.st_mode))}
+        if name.startswith('core/') or name.startswith('apps/epg/') or name.startswith('apps/m3u/'):
+            for directory in [path.parent,*path.parent.parents]:
+                if str(directory)=='/':break
+                d=directory.stat()
+                if d.st_uid!=0 or d.st_gid!=0 or stat.S_IMODE(d.st_mode)!=0o755:raise RuntimeError('image_directory_mode_drift')
+    BOOT['image_source_modes']=modes
+    # Only this ephemeral container's synthetic root publishes assertions.
+    sys.path.insert(0,'/fixture/publisher')
+    from publish_policy import Publisher
+    publisher=Publisher(guard='/guard-status')
+    publisher.initialize();publisher.publish(BOOT['provider_key'])
+    from core.provider_policy import Reader
+    def probe():
+        r,w=os.pipe();pid=os.fork()
+        if pid==0:
+            os.close(r);os.setgroups([]);os.setgid(1000);os.setuid(1000)
+            try:
+                row=Reader().read(BOOT['provider_key'])
+                try:Path('/run/dispatcharr-provider').iterdir().__next__();private=False
+                except PermissionError:private=True
+                try:Path('/run/dispatcharr-provider-status/prohibited').write_text('x');write=True
+                except PermissionError:write=False
+                value={'public':True,'private_denied':private,'public_write_denied':not write,'generation':row['authorization_generation']}
+            except Exception:value={'public':False}
+            os.write(w,json.dumps(value).encode());os.close(w);os._exit(0)
+        os.close(w);data=os.read(r,8192);os.close(r);os.waitpid(pid,0);return json.loads(data)
+    valid=probe()
+    if not valid.get('public') or not valid['private_denied'] or not valid['public_write_denied']:raise RuntimeError('UID1000_authorization_boundary_failure')
+    publisher.revoke(BOOT['provider_key']);revoked=probe()
+    if revoked.get('public'):raise RuntimeError('revocation_not_observed')
+    publisher.publish(BOOT['provider_key']);fresh=probe()
+    if fresh['generation']==valid['generation']:raise RuntimeError('generation_not_fresh')
+    original=json.loads((Path('/run/dispatcharr-provider-status')/(BOOT['provider_key']+'.json')).read_text())
+    negatives=Path('/run/provider-negative-fixtures');negatives.mkdir(mode=0o755)
+    for kind in ['expired','wrong_generation','wrong_namespace','malformed','missing']:
+        folder=negatives/kind;folder.mkdir(mode=0o755);st=folder.stat();value=copy.deepcopy(original);value.update(anchor_dev=st.st_dev,anchor_ino=st.st_ino)
+        if kind=='expired':value['policy']['expires_epoch']=0
+        if kind=='wrong_generation':value['guard_generation']='f'*64
+        if kind=='wrong_namespace':value['policy']['netns']=[1,2]
+        if kind!='missing':
+            file=folder/(BOOT['provider_key']+'.json');file.write_text('{' if kind=='malformed' else json.dumps(value));file.chmod(0o644)
+    BOOT['public_policy_security']={'actual_UID_GID':1000,'private_traversal_denied':True,'unprivileged_public_write_denied':True,'actual_revocation_observed':True,'fresh_generation':True,'real_AirVPN_grant':False}
 
 
 def bootstrap():
@@ -90,7 +155,10 @@ def bootstrap():
     server='https://provider.example.invalid'
     key=hashlib.sha256(json.dumps([server,PROVIDER_USER],sort_keys=True,separators=(',',':')).encode()).hexdigest()
     permit={'schema':1,'server_contract':'dispatcharr-native-airvpn-v1','provider_key':key,'network_owner':'AirVPN','purpose':'IPTV_METADATA_ONLY','review_reference':'SYNTHETIC_ONLY_NO_AIRVPN_NO_PRODUCTION_GRANT','boot_id':boot,'netns':[ns.st_dev,ns.st_ino],'host_netns':[1,1],'expires_epoch':time.time()+600,'vpn_interface':'tun0','policy_review_sha256':'a'*64,'operations':['discover','refresh','epg'],'epg_url_sha256':hashlib.sha256(json.dumps(server+'/xmltv.php?'+urlencode({'username':PROVIDER_USER,'password':PROVIDER_PASSWORD}),sort_keys=True,separators=(',',':')).encode()).hexdigest(),'endpoints':[{'host':'provider.example.invalid','path':'/player_api.php','ipv4':['93.184.216.34']}]}
+    permit['endpoints'].append({'host':'provider.example.invalid','path':'/xmltv.php','ipv4':['93.184.216.34']})
     path=root/(key+'.json');path.write_text(json.dumps(permit));path.chmod(0o600)
+    BOOT['provider_key']=key
+    image_permissions_and_authorization()
 
 
 def application_bootstrap():
@@ -98,6 +166,7 @@ def application_bootstrap():
     os.chdir('/app');sys.path.insert(0,'/app');sys.path.insert(0,'/fixture/client')
     from django.conf import settings
     settings.MEDIA_ROOT=Path('/data/media')
+    sys.addaudithook(audit_network)
     import django
     django.setup();BOOT['django_version']=django.get_version()
     from django.core.management import call_command
@@ -116,7 +185,9 @@ class Provider(http.server.BaseHTTPRequestHandler):
         query=parse_qs(urlsplit(self.path).query);path=urlsplit(self.path).path
         self.server.events.append({'path':path,'action':query.get('action',[None])[0]})
         if path=='/xmltv.php':
-            body=b'<tv><channel id="fixture.one"><display-name>Fixture One</display-name><icon src="http://127.0.0.1/unapproved"/></channel><programme channel="fixture.one" start="20261118000000 +0000" stop="20261119000000 +0000"><title>Real synthetic fixture programme</title></programme></tv>'
+            from datetime import datetime,timezone,timedelta
+            now=datetime.now(timezone.utc);start=(now-timedelta(hours=1)).strftime('%Y%m%d%H%M%S +0000');end=(now+timedelta(hours=2)).strftime('%Y%m%d%H%M%S +0000')
+            body=('<tv><channel id="fixture.one"><display-name>Fixture One</display-name></channel><programme channel="fixture.one" start="'+start+'" stop="'+end+'"><title>Clearly synthetic programme</title></programme></tv>').encode()
         elif query.get('username')!=[PROVIDER_USER] or query.get('password')!=[PROVIDER_PASSWORD]:
             self.send_response(401);self.send_header('Content-Length','0');self.end_headers();return
         elif query.get('action')==['get_live_categories']:
@@ -147,8 +218,12 @@ class Integration(unittest.TestCase):
         cls.client=APIClient();token=cls.client.post('/api/accounts/token/',{'username':'integration-admin','password':'synthetic-admin-password'},format='json')
         if token.status_code!=200:raise RuntimeError('actual_admin_token_route_failed')
         cls.client.credentials(HTTP_AUTHORIZATION='Bearer '+token.json()['access']);cls.client.raise_request_exception=False
-        cls.profile=next(p for p in StreamProfile.objects.filter(locked=True,is_active=True) if p.command=='ffmpeg' and '-c copy' in p.parameters and '-f mpegts' in p.parameters)
+        profiles=[p for p in StreamProfile.objects.filter(locked=True,is_active=True) if p.command=='ffmpeg' and '-c copy' in p.parameters and '-f mpegts' in p.parameters]
+        if not profiles:profiles=[StreamProfile.objects.create(name='Synthetic locked streamcopy fixture',command='ffmpeg',parameters='-i {streamUrl} -c copy -f mpegts pipe:1',locked=True,is_active=True)]
+        if len(profiles)!=1:raise RuntimeError('synthetic_profile_fixture_ambiguous')
+        cls.profile=profiles[0]
         group=ChannelGroup.objects.create(name='Fixture DW Group')
+        for index in range(2):Channel.objects.create(name='Synthetic baseline '+str(index),channel_number=9100+index,channel_group=group,hidden_from_output=True)
         stream=Stream.objects.create(name='DW English',url='http://127.0.0.1:9199/fixture-relay-opaque',tvg_id='fixture.dw',channel_group=group)
         channel=Channel.objects.create(name='DW English',channel_number=9001,channel_group=group,tvg_id='fixture.dw',stream_profile=cls.profile,hidden_from_output=True)
         channel.streams.add(stream)
@@ -169,13 +244,15 @@ class Integration(unittest.TestCase):
                 return response.status_code,data
         cls.store=cls.stack.enter_context(Store(STATE/'native-state'));cls.ledger=Ledger(cls.store,cls.p['key'])
         cls.api=API(Exchange());cls.adapter=Adapter(cls.api,cls.ledger,polls=30)
+        @app.task(name='synthetic.runtime.queue_probe')
+        def queue_probe(value):return {'value':value,'uid':os.geteuid()}
         # Actual Celery consumer + Redis broker, not eager/mocked task execution.
         app.conf.task_always_eager=False
         cls.worker=cls.stack.enter_context(start_worker(app,pool='solo',concurrency=1,perform_ping_check=False,queues=['celery','default','dvr'],loglevel='WARNING'))
         cls.capture=io.StringIO();cls.handler=logging.StreamHandler(cls.capture)
         for name in ['', 'apps','celery','core.tasks','core.utils']:
             logger=logging.getLogger(name);logger.addHandler(cls.handler);cls.addClassCleanup(logger.removeHandler,cls.handler)
-        RESULT['runtime']={'actual_APIClient_JWT':True,'actual_Celery_worker':'solo thread with actual Redis broker','database':'isolated PostgreSQL','provider_endpoint':'loopback TLS only','security_positive_override':'test-only MetadataHTTPS context/authorize; image source unchanged'}
+        RESULT['runtime']={'actual_APIClient_JWT':True,'actual_Celery_worker':'solo thread with actual Redis broker','database':'isolated PostgreSQL','provider_endpoint':'loopback TLS only','security_positive_override':'test-only VPN-context/route/DNS fixtures and approved-IP dial redirection to loopback; actual TLS/destination/public reader; image bytes unchanged'}
 
     def test_01_unmodified_contract_refuses_missing_AirVPN_policy(self):
         response=self.client.get('/api/core/provider-security/',{'provider_key':self.p['key'],'epg_url_sha256':'a'*64})
@@ -198,66 +275,58 @@ class Integration(unittest.TestCase):
         profile=refresh_account_profiles.delay(self.silent_id).get(timeout=20)
         self.assertEqual(profile,'automatic_native_profile_refresh_disabled');self.assertEqual(len(self.server.events),before)
 
-    def test_04_root_policy_is_unreadable_at_actual_deployed_uid(self):
-        from dispatcharr_provider.core import Refused
+    def test_04_public_authorization_and_private_policy_permissions(self):
         self.assertEqual(os.geteuid(),1000)
-        path=Path('/run/dispatcharr-provider')/(self.p['key']+'.json')
-        with self.assertRaises(PermissionError):path.read_bytes()
-        # Public guard/grant reader works at UID 1000; policy traversal does not.
-        reader=self.security.Readiness('/guard-status','a'*64)
-        self.assertEqual(reader.check(),'b'*64)
-        before=len(self.server.events)
-        with self.assertRaises(Refused):
-            self.adapter.register(self.p,[{'id':'101','group':'1','name':'Fixture One','epg_id':'fixture.one','format_hint':'ts'}],self.profile.pk)
-        self.assertIsNone(self.ledger.value);self.assertEqual(len(self.server.events),before)
-        RESULT['blockers']=['UID_1000_CANNOT_READ_ROOT_0700_0600_PROVIDER_POLICY']
-        RESULT['deployment_compatible']=False
-        RESULT['native_remote_workflow']='BLOCKED before mutation by actual server contract gate'
+        with self.assertRaises(PermissionError):(Path('/run/dispatcharr-provider')/(self.p['key']+'.json')).read_bytes()
+        value=self.security.policy(self.p['key'])
+        self.assertEqual(value['provider_key'],self.p['key']);self.assertEqual(value['review_reference'],'trusted_public_projection')
+        self.assertNotIn('SYNTHETIC_ONLY',json.dumps(value))
+        from core.provider_policy import Reader
+        for kind in ['expired','wrong_generation','wrong_namespace','malformed','missing']:
+            with self.assertRaises(Exception):Reader('/run/provider-negative-fixtures/'+kind,'/guard-status').read(self.p['key'])
+        RESULT['authorization_reader']={'real_image_UID1000':True,'private_denied':True,'public_approved_projection':True,'negative_states_rejected':5,'real_AirVPN_grant':False}
 
     def test_05_explicit_discovery_failure_has_known_commit_and_no_blind_retry(self):
         from dispatcharr_provider.core import Refused
         from dispatcharr_provider.native import ACCOUNTS
-        body={'name':self.p['name'],'account_type':'XC','server_url':self.p['server'],'username':self.p['username'],'password':self.p['password'],'is_active':False,'metadata_discovery':True,'enable_vod':False,'auto_enable_new_groups_live':False,'auto_enable_new_groups_vod':False,'auto_enable_new_groups_series':False,'max_streams':1,'refresh_interval':24,'custom_properties':{'provider_cli':{'owner':'dispatcharr-provider/v1/native-v1','key':self.p['key'],'registration':'c'*32}}}
-        self.ledger.begin(self.p,[])
-        with self.assertRaises(Refused):self.ledger.mutate(self.api,'POST',ACCOUNTS,body,{'name':self.p['name']},ACCOUNTS,statuses=(201,))
+        from dispatcharr_provider.core import provider
+        p=provider('Unapproved synthetic discovery','https://unapproved.example.invalid','unapproved','synthetic-unapproved',None,1)
+        from dispatcharr_provider.native import Ledger
+        ledger=Ledger(self.store,p['key'])
+        body={'name':p['name'],'account_type':'XC','server_url':p['server'],'username':p['username'],'password':p['password'],'is_active':False,'metadata_discovery':True,'enable_vod':False,'auto_enable_new_groups_live':False,'auto_enable_new_groups_vod':False,'auto_enable_new_groups_series':False,'max_streams':1,'refresh_interval':24,'custom_properties':{'provider_cli':{'owner':'dispatcharr-provider/v1/native-v1','key':p['key'],'registration':'c'*32}}}
+        ledger.begin(p,[])
+        with self.assertRaises(Refused):ledger.mutate(self.api,'POST',ACCOUNTS,body,{'name':p['name']},ACCOUNTS,statuses=(201,))
         rows=[r for r in self.api.rows(ACCOUNTS) if r.get('custom_properties',{}).get('provider_cli',{}).get('registration')=='c'*32]
         self.assertEqual(len(rows),1)
-        self.assertEqual(self.ledger.value['operations'][-1]['state'],'intent')
-        with self.assertRaises(Refused):self.ledger.reconcile(self.api)
+        self.assertEqual(ledger.value['operations'][-1]['state'],'intent')
+        with self.assertRaises(Refused):ledger.reconcile(self.api)
         self.assertEqual(self.server.events,[])
         RESULT['uncertain_mutation']={'write_attempts':1,'HTTP_failure_after_create':True,'owned_record_confirmed_by_API':rows[0]['id'],'intent_preserved':True,'automatic_retry':False}
 
-    def test_06_real_group_selection_channel_import_and_local_XMLTV_mapping(self):
-        from apps.m3u.models import M3UAccount
-        from apps.channels.models import Stream,ChannelGroup,ChannelGroupM3UAccount
-        from apps.epg.models import EPGSource,EPGData,ProgramData
-        from django_celery_beat.models import PeriodicTask
-        from datetime import datetime,timezone,timedelta
-        # Discovery is blocked. Seed only synthetic native metadata through ORM;
-        # the following group/channel/EPG operations use actual supported APIs.
-        account=M3UAccount.objects.create(name='Seeded Native Metadata Fixture',account_type='XC',server_url='https://seeded.example.invalid',username='seeded',password='synthetic-seeded-password',is_active=True,custom_properties={'enable_vod':False,'auto_enable_new_groups_live':False,'auto_enable_new_groups_vod':False,'auto_enable_new_groups_series':False})
-        group=ChannelGroup.objects.create(name='Seeded Fixture Group')
-        ChannelGroupM3UAccount.objects.create(m3u_account=account,channel_group=group,enabled=False,auto_channel_sync=False,custom_properties={'xc_id':'1'})
-        stream=Stream.objects.create(name='Seeded Fixture Channel',url='https://seeded.example.invalid/live/fixture/fixture/101.ts',m3u_account=account,channel_group=group,stream_id=101,tvg_id='fixture.one')
-        response=self.client.patch('/api/m3u/accounts/'+str(account.pk)+'/group-settings/',{'group_settings':[{'channel_group':group.pk,'enabled':True,'auto_channel_sync':False,'custom_properties':{'xc_id':'1'}}]},format='json');self.assertEqual(response.status_code,200)
-        response=self.client.get('/api/m3u/accounts/'+str(account.pk)+'/');rels=response.json()['channel_groups'];self.assertTrue(next(r for r in rels if r['channel_group']==group.pk)['enabled'])
-        now=datetime.now(timezone.utc);start=(now-timedelta(hours=1)).strftime('%Y%m%d%H%M%S +0000');end=(now+timedelta(hours=2)).strftime('%Y%m%d%H%M%S +0000')
-        path=Path('/data/media/fixture.xml');path.write_text('<tv><channel id="fixture.one"><display-name>Clearly Synthetic Guide</display-name></channel><programme channel="fixture.one" start="'+start+'" stop="'+end+'"><title>Clearly Synthetic Programme</title></programme></tv>')
-        response=self.client.post('/api/epg/sources/',{'name':'Local Synthetic XMLTV','source_type':'xmltv','url':'','file_path':str(path),'is_active':False,'refresh_interval':0},format='json');self.assertEqual(response.status_code,201);pk=response.json()['id']
-        self.assertEqual(self.client.patch('/api/epg/sources/'+str(pk)+'/',{'is_active':True},format='json').status_code,200)
-        self.assertEqual(self.client.post('/api/epg/import/',{'id':pk,'force':False},format='json').status_code,202)
-        def parsed():
-            row=EPGSource.objects.get(pk=pk)
-            if row.status=='error':raise AssertionError('local_XMLTV_import_error')
-            return row.status=='success' and EPGData.objects.filter(epg_source_id=pk,tvg_id='fixture.one').exists()
-        wait(parsed,30)
-        guide=EPGData.objects.get(epg_source_id=pk,tvg_id='fixture.one')
-        response=self.client.post('/api/channels/channels/',{'name':'Seeded Fixture Channel','streams':[stream.pk],'channel_group_id':group.pk,'tvg_id':'fixture.one','epg_data_id':guide.pk,'stream_profile_id':self.profile.pk,'hidden_from_output':True,'channel_profile_ids':[]},format='json');self.assertEqual(response.status_code,201)
-        channel=response.json();self.assertEqual(channel['streams'],[stream.pk]);self.assertEqual(channel['epg_data_id'],guide.pk)
-        self.assertEqual(self.client.post('/api/epg/import/',{'id':pk,'force':False},format='json').status_code,202)
-        wait(lambda:ProgramData.objects.filter(epg=guide).exists(),30)
-        self.assertFalse(PeriodicTask.objects.filter(name='m3u_account-refresh-'+str(account.pk),enabled=True).exists())
-        RESULT['API_components']={'metadata_fixture_seeded_by_ORM':True,'native_network_discovery':False,'group_selection_API':True,'selective_channel_API':True,'local_XMLTV_import_real_worker':True,'EPG_native_ID_mapping':True,'programme_count':ProgramData.objects.filter(epg=guide).count(),'provider_HTTP_requests':len(self.server.events)}
+    def test_06_actual_native_discovery_import_and_XMLTV_mapping(self):
+        from core import provider_transport as transport
+        from apps.epg.models import EPGData,ProgramData
+        from apps.channels.models import Stream,Channel
+        original_socket=socket.socket
+        class LoopbackFixtureSocket(original_socket):
+            def connect_ex(self,address):
+                if address==('93.184.216.34',443):address=('127.0.0.1',443)
+                return super().connect_ex(address)
+        def resolve(host):
+            if host!='provider.example.invalid':raise RuntimeError('unapproved_synthetic_DNS_name')
+            return {'93.184.216.34'}
+        with patch.object(transport.MetadataHTTPS,'context_checks'),patch.object(transport.MetadataHTTPS,'vpn_route'),patch.object(transport,'resolve',side_effect=resolve),patch.object(self.security.socket,'socket',LoopbackFixtureSocket):
+            summary=self.adapter.register(self.p,[{'id':'101','group':'1','name':'Fixture One','epg_id':'fixture.one','format_hint':'ts'}],self.profile.pk)
+        resources=self.ledger.value['resources'];channels=resources['channels'];self.assertEqual(len(channels),1)
+        native=Stream.objects.get(pk=channels[0]['stream_id']);self.assertEqual(native.stream_id,101)
+        guide=EPGData.objects.get(pk=channels[0]['expected']['epg_data_id']);self.assertEqual(guide.tvg_id,'fixture.one')
+        self.assertTrue(ProgramData.objects.filter(epg=guide).exists())
+        self.assertEqual(self.ledger.value['phase'],'registered_inactive')
+        account=self.ledger.value['resources']['account']['id']
+        self.assertEqual(Channel.objects.filter(streams__m3u_account_id=account).distinct().count(),1)
+        self.assertTrue(self.server.events)
+        self.assertTrue(all(e['path'] in ['/player_api.php','/xmltv.php'] for e in self.server.events))
+        RESULT['native_workflow']={'actual_supported_API':True,'actual_Xtream_discovery':True,'actual_selected_channels':1,'unselected_not_imported':True,'actual_XMLTV_import_and_programmes':True,'phase':self.ledger.value['phase'],'provider_HTTP_requests':len(self.server.events),'real_AirVPN_grant':False}
 
     def test_07_existing_local_custom_DW_shape_is_unchanged(self):
         current=self.client.get('/api/channels/channels/'+str(self.dw_id)+'/').json();self.assertEqual(current,self.dw_before)
@@ -271,10 +340,45 @@ class Integration(unittest.TestCase):
         result=refresh_epg_data.delay(source.pk,operator_requested=True);result.get(timeout=20,propagate=False)
         self.assertEqual(result.state,'FAILURE');self.assertEqual(len(self.server.events),before)
 
+    def test_08b_actual_worker_consumes_default_and_DVR_queues(self):
+        from dispatcharr.celery import app
+        for queue in ['celery','dvr']:
+            result=app.send_task('synthetic.runtime.queue_probe',args=[queue],queue=queue).get(timeout=20)
+            self.assertEqual(result,{'value':queue,'uid':1000})
+        RESULT['Celery_queues']=['celery','dvr']
+
+    def test_08c_actual_uWSGI_readiness_without_media(self):
+        import redis
+        executable=shutil.which('uwsgi')
+        self.assertTrue(executable)
+        config=STATE/'uwsgi-fixture.ini'
+        config.write_text('[uwsgi]\nchdir=/app\nmodule=dispatcharr.wsgi:application\nvirtualenv=/dispatcharrpy\nmaster=true\nworkers=2\nlazy-apps=true\nhttp=127.0.0.1:5656\nsocket='+str(STATE/'uwsgi.sock')+'\nvacuum=true\ndie-on-term=true\ngevent=400\ngevent-early-monkey-patch=true\nimport=dispatcharr.gevent_patch\n')
+        process=child([executable,'--ini',str(config)],log='uwsgi.log')
+        r=redis.Redis(host='127.0.0.1',port=6379,password=REDIS_PASSWORD,socket_timeout=2)
+        def heartbeats():
+            rows=[]
+            for key in r.scan_iter(match='live:worker:*:heartbeat',count=100):
+                try:
+                    pid=int(key.rsplit(b':',2)[1]);age=time.time()-float(r.get(key))
+                    if Path('/proc/'+str(pid)+'/comm').read_text().strip()=='uwsgi' and 0<=age<30 and r.ttl(key)>0:rows.append(pid)
+                except (OSError,ValueError,TypeError):pass
+            return len(set(rows))==2
+        try:
+            wait(heartbeats,30)
+            import urllib.request
+            with urllib.request.build_opener(urllib.request.ProxyHandler({})).open('http://127.0.0.1:5656/',timeout=5) as response:self.assertEqual(response.status,200)
+            RESULT['uWSGI']={'actual_workers':2,'fresh_Redis_heartbeats':True,'HTTP_health':200,'stock_application_module':True,'fixture_ini_without_attached_daemons':True}
+        finally:
+            process.terminate()
+            try:process.wait(timeout=10)
+            except subprocess.TimeoutExpired:process.kill();process.wait(timeout=5)
+
     def test_09_credentials_never_appear_in_captured_runtime_logs(self):
         logs=self.capture.getvalue()
         self.assertNotIn(PROVIDER_PASSWORD,logs);self.assertNotIn(PROVIDER_USER,logs)
         RESULT['redaction']={'provider_password_absent':True,'provider_username_absent':True}
+        self.assertEqual(EXTERNAL_ATTEMPTS,[])
+        RESULT['external_network_attempts']=len(EXTERNAL_ATTEMPTS)
 
 
 def app_main():
