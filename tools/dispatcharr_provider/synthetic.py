@@ -13,7 +13,12 @@ from .native import ACCOUNTS, CHANNELS, STREAMS, GROUPS, SOURCES, EPG, PROFILES,
 
 class Synthetic:
     simulation = True
-    def __init__(self, catalogue, path=None, snapshot=None):
+    def __init__(self, catalogue, path=None, snapshot=None, *, discovery_authorized=True, discovery_failure=None):
+        if type(discovery_authorized) is not bool or discovery_failure not in (None,'discovery_incomplete','discovery_timeout','discovery_invalid_response','authorization_refused'):
+            raise ValueError('invalid_synthetic_discovery_fixture')
+        self.discovery_authorized=discovery_authorized
+        self.authorization_expires_epoch=time.time()+300
+        self.discovery_failure=discovery_failure
         self.catalogue, self.path = catalogue, path
         self.calls = []; self.fail = None; self.ticks = 0
         self.data = {p:[] for p in (ACCOUNTS,CHANNELS,STREAMS,GROUPS,SOURCES,EPG,PROFILES)}
@@ -91,7 +96,16 @@ class Synthetic:
             row['status'] = 'pending_setup'; row['updated_at'] = None
             row['profiles'] = [{'id':row['id']+100,'is_default':True}]
             row['channel_groups'] = []
-            # Synchronous group discovery happens EVEN for inactive accounts.
+            # Explicit synthetic approval models the same scoped discover job;
+            # account creation persists even when that subsequent operation fails.
+            if body.get('metadata_discovery') is True and (not self.discovery_authorized
+                    or self.authorization_expires_epoch<=time.time() or self.discovery_failure):
+                code='authorization_refused' if not self.discovery_authorized or self.authorization_expires_epoch<=time.time() else self.discovery_failure
+                row.update(status='error',last_message='native_discovery_failed_no_retry')
+                self.save()
+                return (403 if code=='authorization_refused' else 502),{'detail':'native_discovery_failed_no_retry',
+                    'account_id':row['id'],'account_created':True,'discovery':{'state':'failed','code':code}}
+            # Successful explicit discovery may persist groups without activation.
             for g in (self.catalogue['groups'].values() if body.get('metadata_discovery') is True else []):
                 group = self.allocate(GROUPS,{'name':g['name']})
                 row['channel_groups'].append({'channel_group':group['id'],'enabled':False,

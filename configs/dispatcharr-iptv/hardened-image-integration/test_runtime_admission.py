@@ -146,7 +146,7 @@ class Admission(unittest.TestCase):
         with self.assertRaisesRegex(a.Refused,'stale_capacity_measurement'):self.run_gate(capacity=lambda:{**self.measure(),'monotonic':self.clock()-6})
     def test_journal_is_private_and_pins_match_approved_release(self):
         self.assertEqual((self.journal.path/'admission.jsonl').stat().st_mode&0o777,0o600)
-        contract=json.loads((HERE.parent/'native-provider-hardening/release-contract.json').read_text())
+        contract=json.loads((HERE/'retained-image-contract.json').read_text())
         self.assertEqual(len(a.EXPECTED_SOURCES),18);self.assertEqual(a.EXPECTED_SOURCES,{**contract['source_hashes'],**contract['readiness_hashes']})
 
 class Runner(unittest.TestCase):

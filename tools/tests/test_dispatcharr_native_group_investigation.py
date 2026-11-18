@@ -89,7 +89,7 @@ class NativeGroupInvestigation(unittest.TestCase):
                 'auto_enable_new_groups_vod':False,'auto_enable_new_groups_series':False,**overrides}
 
     def test_excerpt_provenance_matches_approved_contracts(self):
-        release=json.loads((ROOT/'configs/dispatcharr-iptv/native-provider-hardening/release-contract.json').read_text())
+        release=json.loads((ROOT/'configs/dispatcharr-iptv/hardened-image-integration/retained-image-contract.json').read_text())
         api=json.loads((ROOT/'tools/dispatcharr_provider/api-contract.json').read_text())
         for entry in FRAGMENTS.values():
             self.assertEqual(hashlib.sha256(entry['excerpt'].encode()).hexdigest(),entry['excerpt_sha256'])
@@ -136,7 +136,7 @@ class NativeGroupInvestigation(unittest.TestCase):
         backend=SourcePath();status,row=backend.exchange('POST',ACCOUNTS,self.body(metadata_discovery=False))
         self.assertEqual(status,201);self.assertEqual(backend.job_calls,[]);self.assertEqual(backend.group_results,[])
 
-    def test_current_simulator_masks_inactive_account_gate(self):
+    def test_authorized_simulator_matches_corrected_inactive_contract(self):
         optimistic=Synthetic(copy.deepcopy(CATALOGUE))
         status,row=optimistic.exchange('POST',ACCOUNTS,self.body())
         self.assertFalse(row['is_active']);self.assertEqual(status,201)

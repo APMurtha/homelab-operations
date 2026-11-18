@@ -785,24 +785,36 @@
          """Close the session and cleanup resources"""
 --- a/apps/m3u/api_views.py
 +++ b/apps/m3u/api_views.py
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++from core.provider_security import group_discovery_allowed, discovery_failure
 +from core.provider_security import (Denied, SafeLogger, progress, job, remote, xmltv_download, xc_get, contract, safe_errors, media_url)
  from rest_framework import viewsets, status
  from rest_framework.response import Response
  from rest_framework.views import APIView
-@@ -149,8 +150,9 @@
+@@ -149,8 +151,20 @@
              'playlist_id': account_id
          })
  
 -        if account_type == M3UAccount.Types.XC:
 -            refresh_m3u_groups(account_id)
 +        if account_type == M3UAccount.Types.XC and request.data.get("metadata_discovery") is True:
-+            with job("discover", M3UAccount.objects.get(id=account_id), True):
-+                refresh_m3u_groups(account_id)
++            try:
++                with job("discover", M3UAccount.objects.get(id=account_id), True):
++                    discovery_result = refresh_m3u_groups(account_id)
++                    if (not isinstance(discovery_result, tuple) or len(discovery_result) != 2
++                            or not isinstance(discovery_result[1], dict)):
++                        raise RuntimeError("native_discovery_incomplete")
++            except Exception as error:
++                code, http_status = discovery_failure(error)
++                # Preserve this exact newly created inactive record for recovery.
++                M3UAccount.objects.filter(id=account_id, is_active=False).update(
++                    status=M3UAccount.Status.ERROR, last_message="native_discovery_failed_no_retry")
++                return Response({"detail":"native_discovery_failed_no_retry", "account_id":account_id,
++                    "account_created":True, "discovery":{"state":"failed", "code":code}}, status=http_status)
  
              # Check if VOD is enabled
              enable_vod = request.data.get("enable_vod", False)
-@@ -779,7 +781,7 @@
+@@ -779,7 +793,7 @@
          description="Triggers a refresh of a single M3U account",
      )
      def post(self, request, account_id, format=None):
@@ -813,13 +825,14 @@
                  "success": True,
 --- a/apps/m3u/tasks.py
 +++ b/apps/m3u/tasks.py
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +from core.provider_security import denied_remote_playlist
++from core.provider_security import group_discovery_allowed, discovery_failure
 +from core.provider_security import (Denied, SafeLogger, progress, job, remote, xmltv_download, xc_get, contract, safe_errors, media_url)
  # apps/m3u/tasks.py
  import logging
  import re
-@@ -39,7 +41,7 @@
+@@ -39,7 +42,7 @@
      parse_is_adult,
  )
  
@@ -828,7 +841,7 @@
  
  BATCH_SIZE = 1500  # Optimized batch size for threading
  m3u_dir = os.path.join(settings.MEDIA_ROOT, "cached_m3u")
-@@ -125,6 +127,8 @@
+@@ -125,6 +128,8 @@
      ws_action="parsing",
      ws_error=None,
  ):
@@ -837,7 +850,7 @@
      """Update account status using a fresh connection (safe after DB failures)."""
      _release_task_db_connection()
      update = {"status": status}
-@@ -213,10 +217,10 @@
+@@ -213,10 +218,10 @@
  
                  # Set account status to FETCHING before starting download
                  account.status = M3UAccount.Status.FETCHING
@@ -850,7 +863,7 @@
                      account.server_url, headers=headers, stream=True,
                      timeout=(30, 60),  # 30s connect, 60s read between chunks
                  )
-@@ -314,7 +318,7 @@
+@@ -314,7 +319,7 @@
                                      if progress > 0:
                                          # Update the account's last_message with detailed progress info
                                          progress_msg = f"Downloading: {progress:.1f}% - {speed:.1f} KB/s - {time_remaining:.1f}s remaining"
@@ -859,7 +872,7 @@
                                          account.save(update_fields=["last_message"])
  
                                          send_m3u_update(
-@@ -437,7 +441,7 @@
+@@ -437,7 +442,7 @@
                      # Final update with 100% progress
                      dl_size = downloaded / 1024 / 1024
                      final_msg = f"Download complete. Size: {dl_size:.2f} MB, Time: {time.time() - start_time:.1f}s"
@@ -868,7 +881,7 @@
                      account.save(update_fields=["last_message"])
                      send_m3u_update(account.id, "downloading", 100, message=final_msg)
  
-@@ -736,13 +740,7 @@
+@@ -736,13 +741,7 @@
  
  
  def check_field_lengths(streams_to_create):
@@ -883,7 +896,7 @@
  
  
  @shared_task
-@@ -966,10 +964,7 @@
+@@ -966,10 +965,7 @@
              account.get_user_agent_string(),
          ) as xc_client:
  
@@ -895,7 +908,7 @@
  
              # Fetch ALL live streams in a single API call (much more efficient)
              logger.info("Fetching ALL live streams from XC provider...")
-@@ -1001,7 +996,7 @@
+@@ -1001,7 +997,7 @@
                  stream_id = stream.get("stream_id")
                  attributes = {
                      "tvg-id": stream.get("epg_channel_id", ""),
@@ -904,7 +917,7 @@
                      "group-title": group_info["name"],
                      "stream_id": str(stream.get("stream_id", "")),
                      "num": stream.get("num"),
-@@ -1022,7 +1017,7 @@
+@@ -1022,7 +1018,7 @@
                  }
                  all_streams.append({
                      "name": stream_name,
@@ -913,7 +926,7 @@
                      "attributes": attributes,
                  })
                  filtered_count += 1
-@@ -1183,7 +1178,7 @@
+@@ -1183,7 +1179,7 @@
                                  pass
                          url = xc_client.get_stream_url(stream["stream_id"])
                          tvg_id = stream.get("epg_channel_id", "")
@@ -922,7 +935,37 @@
                          group_title = group_name
                          stream_chno = stream.get("num")
                          # Convert stream_chno to float if valid, otherwise None
-@@ -1801,7 +1796,7 @@
+@@ -1698,6 +1694,7 @@
+ 
+ @shared_task
+ def refresh_m3u_groups(account_id, use_cache=False, full_refresh=False, scan_start_time=None):
++    allow_inactive_discovery = group_discovery_allowed(account_id)
+     """Refresh M3U groups for an account.
+ 
+     Args:
+@@ -1713,11 +1710,20 @@
+     lock_renewer.start()
+ 
+     try:
+-        account = M3UAccount.objects.select_related("user_agent").get(id=account_id, is_active=True)
++        account = M3UAccount.objects.select_related("user_agent").get(
++            **({"id": account_id} if allow_inactive_discovery else {"id": account_id, "is_active": True}))
+     except M3UAccount.DoesNotExist:
+         lock_renewer.stop()
+         release_task_lock("refresh_m3u_account_groups", account_id)
+         return f"M3UAccount with ID={account_id} not found or inactive.", None
++
++    if allow_inactive_discovery:
++        try:
++            group_discovery_allowed(account_id, account)
++        except Exception:
++            lock_renewer.stop()
++            release_task_lock("refresh_m3u_account_groups", account_id)
++            raise
+ 
+     extinf_data = []
+     groups = {"Default Group": {}}
+@@ -1801,7 +1807,7 @@
                      # This prevents any delay in the main refresh process
                      try:
                          logger.info(f"Queueing background profile refresh for account {account.name}")
@@ -931,7 +974,23 @@
                      except Exception as e:
                          logger.warning(f"Failed to queue profile refresh task: {str(e)}")
                          # Don't fail the main refresh if profile refresh can't be queued
-@@ -3277,273 +3272,56 @@
+@@ -1968,10 +1974,11 @@
+ 
+     send_m3u_update(account_id, "processing_groups", 0)
+ 
+-    process_groups(account, groups, scan_start_time)
+-
+-    lock_renewer.stop()
+-    release_task_lock("refresh_m3u_account_groups", account_id)
++    try:
++        process_groups(account, groups, scan_start_time)
++    finally:
++        lock_renewer.stop()
++        release_task_lock("refresh_m3u_account_groups", account_id)
+ 
+     if not full_refresh:
+         # Use update() instead of save() to avoid triggering signals
+@@ -3277,273 +3284,56 @@
  
  @shared_task
  def refresh_account_profiles(account_id):
@@ -1250,7 +1309,7 @@
  
  
  def _refresh_single_m3u_account_impl(account_id):
-@@ -4000,12 +3778,7 @@
+@@ -4000,12 +3790,7 @@
  
          # Set status to success and update timestamp BEFORE sending the final update
          account.status = M3UAccount.Status.SUCCESS
@@ -1264,7 +1323,7 @@
          account.updated_at = timezone.now()
          account.save(update_fields=["status", "last_message", "updated_at"])
  
-@@ -4289,3 +4062,7 @@
+@@ -4289,3 +4074,7 @@
      logger.info(
          f"Account expiration check complete: {len(active_notification_keys)} active notifications"
      )
@@ -1946,7 +2005,7 @@
 +        return first['generation']
 --- /dev/null
 +++ b/core/provider_security.py
-@@ -0,0 +1,319 @@
+@@ -0,0 +1,340 @@
 +"""Offline candidate: trusted AirVPN-only native metadata contract, no media.
 +
 +Installed as core.provider_security in a separately reviewed image. Root-published authorization
@@ -2022,7 +2081,8 @@
 +    if kind not in p['operations']: raise Denied()
 +    try: reader=Readiness(GUARD,p['policy_review_sha256'])
 +    except Exception: raise Denied() from None
-+    value={'key':key,'kind':kind,'policy':p,'reader':reader,'requests':0}
++    value={'key':key,'kind':kind,'policy':p,'reader':reader,'requests':0,
++           'resource_id':getattr(resource,'id',None),'resource_type':getattr(resource,'account_type',None)}
 +    token=CURRENT.set(value)
 +    try:
 +        check(); yield
@@ -2037,6 +2097,26 @@
 +    try: state['reader'].check()
 +    except Exception: raise Denied() from None
 +    return state
++
++
++def group_discovery_allowed(account_id, account=None):
++    """Only the exact account in a live explicit discover job may be inactive."""
++    state=CURRENT.get()
++    if state is None or state.get('kind')!='discover': return False
++    check()  # Revalidate lease, generation, namespace and VPN guard.
++    if (type(account_id) is not int or account_id<=0 or type(state.get('resource_id')) is not int or state.get('resource_id')!=account_id
++            or state.get('resource_type')!='XC'): raise Denied()
++    if account is not None and (getattr(account,'id',None)!=account_id
++            or getattr(account,'account_type',None)!='XC' or resource_key(account)!=state['key']): raise Denied()
++    return True
++
++
++def discovery_failure(error=None):
++    """Stable classifications only; never serialize provider exception text."""
++    if isinstance(error,Denied): return 'authorization_refused',403
++    if isinstance(error,TimeoutError): return 'discovery_timeout',502
++    if isinstance(error,ValueError): return 'discovery_invalid_response',502
++    return 'discovery_incomplete',502
 +
 +
 +class SafeLogger:
@@ -2473,14 +2553,14 @@
 +  "apps/epg/api_views.py": "6fafed61eb78ebfdd669ab60745001948a63f708dd549175e8d4950a68ce0051",
 +  "apps/epg/signals.py": "a55f451c8af899edb79f201802e3533cf2139199c37abdb95fa4978a8dac2d8c",
 +  "apps/epg/tasks.py": "3d94f0c6aa4eed6520d584d97ad85b62760a9ae80efeac640a690eabacc427c6",
-+  "apps/m3u/api_views.py": "61c9289fa4c6bc9ecc275d39386c6ff0081a551535ce95d44353fe92c51e4e3f",
++  "apps/m3u/api_views.py": "6c48c35abc821efbb428a74c832e7c8c018eef472d6f987505169cd83d902936",
 +  "apps/m3u/signals.py": "7b7b35c2931f401ef179b132648496749c49c07fabf0dd85d6c019e10dbacd92",
-+  "apps/m3u/tasks.py": "4294d180806627da4029af9b955a3c40f5ac13869da23adc25b4bec7293085ac",
++  "apps/m3u/tasks.py": "75a6eb9276ec96b0e5de2ae2b1274a63ffe47ef89cc8d6c1620a89e049467fb1",
 +  "core/api_urls.py": "8ba3069abff1d26ff9d0070fd83194097c8b6f565b0b0391f46f0709155de324",
 +  "core/provider_dns.py": "28c9564793e1285eb72bb9d91ab24a85ccc3ca2f3db80398445d380b53d9af3a",
 +  "core/provider_policy.py": "2691cc3eeed26f13869d7cdacc671f0e2eebcd46e54e944279ffe78dd0b82639",
 +  "core/provider_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
-+  "core/provider_security.py": "b63d7c4af215d7b135110667c1b37166ddc9b19c3456a4c6703618042d30af16",
++  "core/provider_security.py": "8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004",
 +  "core/provider_security_view.py": "b3e77ccd704251b85cccdc8df9966ecc8d748a4a1542780512746886be31374b",
 +  "core/provider_transport.py": "4032865e09c82b5a755af99ef2a8b62e88aca46e346321565dd0af783cec0d39",
 +  "core/xtream_codes.py": "ed31daaf05ee812cfa7750b423c8b8840ab19bca48cc3ee560202857848133fa"

@@ -47,6 +47,7 @@ def task_options(text,name):
 def change(path,text):
     imports='from core.provider_security import (Denied, SafeLogger, progress, job, remote, xmltv_download, xc_get, contract, safe_errors, media_url)\n'
     if path.endswith(('tasks.py','signals.py','api_views.py','xtream_codes.py')): text=imports+text
+    if path in ('apps/m3u/api_views.py','apps/m3u/tasks.py'): text='from core.provider_security import group_discovery_allowed, discovery_failure\n'+text
     if path=='core/xtream_codes.py':
         text=text.replace('logger = logging.getLogger(__name__)','logger = SafeLogger(__name__)')
         start=text.index('        # Create persistent session');end=text.index('        self.server_info = None',start)
@@ -62,11 +63,23 @@ def change(path,text):
     elif path=='apps/m3u/api_views.py':
         # Only the ViewSet create contains this exact XC branch.
         text=text.replace('if account_type == M3UAccount.Types.XC:\n            refresh_m3u_groups(account_id)',
-            'if account_type == M3UAccount.Types.XC and request.data.get("metadata_discovery") is True:\n            with job("discover", M3UAccount.objects.get(id=account_id), True):\n                refresh_m3u_groups(account_id)')
+            'if account_type == M3UAccount.Types.XC and request.data.get("metadata_discovery") is True:\n            try:\n                with job("discover", M3UAccount.objects.get(id=account_id), True):\n                    discovery_result = refresh_m3u_groups(account_id)\n                    if (not isinstance(discovery_result, tuple) or len(discovery_result) != 2\n                            or not isinstance(discovery_result[1], dict)):\n                        raise RuntimeError("native_discovery_incomplete")\n            except Exception as error:\n                code, http_status = discovery_failure(error)\n                # Preserve this exact newly created inactive record for recovery.\n                M3UAccount.objects.filter(id=account_id, is_active=False).update(\n                    status=M3UAccount.Status.ERROR, last_message="native_discovery_failed_no_retry")\n                return Response({"detail":"native_discovery_failed_no_retry", "account_id":account_id,\n                    "account_created":True, "discovery":{"state":"failed", "code":code}}, status=http_status)')
         text=text.replace('refresh_single_m3u_account.delay(account_id)','refresh_single_m3u_account.delay(account_id, operator_requested=True)')
     elif path=='apps/m3u/tasks.py':
         text=text.replace('logger = logging.getLogger(__name__)','logger = SafeLogger(__name__)')
         text=task_options(text,'refresh_single_m3u_account')
+        text=edit_function(text,'refresh_m3u_groups',prefix='allow_inactive_discovery = group_discovery_allowed(account_id)')
+        old_query='account = M3UAccount.objects.select_related("user_agent").get(id=account_id, is_active=True)'
+        fn=next(n for n in ast.walk(ast.parse(text)) if isinstance(n,ast.FunctionDef) and n.name=='refresh_m3u_groups')
+        lines=text.splitlines(True);segment=''.join(lines[fn.lineno-1:fn.end_lineno]);assert segment.count(old_query)==1
+        segment=segment.replace(old_query,'account = M3UAccount.objects.select_related("user_agent").get(\n            **({"id": account_id} if allow_inactive_discovery else {"id": account_id, "is_active": True}))')
+        lines[fn.lineno-1:fn.end_lineno]=[segment];text=''.join(lines)
+        marker='    extinf_data = []\n    groups = {"Default Group": {}}'
+        assert text.count(marker)==1
+        text=text.replace(marker,'    if allow_inactive_discovery:\n        try:\n            group_discovery_allowed(account_id, account)\n        except Exception:\n            lock_renewer.stop()\n            release_task_lock("refresh_m3u_account_groups", account_id)\n            raise\n\n'+marker)
+        old_cleanup='    process_groups(account, groups, scan_start_time)\n\n    lock_renewer.stop()\n    release_task_lock("refresh_m3u_account_groups", account_id)'
+        assert text.count(old_cleanup)==1
+        text=text.replace(old_cleanup,'    try:\n        process_groups(account, groups, scan_start_time)\n    finally:\n        lock_renewer.stop()\n        release_task_lock("refresh_m3u_account_groups", account_id)')
         text=edit_function(text,'check_field_lengths',replacement='return None')
         text=text.replace('refresh_account_profiles.delay(account.id)', 'None  # automatic credential-bearing profile refresh disabled')
         text=text.replace('tvg_logo = stream.get("stream_icon", "")', 'tvg_logo = ""')

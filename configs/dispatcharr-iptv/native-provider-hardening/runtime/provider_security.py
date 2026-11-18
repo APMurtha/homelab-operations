@@ -73,7 +73,8 @@ def job(kind,resource,operator_requested=False):
     if kind not in p['operations']: raise Denied()
     try: reader=Readiness(GUARD,p['policy_review_sha256'])
     except Exception: raise Denied() from None
-    value={'key':key,'kind':kind,'policy':p,'reader':reader,'requests':0}
+    value={'key':key,'kind':kind,'policy':p,'reader':reader,'requests':0,
+           'resource_id':getattr(resource,'id',None),'resource_type':getattr(resource,'account_type',None)}
     token=CURRENT.set(value)
     try:
         check(); yield
@@ -88,6 +89,26 @@ def check():
     try: state['reader'].check()
     except Exception: raise Denied() from None
     return state
+
+
+def group_discovery_allowed(account_id, account=None):
+    """Only the exact account in a live explicit discover job may be inactive."""
+    state=CURRENT.get()
+    if state is None or state.get('kind')!='discover': return False
+    check()  # Revalidate lease, generation, namespace and VPN guard.
+    if (type(account_id) is not int or account_id<=0 or type(state.get('resource_id')) is not int or state.get('resource_id')!=account_id
+            or state.get('resource_type')!='XC'): raise Denied()
+    if account is not None and (getattr(account,'id',None)!=account_id
+            or getattr(account,'account_type',None)!='XC' or resource_key(account)!=state['key']): raise Denied()
+    return True
+
+
+def discovery_failure(error=None):
+    """Stable classifications only; never serialize provider exception text."""
+    if isinstance(error,Denied): return 'authorization_refused',403
+    if isinstance(error,TimeoutError): return 'discovery_timeout',502
+    if isinstance(error,ValueError): return 'discovery_invalid_response',502
+    return 'discovery_incomplete',502
 
 
 class SafeLogger:

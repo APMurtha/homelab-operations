@@ -1,0 +1,156 @@
+{
+  "GO_NO_GO": "GO for separately authorized corrected COPY-only image build; NO_GO runtime/image binding/deployment until separate authorization and real isolated acceptance",
+  "adapter_changes": "Algorithm and journal unchanged; exact hardened server output contract advanced. Non-success create leaves write-ahead intent blocking replay.",
+  "application_output_changes": {
+    "apps/m3u/api_views.py": {
+      "new": "6c48c35abc821efbb428a74c832e7c8c018eef472d6f987505169cd83d902936",
+      "previous": "61c9289fa4c6bc9ecc275d39386c6ff0081a551535ce95d44353fe92c51e4e3f"
+    },
+    "apps/m3u/tasks.py": {
+      "new": "75a6eb9276ec96b0e5de2ae2b1274a63ffe47ef89cc8d6c1620a89e049467fb1",
+      "previous": "4294d180806627da4029af9b955a3c40f5ac13869da23adc25b4bec7293085ac"
+    },
+    "core/provider_security.py": {
+      "new": "8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004",
+      "previous": "b63d7c4af215d7b135110667c1b37166ddc9b19c3456a4c6703618042d30af16"
+    }
+  },
+  "baseline": "887989307f562878df594e17025f15e46e345d4c",
+  "candidate_image": null,
+  "changed_installed_candidate_pins": [
+    "/docker/dispatcharr-iptv/minimal-phase6b3d/verify.py",
+    "/docker/dispatcharr-iptv/permanent-streaming/base-input-pins.json",
+    "/docker/dispatcharr-iptv/permanent-streaming/manifest.json",
+    "/docker/dispatcharr-iptv/native-provider-hardening/output-hashes.json",
+    "/docker/dispatcharr-iptv/native-provider-hardening/release-contract.json",
+    "/docker/dispatcharr-iptv/native-provider-hardening/runtime/provider_security.py"
+  ],
+  "distinct_tests": 704,
+  "executions_including_repeated_audit_tests": 739,
+  "file_inventory": {
+    "configs/dispatcharr-iptv/hardened-image-integration/retained-image-contract.json": {
+      "new_sha256": "a13eee5cff0b0e9781d634225cc85305e32573ab6e29322ae624ff6568bc78be",
+      "previous_sha256": null
+    },
+    "configs/dispatcharr-iptv/hardened-image-integration/test_runtime_admission.py": {
+      "new_sha256": "2bfc2cbbb3a56dbe6453def7d0d63f08f6dfac4e50fbb2efa0e2567836e660c7",
+      "previous_sha256": "9848ea54a5baa514e205abba9b032b2e8e55609dc5db9dccfa3b46984d4e8090"
+    },
+    "configs/dispatcharr-iptv/minimal-phase6b3d/artifact-hashes.json": {
+      "new_sha256": "17f94c52b7bffecb7a4b8e9eba07ab792b2273804301c14f4dd14729a3112464",
+      "previous_sha256": "7a0952ae77f122a9b5b6d0993a1458c55581cb2e34c47cd82b60b1c1292e0857"
+    },
+    "configs/dispatcharr-iptv/minimal-phase6b3d/verify.py": {
+      "new_sha256": "6c24b83443059b90b246ada531d67cc58a172389135968f45cedd289942bb108",
+      "previous_sha256": "3133c228bcad182454e3fa03e0af9ae26e39dbf23f616cc39c47d8a44e07f89c"
+    },
+    "configs/dispatcharr-iptv/native-provider-hardening/output-hashes.json": {
+      "new_sha256": "dc861e4615419508a43c16613f36bad1eca549980814fbbc51efb726566a4dd4",
+      "previous_sha256": "6f4731afe4fb93b490d0699372526289fc55480f88128915569283d6518cd36d"
+    },
+    "configs/dispatcharr-iptv/native-provider-hardening/prepare.py": {
+      "new_sha256": "b2fde74b47ad4ad6ce22775ea745103a573390e4dce1fb28f0f15ebedd5a88c5",
+      "previous_sha256": "30133a926192cfd45eb47530c471ea2cec22b0e85b9b1e31f063968f994d7c88"
+    },
+    "configs/dispatcharr-iptv/native-provider-hardening/release-contract.json": {
+      "new_sha256": "891b115e0ad7b6e154aab9f1967fca6009e60e8ae6ba6996b14a980ef9573af1",
+      "previous_sha256": "d1c1d2b72b70beecd8a8f67a9c071317fab04bc00133a9b2d0377a9fd07d3eab"
+    },
+    "configs/dispatcharr-iptv/native-provider-hardening/runtime/provider_security.py": {
+      "new_sha256": "8d3049e4dfb471f62a66c13a17e94da04e6cff3050e07121208327071c4ce004",
+      "previous_sha256": "b63d7c4af215d7b135110667c1b37166ddc9b19c3456a4c6703618042d30af16"
+    },
+    "configs/dispatcharr-iptv/native-provider-hardening/server.patch": {
+      "new_sha256": "f9c39815f7fcabeede8966b7416aaf81aa35762da2e1b6f06952a08aaa815ef3",
+      "previous_sha256": "4c0ebba29aa8b1e728c4cf4b1ca65617199c0f411031c6cd04261694cb01b753"
+    },
+    "configs/dispatcharr-iptv/native-provider-hardening/tests/test_group_lifecycle.py": {
+      "new_sha256": "c57ffcc0c5b45e0fdd2ab2b9a25d4dc26968c9d8ffaf3a833d8af158f267a5e4",
+      "previous_sha256": null
+    },
+    "configs/dispatcharr-iptv/permanent-streaming/base-input-pins.json": {
+      "new_sha256": "64422238a85aef03bd2d475d144a6fb3bde73e54c130418cacfba1a58247c24b",
+      "previous_sha256": "cfe0d81ad95dd3daa73b8740a002474c8e8de7d94c2f219c29a1ac1663195ccf"
+    },
+    "configs/dispatcharr-iptv/permanent-streaming/manifest.json": {
+      "new_sha256": "427daf159e2e5d06205ae8e9f1b49a7014ade38e6e75f5abb12dc04e778d2436",
+      "previous_sha256": "67b6fd25803944c721c6b85f41badb14da79d1f612c6a2d574098ce67ad4a051"
+    },
+    "configs/dispatcharr-iptv/trusted-guard-tests/transition-manifest.json": {
+      "new_sha256": "7a97700e9f26cac3421237f4c493fc3df7c9edc0f96dfe04edff9203a4e57cb0",
+      "previous_sha256": "2466096d566ce5b0b5144d8a03074d16891151b5260068c6922a64c3b78ce448"
+    },
+    "tools/dispatcharr_provider/server-contract.json": {
+      "new_sha256": "a57b04d22e0236ecb39c94cf9d63d050dae0e53f1e19ab275a95bdaf99e25c5e",
+      "previous_sha256": "ab805deac2bd8f0620ddd05b853944ae61331c1cc7aba8fe031af742b8fc27e3"
+    },
+    "tools/dispatcharr_provider/synthetic.py": {
+      "new_sha256": "f718ebde15e1564c7c6b3ac826d00435b40576c5d83b14e7a12b56ff17bb8dad",
+      "previous_sha256": "9cd6900eecc09ab8038ecc3c76244f1245f52b6fd85032659d237beb3433c93d"
+    },
+    "tools/tests/test_dispatcharr_native_group_investigation.py": {
+      "new_sha256": "ea89dc33a564834f601060293ed4012beed4ee1c0f6d9a89f9b63f15dec394f2",
+      "previous_sha256": "de85200b1e9c0b5507ec5259586add2f52e3912529eb440f2a5bf68a4afb8530"
+    }
+  },
+  "new_lifecycle_tests": 15,
+  "offline_suites": {
+    "audit": {
+      "failures": 0,
+      "log_sha256": "99ccdd33742b6c39114249b8b753c7cc838536f13b56a0506e135973c3398e03",
+      "test_executions": 38
+    },
+    "design": {
+      "failures": 0,
+      "log_sha256": "8c9bc15e38087ad0141178f20ff79800c6241fd35806c469a05aa158e0d82fc0",
+      "test_executions": 28
+    },
+    "guard": {
+      "failures": 0,
+      "log_sha256": "fd5c70f7c0baa96e5781ea0ac33bf24b23868f9682e9c191da35300a5ef5fd60",
+      "test_executions": 14
+    },
+    "harness": {
+      "failures": 0,
+      "log_sha256": "56429d3ee71296766aebea9129c6b42ca83fd8ac978abb3a409439a224140d99",
+      "test_executions": 116
+    },
+    "isolated": {
+      "failures": 0,
+      "log_sha256": "681c112abff5569b89c21bd2f05e568a2d069760cbef36d652743f3d576cc720",
+      "test_executions": 14
+    },
+    "native": {
+      "failures": 0,
+      "log_sha256": "2c328302329085532414a5f316f7186604ba0b0ec67e5f1622e012dae60a21dd",
+      "test_executions": 106
+    },
+    "permissions": {
+      "failures": 0,
+      "log_sha256": "609c986415ffafd138365a2d8a4b81f544f82e529d6137a23a3a7b01ef3907d1",
+      "test_executions": 40
+    },
+    "persistence": {
+      "failures": 0,
+      "log_sha256": "771a1a9d840f346bc664b124dbe45d79f8dec5d77bffcb585c15971b2f191f0b",
+      "test_executions": 26
+    },
+    "streaming": {
+      "failures": 0,
+      "log_sha256": "f3ece2c96e439c33dc5a644081971f6fbe12866ad27949d3adaf4f6085e922da",
+      "test_executions": 210
+    },
+    "tools": {
+      "failures": 0,
+      "log_sha256": "30fea3ae90a9407abd8a6c8e1ab228ed9cc838083bcbbc9dbe050b5da19f80e0",
+      "test_executions": 147
+    }
+  },
+  "retained_image": "sha256:e37c7aacaacea0ce2d5b19fbc8b87b9e36b6731d7236799e40bac2fe1e64b4be",
+  "retained_image_contains_fix": false,
+  "rollback_original_pins_unchanged": true,
+  "schema": 1,
+  "test_method": "Generated full hardened task/process_groups/view and pinned serializer bodies executed over in-memory ORM/HTTP/policy witnesses; no real Django or Celery startup. Existing isolated permissions/network fixture regressions also rerun.",
+  "unchanged_hardened_outputs": 11,
+  "unchanged_readiness_files": 4
+}

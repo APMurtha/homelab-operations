@@ -8,7 +8,7 @@
   "units/dispatcharr-stack.service": "30e7f5e64b7a6ce3f8ec3cf80572d74bb2dd1ed67083929276cf55fbb65c357e",
   "units/docker.service.50-dispatcharr-order.conf": "c9beb54d2b2e6285013355f3a80dd6677ff7723d10e835f45c499f39fb9e581b",
   "validation-results.json": "b5bd3619e53bdb2afb642834e0a6b98e9b45136663e4844fc629ef57eb71bdca",
-  "verify.py": "3133c228bcad182454e3fa03e0af9ae26e39dbf23f616cc39c47d8a44e07f89c",
+  "verify.py": "6c24b83443059b90b246ada531d67cc58a172389135968f45cedd289942bb108",
   "cleanup.py": "0007aafcc865746e2186e3d491a9c913958985453e8ea66f7523e690dc5406f2",
   "units/dispatcharr-egress-guard.service.d/20-trusted-readiness.conf": "37226a0e1d77a14d2f0c0e16254f0f6699e7e0c543afcebfd24630cde0249a34"
 }
