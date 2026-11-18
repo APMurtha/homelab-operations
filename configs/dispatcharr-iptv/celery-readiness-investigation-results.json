@@ -1,0 +1,546 @@
+{
+  "backend_receipt": {
+    "boundary": "inside_readiness",
+    "captured_bytes": 1245,
+    "invocation": "3bb14e388660a22ed7f62a9aacb795ea",
+    "producer_entered": true,
+    "reason": "backend_stage_failed",
+    "records": [
+      {
+        "classification": "checking",
+        "elapsed_s": 3.3e-05,
+        "event": "start",
+        "stage": "api_sources"
+      },
+      {
+        "classification": "ready",
+        "count": 14,
+        "elapsed_s": 0.018688,
+        "event": "pass",
+        "stage": "api_sources"
+      },
+      {
+        "classification": "checking",
+        "elapsed_s": 0.019073,
+        "event": "start",
+        "stage": "postgres"
+      },
+      {
+        "classification": "ready",
+        "elapsed_s": 0.283854,
+        "event": "pass",
+        "returncode": 0,
+        "stage": "postgres"
+      },
+      {
+        "classification": "checking",
+        "elapsed_s": 0.284041,
+        "event": "start",
+        "stage": "redis"
+      },
+      {
+        "classification": "ready",
+        "elapsed_s": 0.708244,
+        "event": "pass",
+        "stage": "redis"
+      },
+      {
+        "classification": "checking",
+        "elapsed_s": 0.708337,
+        "event": "start",
+        "stage": "uwsgi"
+      },
+      {
+        "classification": "ready",
+        "count": 2,
+        "elapsed_s": 0.710157,
+        "event": "pass",
+        "stage": "uwsgi"
+      },
+      {
+        "classification": "checking",
+        "elapsed_s": 0.710226,
+        "event": "start",
+        "stage": "celery"
+      },
+      {
+        "classification": "celery_command_failed",
+        "count": 0,
+        "default_present": false,
+        "dvr_present": false,
+        "elapsed_s": 9.654352,
+        "event": "fail",
+        "returncode": 69,
+        "stage": "celery"
+      }
+    ],
+    "returncode": 1,
+    "state": "complete"
+  },
+  "bounded_Docker_log_classifications": {
+    "events": [
+      {
+        "code": "postgres_ready",
+        "timestamp": "2026-11-18T22:31:05.166611063Z"
+      },
+      {
+        "code": "unattributed_connection_error",
+        "timestamp": "2026-11-18T22:31:09.460967496Z"
+      },
+      {
+        "code": "uwsgi_workers_spawned",
+        "timestamp": "2026-11-18T22:31:14.928079563Z"
+      },
+      {
+        "code": "uwsgi_workers_spawned",
+        "timestamp": "2026-11-18T22:31:14.928088158Z"
+      },
+      {
+        "code": "worker_start_role",
+        "timestamp": "2026-11-18T22:31:15.226794497Z"
+      },
+      {
+        "code": "worker_start_role",
+        "timestamp": "2026-11-18T22:31:15.326952529Z"
+      },
+      {
+        "code": "broker_connected",
+        "timestamp": "2026-11-18T22:31:30.580346016Z"
+      },
+      {
+        "code": "celery_mingle_started",
+        "timestamp": "2026-11-18T22:31:30.584714238Z"
+      },
+      {
+        "code": "broker_connected",
+        "timestamp": "2026-11-18T22:31:30.726959033Z"
+      },
+      {
+        "code": "celery_mingle_started",
+        "timestamp": "2026-11-18T22:31:30.730073689Z"
+      },
+      {
+        "code": "celery_worker_start",
+        "timestamp": "2026-11-18T22:31:31.008308895Z"
+      },
+      {
+        "code": "celery_mingle_complete",
+        "timestamp": "2026-11-18T22:31:31.604290308Z"
+      },
+      {
+        "code": "worker_ready",
+        "role": "default",
+        "timestamp": "2026-11-18T22:31:31.667445161Z"
+      },
+      {
+        "code": "worker_start_role",
+        "timestamp": "2026-11-18T22:31:31.667445161Z"
+      },
+      {
+        "code": "celery_mingle_complete",
+        "timestamp": "2026-11-18T22:31:31.782171309Z"
+      },
+      {
+        "code": "worker_ready",
+        "role": "dvr",
+        "timestamp": "2026-11-18T22:31:31.813990066Z"
+      },
+      {
+        "code": "worker_start_role",
+        "timestamp": "2026-11-18T22:31:31.813990066Z"
+      }
+    ],
+    "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+    "kernel_exact": true,
+    "lines_examined": 135,
+    "log_bytes_examined": 17182,
+    "stopped": true,
+    "utc": "2026-11-18T22:57:29Z",
+    "window": [
+      "2026-11-18T22:30:35Z",
+      "2026-11-18T22:31:50Z"
+    ]
+  },
+  "bounded_application_log": {
+    "bytes_read": 12521,
+    "corresponding_host_local_window_EST": "2026-11-18 17:31",
+    "events": [
+      {
+        "application_timestamp": "2026-11-18 17:31:30,578",
+        "code": "broker_connected"
+      },
+      {
+        "application_timestamp": "2026-11-18 17:31:30,726",
+        "code": "broker_connected"
+      },
+      {
+        "application_timestamp": "2026-11-18 17:31:31,666",
+        "code": "worker_ready",
+        "role": "default"
+      },
+      {
+        "application_timestamp": "2026-11-18 17:31:31,813",
+        "code": "worker_ready",
+        "role": "dvr"
+      }
+    ],
+    "raw_logs_returned": false,
+    "read_limit_bytes": 262144,
+    "utc": "2026-11-18T23:12:16Z",
+    "window_UTC": "2026-11-18 22:31"
+  },
+  "celery_source_version": "5.6.3",
+  "container_execution": false,
+  "creation_environment_presence_comparisons_only": {
+    "broker_override_default_database": true,
+    "broker_override_default_port": true,
+    "broker_override_loopback": true,
+    "broker_override_password_present": false,
+    "broker_override_plain_redis": true,
+    "broker_override_present": true,
+    "redis_password_present_in_container_environment": false
+  },
+  "decision": {
+    "GO": "separately reviewed diagnostic-only classification/timing correction",
+    "NO_GO": [
+      "claiming a confirmed startup race",
+      "increasing timeouts or changing broker/security configuration on this evidence",
+      "unreviewed recovery start"
+    ]
+  },
+  "entrypoint_copies_identical": true,
+  "entrypoint_sha256": "af1353b20193c7e9f19a50b8e0ff5bbcfd40f45273cb6957a2495e8f2a22cc8c",
+  "estimate_limitation": "Derived from receipt mtime minus producer elapsed time; IPC/drain/write latency and broadcast time were not measured.",
+  "estimated_command_start_UTC": "2026-11-18T22:31:30.759874+00:00",
+  "exact_branch_from_original_attempt": "unknown; raw CLI stdout/stderr deliberately not retained",
+  "executable_wrapper_sha256": "a36c6599754b5de4a2af22fb7d02b84c474045e29fdb3a2bef093c8dd7383696",
+  "final_state": {
+    "Docker_networks_volumes_unchanged": true,
+    "Jellyfin_healthy": true,
+    "all33_container_rows_unchanged_since_failed_cleanup": true,
+    "all67_candidate_files_match": true,
+    "app_log": {
+      "events": [],
+      "exists": true,
+      "tail_limit_bytes": 262144
+    },
+    "container_execution": false,
+    "creation_environment_flags_only": {
+      "CELERY_BROKER_URL_present_at_container_creation": true,
+      "CELERY_RESULT_BACKEND_present_at_container_creation": false,
+      "REDIS_SSL_present_at_container_creation": false,
+      "REDIS_URL_present_at_container_creation": false
+    },
+    "four_IPTV_stopped": true,
+    "installed_backend_sha256": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
+    "installed_lifecycle_sha256": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
+    "protection": {
+      "anchors_valid": true,
+      "kernel_exact": true,
+      "ownership_no_pending_transaction": true,
+      "private_permissions_valid": true,
+      "provider_inactive": true,
+      "public_assertions_withdrawn": true,
+      "receipt_path_compatible": true,
+      "transaction_revoked_unblocked": true
+    },
+    "receipt_metadata": {
+      "3bb14e388660a22ed7f62a9aacb795ea.intent.json": {
+        "ctime_ns": 1795041089345000000,
+        "mtime_ns": 1795041089345000000,
+        "sha256": "2aa3e9bda05b94a8995f4d437455b66a0b35d455b2e16c3d76f70d64f89f9e14"
+      },
+      "3bb14e388660a22ed7f62a9aacb795ea.result.json": {
+        "ctime_ns": 1795041099704000000,
+        "mtime_ns": 1795041099704000000,
+        "sha256": "5f5efba1fc7374931345410e247b7359df95ee319b1bcffe29535946b7e9fa51"
+      }
+    },
+    "service_starts": 0,
+    "source_changes": false,
+    "utc": "2026-11-18T23:08:21Z"
+  },
+  "incident_commit": "f4298da612300a9024ac8302c8db1252d8d69fc6",
+  "journal": {
+    "container_execution": false,
+    "journal_events": [
+      {
+        "code": "systemd_starting",
+        "monotonic_us": "179507345777",
+        "realtime_us": "1795041040352255"
+      },
+      {
+        "backend_elapsed_s": 3.3e-05,
+        "classification": "checking",
+        "code": "backend_api_sources_start",
+        "monotonic_us": "179566707257",
+        "realtime_us": "1795041099713735"
+      },
+      {
+        "backend_elapsed_s": 0.018688,
+        "classification": "ready",
+        "code": "backend_api_sources_pass",
+        "monotonic_us": "179566707257",
+        "realtime_us": "1795041099713735"
+      },
+      {
+        "backend_elapsed_s": 0.019073,
+        "classification": "checking",
+        "code": "backend_postgres_start",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "backend_elapsed_s": 0.283854,
+        "classification": "ready",
+        "code": "backend_postgres_pass",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "backend_elapsed_s": 0.284041,
+        "classification": "checking",
+        "code": "backend_redis_start",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "backend_elapsed_s": 0.708244,
+        "classification": "ready",
+        "code": "backend_redis_pass",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "backend_elapsed_s": 0.708337,
+        "classification": "checking",
+        "code": "backend_uwsgi_start",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "backend_elapsed_s": 0.710157,
+        "classification": "ready",
+        "code": "backend_uwsgi_pass",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "backend_elapsed_s": 0.710226,
+        "classification": "checking",
+        "code": "backend_celery_start",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "backend_elapsed_s": 9.654352,
+        "classification": "celery_command_failed",
+        "code": "backend_celery_fail",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "code": "retained_backend_failure",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "code": "lifecycle_generic_failure",
+        "monotonic_us": "179566707920",
+        "realtime_us": "1795041099714399"
+      },
+      {
+        "code": "systemd_failed",
+        "monotonic_us": "179570829452",
+        "realtime_us": "1795041103835930"
+      }
+    ],
+    "utc": "2026-11-18T23:00:04Z"
+  },
+  "library_source_inventory": {
+    "celery/__init__.py": {
+      "bytes": 6370,
+      "path": "/dispatcharrpy/lib/python3.13/site-packages/celery/__init__.py",
+      "relevant_lines": [
+        27
+      ],
+      "sha256": "84a164d3862145db4ac21717f808ceeeb289ae885b873978b5df234cd831d16b",
+      "two_layer_copies_identical": true
+    },
+    "celery/bin/base.py": {
+      "relevant_functions": [
+        {
+          "line": 123,
+          "name": "handle_remote_command_error"
+        }
+      ],
+      "sha256": "922af38f29c48c06246dc5cf0b0e8b5bf1fe2ed58886ef6d1d182c6188db0bb7"
+    },
+    "celery/bin/celery.py": {
+      "bytes": 7517,
+      "path": "/dispatcharrpy/lib/python3.13/site-packages/celery/bin/celery.py",
+      "relevant_lines": [],
+      "sha256": "76730385bda66607440b5dd34c688f987f6eb15103d55f2ee887e7b672c601ac",
+      "two_layer_copies_identical": true
+    },
+    "celery/bin/control.py": {
+      "bytes": 9032,
+      "path": "/dispatcharrpy/lib/python3.13/site-packages/celery/bin/control.py",
+      "relevant_functions": [
+        {
+          "line": 16,
+          "name": "_say_remote_command_reply"
+        },
+        {
+          "line": 59,
+          "name": "_verify_command_name"
+        },
+        {
+          "line": 178,
+          "name": "inspect"
+        }
+      ],
+      "relevant_lines": [
+        11,
+        129,
+        133,
+        140,
+        141,
+        142,
+        178,
+        191,
+        196,
+        197,
+        198,
+        247,
+        256,
+        257,
+        258
+      ],
+      "sha256": "c1267b714e2100b4c7f9817833a985f6f4cf704da08485ddaaa33279f54efbdd",
+      "two_layer_copies_identical": true
+    },
+    "celery/exceptions.py": {
+      "relevant_functions": [
+        {
+          "line": 307,
+          "name": "CeleryCommandException"
+        }
+      ],
+      "sha256": "16b971422a1d46dc7446b25f810a3964c61327c05286b264b5e487dbd4c250a3"
+    },
+    "celery/platforms.py": {
+      "bytes": 25610,
+      "path": "/dispatcharrpy/lib/python3.13/site-packages/celery/platforms.py",
+      "relevant_lines": [
+        39,
+        51
+      ],
+      "sha256": "0c30860a9f32b7a7ff0eb64f4a20a359b8eed87242b0559f934cad49ff810f10",
+      "two_layer_copies_identical": true
+    },
+    "celery/worker/consumer/consumer.py": {
+      "relevant_functions": [
+        {
+          "line": 427,
+          "name": "on_ready"
+        }
+      ],
+      "sha256": "4993370f72b92a96a692bee0b711e0fcc32ce022080dcbc2c3e8204989fa190f"
+    },
+    "celery/worker/consumer/control.py": {
+      "bytes": 946,
+      "path": "/dispatcharrpy/lib/python3.13/site-packages/celery/worker/consumer/control.py",
+      "relevant_lines": [],
+      "sha256": "d0d889f4ff801ddbf5df899792046053d85f85d27f3fb1ca6fbcfd0385ea6b64",
+      "two_layer_copies_identical": true
+    },
+    "celery/worker/pidbox.py": {
+      "bytes": 3630,
+      "path": "/dispatcharrpy/lib/python3.13/site-packages/celery/worker/pidbox.py",
+      "relevant_lines": [
+        51,
+        53,
+        86,
+        102
+      ],
+      "sha256": "2dc42c28391df19f779d0c64d1238bba507c18b11f2233e437e274a4693b75f3",
+      "two_layer_copies_identical": true
+    },
+    "celery/worker/worker.py": {
+      "relevant_functions": [
+        {
+          "line": 154,
+          "name": "on_consumer_ready"
+        }
+      ],
+      "sha256": "8afaee27658ae49caf17bacb62eb8c1df5649627ceaeb425ef5971ea0e165263"
+    },
+    "kombu/pidbox.py": {
+      "bytes": 15340,
+      "path": "/dispatcharrpy/lib/python3.13/site-packages/kombu/pidbox.py",
+      "relevant_functions": [
+        {
+          "line": 258,
+          "name": "get_queue"
+        },
+        {
+          "line": 298,
+          "name": "_publish"
+        },
+        {
+          "line": 322,
+          "name": "_broadcast"
+        }
+      ],
+      "relevant_lines": [
+        88,
+        322
+      ],
+      "sha256": "959ffb7345bc60255973a1a13673c9e422847f58a7b5ab2a39539ea7e9088e8b",
+      "two_layer_copies_identical": true
+    }
+  },
+  "original_image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+  "production_changes": false,
+  "python_virtualenv_source_version": "3.13.17",
+  "receipt_end_mtime_is_not_command_end_timestamp": true,
+  "result": "FAILURE_BRANCH_UNRESOLVED_STARTUP_OVERLAP_CONFIRMED",
+  "schema": 1,
+  "service_starts": 0,
+  "source_method": {
+    "Docker_cp_stopped_file_lookups": "returned file absent; no container executed",
+    "committed_snapshot_verified": true,
+    "full_image_export_or_verification_scan": false,
+    "image_root_chain": "sha256:5b1283c4ac7cb57ca57908b2c394ea0f621d2a84ee6cc50d4cc0a15d1c0122aa",
+    "mounts_or_new_snapshots_created": false,
+    "snapshot_directory_metadata_probes": 374,
+    "source_read_directly_from_existing_layer_directories": true
+  },
+  "source_supported_exit69_branches": [
+    "no_replies",
+    "broker_operational_error",
+    "other_remote_command_exception"
+  ],
+  "synthetic_parser_check": {
+    "actual_runtime_output_reconstructed": false,
+    "result": "PASS",
+    "roles": [
+      "default",
+      "dvr"
+    ]
+  },
+  "uwsgi_ini_source_inventory": [
+    {
+      "attach_daemon_static_source": [
+        "exec-pre = python /app/scripts/wait_for_redis.py",
+        "attach-daemon = redis-server --timeout $(REDIS_IDLE_TIMEOUT) --loglevel warning",
+        "attach-daemon = nice -n $(CELERY_NICE_LEVEL) celery --quiet -A dispatcharr worker -Q celery -n default@%%h --autoscale=$(CELERY_MAX_WORKERS),$(CELERY_MIN_WORKERS)",
+        "attach-daemon = nice -n $(CELERY_NICE_LEVEL) celery --quiet -A dispatcharr worker -Q dvr -n dvr@%%h --pool=threads --concurrency=20",
+        "attach-daemon = nice -n $(CELERY_NICE_LEVEL) celery --quiet -A dispatcharr beat",
+        "attach-daemon = daphne -b 0.0.0.0 -p 8001 dispatcharr.asgi:application"
+      ],
+      "sha256": "2e9fe2643141b14d31ee2625c4fa312e3c45c636cda200c40f29c08306844992"
+    }
+  ]
+}
