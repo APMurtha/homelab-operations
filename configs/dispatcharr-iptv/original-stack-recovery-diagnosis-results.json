@@ -1,0 +1,842 @@
+{
+  "confirmed_failure_boundary": "Original backend.py invocation exited1 before registration; exact subcheck not retained",
+  "decision": "NO_GO_BLIND_RETRY; CONDITIONAL_GO_SEPARATELY_AUTHORIZED_INSTRUMENTED_MANAGED_ATTEMPT",
+  "diagnostic_execution": {
+    "application_API_calls": 0,
+    "container_application_code_executions": 0,
+    "container_lifecycle_commands": 0,
+    "playback": 0,
+    "provider_requests": 0,
+    "restore_or_archive_disk_extraction": 0,
+    "runtime_mutations": 0,
+    "systemd_or_Compose_lifecycle_commands": 0
+  },
+  "exact_cause_established": false,
+  "final_preservation": {
+    "Jellyfin_healthy": true,
+    "all_33_rows_unchanged_after_read_only_diagnosis": true,
+    "container_application_executions": 0,
+    "four_IPTV_stopped": true,
+    "lifecycle_operations": 0,
+    "utc": "2026-11-18T21:31:53Z"
+  },
+  "fresh_state": {
+    "AIO_namespace_reference_matches_existing_owner": true,
+    "AIO_runtime_mount": [
+      {
+        "destination": "/runtime",
+        "read_only": false,
+        "source": "/run/dispatcharr-permanent/relay",
+        "type": "bind"
+      }
+    ],
+    "all_33_rows_match_incident_final": true,
+    "bounded_log_classifications": {
+      "AIO_last_300": {
+        "bytes": 13535,
+        "fixed_pattern_counts": {
+          "Celery_ready": 2,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 1,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 2
+        },
+        "read_exit": 0
+      },
+      "dispatcharr": {
+        "bytes": 10026,
+        "fixed_pattern_counts": {
+          "Celery_ready": 2,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 0,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 2
+        }
+      },
+      "rivendell-iptv-gateway": {
+        "bytes": 4366,
+        "fixed_pattern_counts": {
+          "Celery_ready": 0,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 0,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 0
+        }
+      },
+      "rivendell-iptv-relay": {
+        "bytes": 1,
+        "fixed_pattern_counts": {
+          "Celery_ready": 0,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 0,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 0
+        }
+      },
+      "rivendell-iptv-vpn": {
+        "bytes": 6199,
+        "fixed_pattern_counts": {
+          "Celery_ready": 0,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 0,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 0
+        }
+      }
+    },
+    "checkpoint_source_sha256_verified": true,
+    "containers": {
+      "audiobookshelf": {
+        "configuration_sha256": "aca96b6d340f540426b07306bbf51ce6eb6663b66ed021b01b17d51146f3dacb",
+        "health": null,
+        "id": "e73dc188981868b84ce3aee6a74e0c8ba06a6e30ce754532d6e60a693c8b2b81",
+        "image": "sha256:180acad33d69c99ed208676465d8edcb268fa46967735579a7810859885b1a8e",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.224299034Z",
+        "status": "running"
+      },
+      "audiobookshelf-trial": {
+        "configuration_sha256": "b5ab16caafab9069a6ce375eb58506eaa6482efa3c97b8f91c38049bf11d366a",
+        "health": null,
+        "id": "118ffa920acdad0cd5349d83169576b094c8bf43fc92d684070e2bd9dc1a40b1",
+        "image": "sha256:180acad33d69c99ed208676465d8edcb268fa46967735579a7810859885b1a8e",
+        "restarts": 0,
+        "started": "2026-11-01T20:44:54.94432778Z",
+        "status": "exited"
+      },
+      "bazarr": {
+        "configuration_sha256": "542cef5d90c0d2ff6d3442a2c186d5a91f638eac5a18c595f63246bf528d97c2",
+        "health": null,
+        "id": "5bf744ab82c6b753279f0337655ab5f81f1cec9fc66178e781f7623d15acaede",
+        "image": "sha256:84b6f05a7a4194fafe5a0bec062d32f6ae9ea74db33d43d678cb9a3191f31c24",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:36.401723516Z",
+        "status": "running"
+      },
+      "chaptarr": {
+        "configuration_sha256": "cd68b64214ddb8c16f70beb72719b02dbbfbefd0a7ade1d778b5bb9747a678e4",
+        "health": null,
+        "id": "745612b8baafb0a9114e41acba58c0957b2db43cc6d37080542849707e42b9ab",
+        "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:36.872079651Z",
+        "status": "running"
+      },
+      "chaptarr-import-review": {
+        "configuration_sha256": "078b11d370b5fa432c64e108045b7adb9a001746c4eeed2454a1b87c0fca8263",
+        "health": null,
+        "id": "2a7b362e56d2886606e231bfba1e0fb490dbcbff63674eae99463a4065e2b279",
+        "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+        "restarts": 0,
+        "started": "2026-11-02T00:56:11.626114678Z",
+        "status": "exited"
+      },
+      "chaptarr-restore-check": {
+        "configuration_sha256": "97f2ed0926dbde8ebb0785ee53c425c7647a1d52a0093e81e533fc168f386512",
+        "health": null,
+        "id": "b0da11b391a7ece1e042fae1284d76f9503fcec37438440ab474edff5164d0ea",
+        "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+        "restarts": 0,
+        "started": "2026-11-02T05:30:12.593957567Z",
+        "status": "exited"
+      },
+      "chaptarr-search-check": {
+        "configuration_sha256": "cde7342af2074b566521063ed7fd4d81caf652f16fcb2d2d096364e37426c026",
+        "health": null,
+        "id": "5e3c0448fc95a95489eace99c307f238c797a258ffeab6fc0470bf5285b8a8dd",
+        "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+        "restarts": 0,
+        "started": "2026-11-02T21:57:31.776712122Z",
+        "status": "exited"
+      },
+      "chaptarr-stock-batch": {
+        "configuration_sha256": "32cda3f85bbc6ba224548a97f96502562a3dbcfa6d4529bd9ea50121cc89885c",
+        "health": null,
+        "id": "6dc80f64f902f2bda42e291c129002e2450945a541e150ca1338f12ca959fd0a",
+        "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+        "restarts": 0,
+        "started": "2026-11-02T02:10:49.239791631Z",
+        "status": "exited"
+      },
+      "chaptarr-stock-full": {
+        "configuration_sha256": "00cd9469cce50ff433fbb2fbee7c9d1ec2af2dab6bd1b7dc04442aa982d75ae9",
+        "health": null,
+        "id": "02b92bf90c67632f1b9a7f2d0d8b78581fece7a97d06e4e92b0a1536958423b7",
+        "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+        "restarts": 0,
+        "started": "2026-11-02T04:14:43.396806278Z",
+        "status": "exited"
+      },
+      "chaptarr-stock-rebuild-check": {
+        "configuration_sha256": "73e3fa9d86a531a8ec32c9a894744d2ea8bc2caedcbfde54682c3111acbc3d5a",
+        "health": null,
+        "id": "5d495a0dfd6923a913fcbfdcdfdcd1447b17da02f4ae4cd087993a554cd2c549",
+        "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+        "restarts": 0,
+        "started": "2026-11-02T05:13:02.464690376Z",
+        "status": "exited"
+      },
+      "chaptarr-trial": {
+        "configuration_sha256": "4a97a0b4f8fe49a00cca7c6223ede69e5e19369a1acac3e3236f97085bda4a76",
+        "health": null,
+        "id": "fa01bb4227669a43059a5b2dfebcf8e0641210647755d57b312246b0a68b0a7a",
+        "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+        "restarts": 0,
+        "started": "2026-11-01T20:54:32.894807834Z",
+        "status": "exited"
+      },
+      "chaptarr-west-regression": {
+        "configuration_sha256": "c56c38dc174a1494857fc260013f2c350434aeda5f0bae11bbdfeb240d14a9d9",
+        "health": null,
+        "id": "ef1eb6151ad366dba319b29a9b30102ad11c19676e090810457a974cceea1e89",
+        "image": "sha256:b182902dc2a7a3f8df6b1774cb4c2aacbb49111f698f9ac15608b36f94079508",
+        "restarts": 0,
+        "started": "2026-11-02T01:41:33.027640983Z",
+        "status": "exited"
+      },
+      "chaptarr-west-regression-v2": {
+        "configuration_sha256": "cc6e0329ea3fa259382a1fe047933848b5063ccd076f1b8c40a1b3457ca4adf0",
+        "health": null,
+        "id": "a1dbf8bbc83f6dec4a70467a5fff8861719ef457b46c51a6a419834fe385dc6c",
+        "image": "sha256:b182902dc2a7a3f8df6b1774cb4c2aacbb49111f698f9ac15608b36f94079508",
+        "restarts": 0,
+        "started": "2026-11-02T01:47:48.830279316Z",
+        "status": "exited"
+      },
+      "deunhealth": {
+        "configuration_sha256": "25663743a522d547c4db3a3e8af091e489246ae966aa5bbcf694cc0a54255a5f",
+        "health": "healthy",
+        "id": "4494379057b5b50612529f9ccad48ee211e8f46db2766b391a276a60b1c28e17",
+        "image": "sha256:db1e4fcd3aceeb0da34a83f7a8a5432df586e6d0388ddb6ad8dd7b479e4aa25d",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.103179554Z",
+        "status": "running"
+      },
+      "dispatcharr": {
+        "configuration_sha256": "05afe99d9591388c308d1513f0ad4a2e0f91b4eb7847e61b732c4b0ef4646459",
+        "health": "unhealthy",
+        "id": "0d34537414caa0b788415ef7017e77687768fd9344353a34e882bd5a5c027a04",
+        "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+        "restarts": 0,
+        "started": "2026-11-18T20:36:03.918644885Z",
+        "status": "exited"
+      },
+      "gluetun": {
+        "configuration_sha256": "c7df9eccf807238f161f20258ab31379c2ab85bcadceb52287f5a2b70cfa8229",
+        "health": "healthy",
+        "id": "1d1c69791f681528ed021bbd9af1ca15d0461602c79b8eb17298ef1f3a04ef7b",
+        "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.124486724Z",
+        "status": "running"
+      },
+      "jellyfin": {
+        "configuration_sha256": "ffc0f9acb8f959637893770a3223685cfb2bd3f4ff3fde80729b3ccf2ec3fa8c",
+        "health": "healthy",
+        "id": "6798247b9099bc791892f7118f598aa48d0b7c21ecfc616bbbebfee43c22763b",
+        "image": "sha256:baba630419915985442f315f08b0cf46d9f4c8a0cc4bd38e94a6d35751dd5ef5",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.260706697Z",
+        "status": "running"
+      },
+      "lidarr": {
+        "configuration_sha256": "a474d2526972bd9246e2a2ea428d1f13e73226f96478693e38ba6e52234633da",
+        "health": null,
+        "id": "2e677d5112ba8dcfff62c3843318ea52eb46416861f4b919a687c4c7646b1328",
+        "image": "sha256:8ab0fd370b604ae034d9a9c261a9d8d873bece33d9736852e7ce4f3566e4a35d",
+        "restarts": 0,
+        "started": "2026-10-20T22:51:54.249627307Z",
+        "status": "exited"
+      },
+      "n8n": {
+        "configuration_sha256": "2f9b6b251577fb1072468014bb7aeeb552602df9d5f175a498d6d31269cee5e4",
+        "health": null,
+        "id": "2a4bdfbf8a82339f2c44023f704ba9e9aa2de15579c8e7e12252985ade4cfbbb",
+        "image": "sha256:a293b89bac876872a0c1ef0fbbb7ce056aa2d215f62917acf032ecb8010199af",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.314322466Z",
+        "status": "running"
+      },
+      "nzbget": {
+        "configuration_sha256": "1c8f38521c255ae8b11dae18986c39f79cac7ce3b79973d7e7614c3be3e09716",
+        "health": null,
+        "id": "1c6fa534fe68e4b71c9c26aa3c5f48dc13e4fc0bab967022dfa8755c69514354",
+        "image": "sha256:24951ff9689ddbc0843e309ed16db74409a077541a8aeaecca606ae3565768f2",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.280703714Z",
+        "status": "running"
+      },
+      "pairdrop": {
+        "configuration_sha256": "78d692f260c9f3942fb1ce98ae6e80ac27db1bdf5680a4a0a5b16da260b78c05",
+        "health": null,
+        "id": "041b220217e2328e70f8716bfc6ba85ea72fa97e3e35c2e1e7b77d2ddfd44bc2",
+        "image": "sha256:830bd38a0bff0befbb5353c44a30d366f8ed692e68318a03939041e624b30c58",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.19244424Z",
+        "status": "running"
+      },
+      "profilarr": {
+        "configuration_sha256": "20833fc35c476cd5005840b1b62ca420459f3e7dc651a78a763a29eb3e9afa8b",
+        "health": "healthy",
+        "id": "a3ae6b9d9451b277adde23cff8a1ba6e6a7bf478c046bb40934d0c8b51fa4372",
+        "image": "sha256:ddcdd0f340043c2ec0a85ca74b9a6be9be42b1c0288c75fc36a26a43f695860b",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.294765911Z",
+        "status": "running"
+      },
+      "profilarr-parser": {
+        "configuration_sha256": "bf91f1dc12b16e180c28173b8e08e3632a77ea0927d005dc32a2eb50f4d6e8f1",
+        "health": "starting",
+        "id": "aaf7f660a136487042f3e4aae94d633702af4d0db466becbc950e1e067696a0d",
+        "image": "sha256:3cd3f8c4979ee66304a518462cc6c5b59825bae6b25e7dfa51b30178b9265df7",
+        "restarts": 0,
+        "started": "2026-10-20T22:50:07.974132314Z",
+        "status": "exited"
+      },
+      "prowlarr": {
+        "configuration_sha256": "22167536d628d2b5e4ab2d7715b9764512caaee02fa3f63fb06d8e5ba72d29fb",
+        "health": null,
+        "id": "c483390b08bab2e18d26a8977582d01dd52d8dfbc587e27757260ad58d4119b4",
+        "image": "sha256:c7502a75b021d964481c129c84590b9cbc40f83aadd4e553f173871bc0deaa3c",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:36.117978599Z",
+        "status": "running"
+      },
+      "qbittorrent": {
+        "configuration_sha256": "44119d65e26be4c01d1d2016549ffd039651b6de2fafa1df3a6669c2ac58c658",
+        "health": "healthy",
+        "id": "512885aff720a4582e3ac02550a8fe58f620a75df5f9ccc336e0c7744cf150db",
+        "image": "sha256:2be038f3421f60f62e8e4bf201f66f385b68e4fbc9ed3ab79051069ea22e2650",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:36.313296914Z",
+        "status": "running"
+      },
+      "radarr": {
+        "configuration_sha256": "34c680fa59c2da595e4f92e40666c95faeebb5f3168084c2a45001108b466a36",
+        "health": null,
+        "id": "d721f472d63be4d6187d35ee1a9bcdd1bf250dd50ad847032aae6c4e11d85f59",
+        "image": "sha256:fe051413dfd91b383ba04910552e83fb0306895fefee275c48dafe7bb90807dc",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:36.278303434Z",
+        "status": "running"
+      },
+      "rivendell-iptv-gateway": {
+        "configuration_sha256": "6e8909c4d8cb00f8d3fac0c61c42a67694a755a5ddb813107560d40c54f9a63e",
+        "health": "unhealthy",
+        "id": "448ceeb80a51e6660a04cda3449a140052c2cb0984040d727824894413606199",
+        "image": "sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9",
+        "restarts": 0,
+        "started": "2026-11-17T05:41:52.932663045Z",
+        "status": "exited"
+      },
+      "rivendell-iptv-relay": {
+        "configuration_sha256": "5644a36879499badd036c989926439e1c42699304e524c120b516270b7e40918",
+        "health": "unhealthy",
+        "id": "3aa41213fdc8cacb88f18ce20136bec082e55490baf58d79f2e01d55ba85be27",
+        "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+        "restarts": 0,
+        "started": "2026-11-18T20:36:03.774731441Z",
+        "status": "exited"
+      },
+      "rivendell-iptv-vpn": {
+        "configuration_sha256": "24e276151455d9e35e4ad260a88f82639e551ea424d8755f20ce3ac58190c68c",
+        "health": "unhealthy",
+        "id": "1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e",
+        "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+        "restarts": 0,
+        "started": "2026-11-18T20:35:56.626118544Z",
+        "status": "exited"
+      },
+      "seedboxapi": {
+        "configuration_sha256": "756427cb67d62bf7a36c34db483c67d49380035e72b8dce3595265f0b033036a",
+        "health": null,
+        "id": "752af963b61000c253c8a8d1734c84d71272499e06f95987db830788b1429dbf",
+        "image": "sha256:4712ede49e8c17ca1aee4cf61a145e249ddbb9498390b469c64b0b3086628259",
+        "restarts": 3,
+        "started": "2026-11-18T10:53:51.220324711Z",
+        "status": "running"
+      },
+      "seerr": {
+        "configuration_sha256": "6bcdcbb31e76b16d3338f5ed18bc9a8442ef8262b68dc977d152c0e04778fbb1",
+        "health": null,
+        "id": "67133cc6e4fc70b66c3beb3b19c55cdb111753d2dc5802f29657df6e24daaae2",
+        "image": "sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:27.303752701Z",
+        "status": "running"
+      },
+      "shelfarr": {
+        "configuration_sha256": "ee2f8d0e53d3c6927b186507d2d89fd09ecfb56fd074c2fe17269cac92c98899",
+        "health": "unhealthy",
+        "id": "f7a4f452b947478301ca5e1bf8925c2f3c0031f2f76fe5bc2bdacc9d70a79be9",
+        "image": "sha256:942ba37d51b4ed7fe08a25a58d2f69e354bd5baa3c3b7fa6655650c7cf57d9c2",
+        "restarts": 0,
+        "started": "2026-10-20T22:52:14.18489768Z",
+        "status": "exited"
+      },
+      "sonarr": {
+        "configuration_sha256": "d2b350570b5cb723d7e132d21436b0aa96c14f82d68a808faff9d7eb26d8301d",
+        "health": null,
+        "id": "f438ff1017bbf08e157da6061dc8d6436e77be0b04b7d7c7efbca72e442fd51c",
+        "image": "sha256:82172b363f9eddc02aca544f880a044f2ceb9aaf190bc87e4454e2f705eb91d0",
+        "restarts": 0,
+        "started": "2026-11-16T20:39:35.993518009Z",
+        "status": "running"
+      }
+    },
+    "ephemeral_runtime_directory_exists": false,
+    "guard_anchor_current_boot_and_inode": true,
+    "guard_private_metadata": {
+      "directory": true,
+      "gid": 0,
+      "mode": "0o700",
+      "nlink": 2,
+      "regular": false,
+      "symlink": false,
+      "uid": 0
+    },
+    "guard_public_metadata": {
+      "directory": true,
+      "gid": 0,
+      "mode": "0o755",
+      "nlink": 2,
+      "regular": false,
+      "symlink": false,
+      "uid": 0
+    },
+    "guard_transaction": {
+      "blocked": false,
+      "phase": "revoked"
+    },
+    "host": "rivendell",
+    "kernel_nftables_exact": true,
+    "legacy_ready_matches_policy": true,
+    "mode": "READ_ONLY; no container exec or lifecycle operations",
+    "network_matches_incident_stopped_state": true,
+    "network_sha256": "323f303c08b51c7ca59bd25a054ca89276b5e6bd182c570000bdaa1e14382c01",
+    "original_67_public_hashes": {
+      "/docker/dispatcharr-iptv/Caddyfile": "bf5e40d2ccba8799f4b38f15336399fea7068f676150c2f7b18a1e07dc081a98",
+      "/docker/dispatcharr-iptv/boot-admission-phase6b3k/admit.py": "649c5dcee6fff563bf7ee80d62d77d42e8c942e8a6a1205eeb4a2a570be2f917",
+      "/docker/dispatcharr-iptv/compose.proposed.yaml": "08585e417a257c22f7a207c8440c82bc009edc48ab641b097ce733cde553915d",
+      "/docker/dispatcharr-iptv/guard.py": "d25808d50ff14dd1f195397d34b1ead33c3ed8fa5b6aebc5a6c4bf2c120e91b0",
+      "/docker/dispatcharr-iptv/minimal-phase6b3d/accepted-table.template.json": "90976136177701559e709ab612f6857499bfd2aea372a43c6ca9e538cd2156d5",
+      "/docker/dispatcharr-iptv/minimal-phase6b3d/cleanup.py": "bb1f7166cb6adeec352abdd2eccb21365c8ae61ff7892a0da028e4c1fee71432",
+      "/docker/dispatcharr-iptv/minimal-phase6b3d/compose.persistence.proposed.yaml": "60a41dd431bd1b986a9f432ffecdd039e80eae6aea630322dab163bee66a8c9a",
+      "/docker/dispatcharr-iptv/minimal-phase6b3d/contracts.py": "2ba2080ce45a2c72611f3c33c7341f921d44cdbc9d936ca9d1edd086622251dd",
+      "/docker/dispatcharr-iptv/minimal-phase6b3d/verify.py": "a809936e8b31c265c00738d60d24064578b32c255759f16151a048cb95408de7",
+      "/docker/dispatcharr-iptv/permanent-streaming/.gitignore": "6feaded4e28ea86e001a6751b4e3d960e8b7c31b9616ff9936b79297086e809b",
+      "/docker/dispatcharr-iptv/permanent-streaming/30-permanent-streaming.conf": "55ed3a21aec684c70b0599be358a915d2b91ffdfe088bee7a338e1774ce1a1c9",
+      "/docker/dispatcharr-iptv/permanent-streaming/Caddyfile": "8b7b661f80ab157957480b330d96861d3980370fd1830d0cb36df93b79a08ba6",
+      "/docker/dispatcharr-iptv/permanent-streaming/README.md": "8d47edb478a1e2845f358b75f6e374076e3fdee0b0d423752e108c800d532312",
+      "/docker/dispatcharr-iptv/permanent-streaming/accepted-table.template.json": "90976136177701559e709ab612f6857499bfd2aea372a43c6ca9e538cd2156d5",
+      "/docker/dispatcharr-iptv/permanent-streaming/api-source-pins.json": "036dd097e03ef536f3f0e1de53f3707c5ab5177fc2244dc71dce91400f637cdc",
+      "/docker/dispatcharr-iptv/permanent-streaming/api.py": "74b824154c19b1fc612330ddf462b80bdc7ada830da502b737bb944ac4e32b6c",
+      "/docker/dispatcharr-iptv/permanent-streaming/backend.py": "651c7f5952667ac0bda3e21e1e1edb73963aea16b38c9ceca8501182ae774dbf",
+      "/docker/dispatcharr-iptv/permanent-streaming/base-input-pins.json": "425ebd00cbae9c21180037d404cf38a1bba2c419145d77beafda4029bdf48227",
+      "/docker/dispatcharr-iptv/permanent-streaming/bounded_server.py": "ec8e615f721ee1b047b51a80537c39f1247b136503c5236ef5d975f4fc9c020d",
+      "/docker/dispatcharr-iptv/permanent-streaming/compose.yaml": "3f1993c109a9e9e18a0da04616e3a09dd3a132c478f57af15cd99cceef2c27de",
+      "/docker/dispatcharr-iptv/permanent-streaming/contracts.py": "2faddb7e2d33a2d1a841abd36244770101c294a69df6cb527dae773eef90fe20",
+      "/docker/dispatcharr-iptv/permanent-streaming/diagnostic_inventory.py": "2e83b5e7a11f247ed7d8e382c64f62375aa4086ce517629c052be8b08ff16126",
+      "/docker/dispatcharr-iptv/permanent-streaming/dns_worker.py": "df7e483eaad95749fe5cc0ae97dd0d259c6e86b7896edca3cac9d62728870596",
+      "/docker/dispatcharr-iptv/permanent-streaming/exports.py": "460291da7961b9463420cec14c19648f4e33ad21eef82af271d3d1d830bb9c44",
+      "/docker/dispatcharr-iptv/permanent-streaming/fetch_runtime.py": "8b3595556c3061da17e5a018e07871238d786601e973625cde13f88ca91a3d27",
+      "/docker/dispatcharr-iptv/permanent-streaming/files.py": "314e4c70f7daf02bd6d1ce8a5bb8cc60690365d4507c3f99915ae2c5cf79723a",
+      "/docker/dispatcharr-iptv/permanent-streaming/guard_readiness.py": "5f137b756a1a988d4641ccd8a13b6bd4e13849bbdb2539c22026c88f4d8cf698",
+      "/docker/dispatcharr-iptv/permanent-streaming/health.py": "f4da54dece514ea24df5a6561ce52b883a1737213634b95bb1eab94a1b4ec6db",
+      "/docker/dispatcharr-iptv/permanent-streaming/hls_relay.py": "171461eb4bb83170a83d4b52aeca90d3f7ebc5d8486b615cdf654b7fc98078f5",
+      "/docker/dispatcharr-iptv/permanent-streaming/jellyfin.py": "f328d3c5e26ca3465717b17376e6cc3a04f858595b08514e449064c68ade950f",
+      "/docker/dispatcharr-iptv/permanent-streaming/lifecycle.py": "9dbe2ec2cfb41b847cffc5cff487e558c16f56d5d992474670989c387d286779",
+      "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": "9014af51977ae95a33ea5a380480196da8352af6043bde6126c9b39a4c8f781c",
+      "/docker/dispatcharr-iptv/permanent-streaming/manifest_telemetry.py": "179a364baaf3a7fbde6c09082db0fc9df65639812a86e7139bc0c1ec32df5784",
+      "/docker/dispatcharr-iptv/permanent-streaming/rate_budget.py": "86b11daec92b621d2bb4d9288da78ea909976f5483c5aab4417a29961b22bd56",
+      "/docker/dispatcharr-iptv/permanent-streaming/reference/Caddyfile.accepted": "bf5e40d2ccba8799f4b38f15336399fea7068f676150c2f7b18a1e07dc081a98",
+      "/docker/dispatcharr-iptv/permanent-streaming/reference/trial_hls_relay.py": "15c7ab3d87cbeb6e23419ce08536d6882d2721a3c9339b6bb24673387de6fb75",
+      "/docker/dispatcharr-iptv/permanent-streaming/refresh_manifest.py": "438fe72028cec2703111a109b8217fc01e8c3b8757d380c9b0af5cbb6f2c0a8d",
+      "/docker/dispatcharr-iptv/permanent-streaming/register.py": "a92d5cbba346238d8c2807587be02201d4fa93e50a416bc5975ba4fe7eb16055",
+      "/docker/dispatcharr-iptv/permanent-streaming/registration-config.schema.json": "7edb2204f1be1380dd9c2168c2d6021da8882c69b2abf89b401aecdfa8ed413b",
+      "/docker/dispatcharr-iptv/permanent-streaming/relay-config.schema.json": "94cf3990b3e8f3d6237f7ef09f832b01b12f3fe8c8d529c44662e4b12076cf8b",
+      "/docker/dispatcharr-iptv/permanent-streaming/relay_main.py": "830c87685643af37b9f008640b457d1a4e77bdf1fdef554f36fd82cec589f356",
+      "/docker/dispatcharr-iptv/permanent-streaming/telemetry.py": "d5ab9d69bd66b364b0cdc2c0b61af225e75998cbc587bac2b61fdb16823c5ffa",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/fixtures/relay-inspect-c611253.json": "d7aa9f8ae10fed661cbea925a64295a8045720b2b22d49fa52f52ed7f492c3b1",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/fixtures/relay-stopped-18bdf54.json": "cbd455cfa1797347362e0a96244886398ea3388e59a013cd7a315bf59cbd884c",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/run-offline.sh": "978694b1160ebdd0fe3e7fba861964188b690305976052759961927419e90790",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/test_candidate.py": "afa66139f415e6aabc0d305c71fd4f171c0fa7e693a217dcabaa0ae432d0d66f",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/test_contract.py": "3f2545316b816314a6a540eab643bf37493b33ea1181cfce67a5b2840c7e6e52",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/test_gateway_native.py": "6d5b298927c27315f057182507098aac4af4b7d59cf8cb0d37a4a3d25e456dee",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/test_inventory.py": "535c0427773fa268aa26a6ef5d35d7e02ecfeb1bff6fbaf10c5cbbd4ac2caf79",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/test_network.py": "952f1673076daae67f6c6e6ec413bafd9ec636c8f7327bf6828dbb0026bc666f",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/test_provenance.py": "dee3b3a5360497574668d5eb9ad710c67f4e85ad7f2013357314cdbf4c194cfd",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/test_rollback.py": "5b320ffd27a19f2f659223af4158537b405884ec4e32b625faee56a15a31f0a6",
+      "/docker/dispatcharr-iptv/permanent-streaming/tests/verify_units.py": "ef4d2b9c51c2c0f30ee913324185803e4a24206ea74face082ac5fdd45036524",
+      "/docker/dispatcharr-iptv/permanent-streaming/validation-results.json": "1fdffff152283fd7e141d94c9c6fdfe076dfd16768b31dc5b8485da3b5abe0c9",
+      "/docker/dispatcharr-iptv/permanent-streaming/verify.py": "9b6bb1eab509ae3d7c2e8d0143829ddd1b6b92e05b9340ed5c1bcdf99db0cfaa",
+      "/docker/dispatcharr-iptv/permanent-streaming/verify_binding.py": "cf9d079d720c952c7a2368a568d9d73595f12cd05889aac33775ef0cacc1c4f8",
+      "/docker/dispatcharr-iptv/resolv.vpn.conf": "847d06f745d54e604791fa452b44a992026df81ba0dbdf58d81a8d02dd9d7ce2",
+      "/docker/dispatcharr-iptv/security.py": "e7a92e7753e666a6f8cafd1b0292cec5e65f1431b09fc92ba10678c26e5ef8e2",
+      "/docker/dispatcharr-iptv/vpn-owner-gate.sh": "e343e41632ece47165ecc6f2ae1f00779e92d77dd552329ef628807bab7ba523",
+      "/docker/dispatcharr-iptv/vpn-post-rules.txt": "d48815495401014e7fcd43848af20259a13f1a59c3ac7882795c9fecace6ade4",
+      "/docker/dispatcharr-iptv/vpn-startup-gate.py": "766879e875aa801c376adc44a65f02301dfd2c225acd29909c34da823b847ee7",
+      "/etc/systemd/system/dispatcharr-egress-guard.service": "bde5207014fa24781d8cd1275a54dac056684299e498f4773fca2ed2e98cc174",
+      "/etc/systemd/system/dispatcharr-egress-guard.service.d/20-trusted-readiness.conf": "392994ee3a0eec4b87127b13aa1efb51ce058fd135fbbed52f17d30fde2dbefc",
+      "/etc/systemd/system/dispatcharr-stack.service": "30e7f5e64b7a6ce3f8ec3cf80572d74bb2dd1ed67083929276cf55fbb65c357e",
+      "/etc/systemd/system/dispatcharr-stack.service.d/20-resource-admission.conf": "578e03101e64c14da217e3d77f5bed9e0dbfbab9dad24b3f077c6b3891aed023",
+      "/etc/systemd/system/dispatcharr-stack.service.d/30-permanent-streaming.conf": "55ed3a21aec684c70b0599be358a915d2b91ffdfe088bee7a338e1774ce1a1c9",
+      "/etc/systemd/system/docker.service.d/50-dispatcharr-order.conf": "c9beb54d2b2e6285013355f3a80dd6677ff7723d10e835f45c499f39fb9e581b"
+    },
+    "ownership_state_files": [
+      "lock",
+      "owned.json"
+    ],
+    "persistent_log_metadata_and_categories": [
+      {
+        "basename": "dispatcharr.log",
+        "bounded_pattern_counts": {
+          "Celery_ready": 2,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 1,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 2
+        },
+        "bytes": 12954
+      },
+      {
+        "basename": "dispatcharr.log.1",
+        "bounded_pattern_counts": {
+          "Celery_ready": 0,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 0,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 0
+        },
+        "bytes": 219673
+      },
+      {
+        "basename": "dispatcharr.log.2",
+        "bounded_pattern_counts": {
+          "Celery_ready": 2,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 1,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 2
+        },
+        "bytes": 18355
+      },
+      {
+        "basename": "dispatcharr.log.3",
+        "bounded_pattern_counts": {
+          "Celery_ready": 2,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 1,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 2
+        },
+        "bytes": 12956
+      },
+      {
+        "basename": "dispatcharr.log.4",
+        "bounded_pattern_counts": {
+          "Celery_ready": 2,
+          "OOM": 0,
+          "Redis_authentication_failure": 0,
+          "backend_generic_refusal": 0,
+          "no_pending_migrations": 1,
+          "permission_error": 0,
+          "postgres_authentication_failure": 0,
+          "postgres_connection_refused": 0,
+          "traceback": 0,
+          "uWSGI_worker_spawn": 2
+        },
+        "bytes": 20150
+      }
+    ],
+    "provider_private_metadata": {
+      "directory": true,
+      "gid": 0,
+      "mode": "0o700",
+      "nlink": 2,
+      "regular": false,
+      "symlink": false,
+      "uid": 0
+    },
+    "provider_projection_empty": true,
+    "provider_public_metadata": {
+      "directory": true,
+      "gid": 0,
+      "mode": "0o755",
+      "nlink": 2,
+      "regular": false,
+      "symlink": false,
+      "uid": 0
+    },
+    "public_guard_grant_absent": true,
+    "read_only_receipt_files_unchanged": {
+      "checkpoint.json": "4ec6d6c90565265296176d9f9413b47248f880da9bcd6e1b70cff8bcf60ff664",
+      "restoration-Docker-events-private.json": "6422608cbf862ed68dd295fa1c44c761bdfb5d3d1b3cf9a2ee4747847bc689cb",
+      "restoration-failure-private.json": "b507677df7569eb8c9b8b2906ebf52dbc786b7001c53ad180c5645daa979c05c",
+      "rollback-preconditions.json": "4f8f2e33de9ec9a57cd4f15b5aa625cad13380b2805203ee71dcd6550c8e4ebf",
+      "rollback-start-command.json": "a9804e585aca7113c58ffb1394c3529c63c7135b4e968fd314c7e35a434c0ee8"
+    },
+    "required_private_file_metadata": {
+      "app.env": {
+        "directory": false,
+        "gid": 0,
+        "mode": "0o600",
+        "nlink": 1,
+        "regular": true,
+        "symlink": false,
+        "uid": 0
+      },
+      "egress-policy.json": {
+        "directory": false,
+        "gid": 0,
+        "mode": "0o600",
+        "nlink": 1,
+        "regular": true,
+        "symlink": false,
+        "uid": 0
+      },
+      "permanent-registration.json": {
+        "directory": false,
+        "gid": 1000,
+        "mode": "0o400",
+        "nlink": 1,
+        "regular": true,
+        "symlink": false,
+        "uid": 1000
+      },
+      "permanent-relay.json": {
+        "directory": false,
+        "gid": 1000,
+        "mode": "0o400",
+        "nlink": 1,
+        "regular": true,
+        "symlink": false,
+        "uid": 1000
+      },
+      "wg0.conf": {
+        "directory": false,
+        "gid": 0,
+        "mode": "0o600",
+        "nlink": 1,
+        "regular": true,
+        "symlink": false,
+        "uid": 0
+      }
+    },
+    "restoration_exec_evidence": [
+      {
+        "create_ns": 1795034189681656388,
+        "die_ns": 1795034199909418201,
+        "elapsed_seconds": 10.227761813,
+        "exit": "1",
+        "script": "backend.py"
+      }
+    ],
+    "stopped_container_archive_HEAD": {
+      "/app": {
+        "HTTP_status": 404
+      },
+      "/app/core": {
+        "HTTP_status": 404
+      },
+      "/app/core/api_urls.py": {
+        "HTTP_status": 404
+      },
+      "/etc/profile.d/dispatcharr.sh": {
+        "HTTP_status": 404
+      }
+    },
+    "units": "MainPID=0\nResult=exit-code\nExecStartPre={ path=/usr/bin/rm ; argv[]=/usr/bin/rm -f -- /run/dispatcharr-guard-status/guard.json /run/dispatcharr-guard-status/grant.json /run/dispatcharr-guard/ready ; ignore_errors=no ; start_time=[Wed 2026-11-18 20:35:40 UTC] ; stop_time=[Wed 2026-11-18 20:35:40 UTC] ; pid=3100680 ; code=exited ; status=0 }\nExecStartPre={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /docker/dispatcharr-iptv/permanent-streaming/verify.py inputs ; ignore_errors=no ; start_time=[Wed 2026-11-18 20:35:40 UTC] ; stop_time=[Wed 2026-11-18 20:35:40 UTC] ; pid=3100682 ; code=exited ; status=0 }\nExecStartPre={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /docker/dispatcharr-iptv/boot-admission-phase6b3k/admit.py ; ignore_errors=no ; start_time=[Wed 2026-11-18 20:35:40 UTC] ; stop_time=[Wed 2026-11-18 20:35:55 UTC] ; pid=3100684 ; code=exited ; status=0 }\nExecStartPre={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 /docker/dispatcharr-iptv/guard.py apply --policy /docker/dispatcharr-iptv/private/egress-policy.json ; ignore_errors=no ; start_time=[Wed 2026-11-18 20:35:55 UTC] ; stop_time=[Wed 2026-11-18 20:35:55 UTC] ; pid=3100754 ; code=exited ; status=0 }\nExecStartPre={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /docker/dispatcharr-iptv/permanent-streaming/lifecycle.py prepare ; ignore_errors=no ; start_time=[Wed 2026-11-18 20:35:55 UTC] ; stop_time=[Wed 2026-11-18 20:35:55 UTC] ; pid=3100760 ; code=exited ; status=0 }\nExecStartPre={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /docker/dispatcharr-iptv/permanent-streaming/verify.py prestart ; ignore_errors=no ; start_time=[Wed 2026-11-18 20:35:55 UTC] ; stop_time=[Wed 2026-11-18 20:35:56 UTC] ; pid=3100790 ; code=exited ; status=0 }\nExecStart={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /docker/dispatcharr-iptv/permanent-streaming/lifecycle.py start ; ignore_errors=no ; start_time=[Wed 2026-11-18 20:35:56 UTC] ; stop_time=[Wed 2026-11-18 20:36:39 UTC] ; pid=3100822 ; code=exited ; status=1 }\nExecStopPost={ path=/usr/bin/rm ; argv[]=/usr/bin/rm -f -- /run/dispatcharr-guard-status/guard.json /run/dispatcharr-guard-status/grant.json ; ignore_errors=yes ; start_time=[Wed 2026-11-18 20:36:39 UTC] ; stop_time=[Wed 2026-11-18 20:36:39 UTC] ; pid=3102772 ; code=exited ; status=0 }\nExecStopPost={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /docker/dispatcharr-iptv/permanent-streaming/lifecycle.py stop ; ignore_errors=no ; start_time=[Wed 2026-11-18 20:36:39 UTC] ; stop_time=[Wed 2026-11-18 20:36:43 UTC] ; pid=3102774 ; code=exited ; status=0 }\nId=dispatcharr-stack.service\nActiveState=failed\nSubState=failed\nDropInPaths=/etc/systemd/system/dispatcharr-stack.service.d/20-resource-admission.conf /etc/systemd/system/dispatcharr-stack.service.d/30-permanent-streaming.conf\n\nMainPID=0\nResult=success\nExecStartPre={ path=/usr/bin/rm ; argv[]=/usr/bin/rm -f -- /run/dispatcharr-guard-status/guard.json /run/dispatcharr-guard-status/grant.json /run/dispatcharr-guard/ready ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nExecStartPre={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 /docker/dispatcharr-iptv/minimal-phase6b3d/verify.py inputs ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nExecStart={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 /docker/dispatcharr-iptv/guard.py apply --policy /docker/dispatcharr-iptv/private/egress-policy.json ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nExecStopPost={ path=/usr/bin/rm ; argv[]=/usr/bin/rm -f -- /run/dispatcharr-guard-status/guard.json /run/dispatcharr-guard-status/grant.json /run/dispatcharr-guard/ready ; ignore_errors=yes ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nExecStopPost={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /docker/dispatcharr-iptv/guard.py revoke ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nExecStopPost={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -B /docker/dispatcharr-iptv/guard.py assert-revoked ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nId=dispatcharr-egress-guard.service\nActiveState=active\nSubState=exited\nDropInPaths=/etc/systemd/system/dispatcharr-egress-guard.service.d/20-trusted-readiness.conf\n\nMainPID=1112\nResult=success\nExecStart={ path=/usr/bin/dockerd ; argv[]=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nId=docker.service\nActiveState=active\nSubState=running\nDropInPaths=/etc/systemd/system/docker.service.d/50-dispatcharr-order.conf\n",
+    "utc": "2026-11-18T21:24:07Z",
+    "volume_sha256": "62bba3105a84730f80f6a2027aab8ef6bda044be99c2d5375c5f8e98b9d2248a"
+  },
+  "incident_commit": "3b2481f3e820960db07251cf59dda306df01b5f7",
+  "independent_checkpoint_verification": {
+    "bytes": 236147,
+    "directory_mode": "0o700",
+    "matches_source_manifest": true,
+    "mode": "0o600",
+    "path": "/mnt/data/Backups/Rivendell/dispatcharr-checkpoints/dispatcharr-hardening-20261118T201302Z/recovery.tar.gz",
+    "sha256": "ce8e254f78972dd7b1a14012e3a5b2cbc9c8c9fa506054b1e920ad8dc4d3deb7"
+  },
+  "instrumentation_recommendation": {
+    "active_source_changes": [
+      "permanent-streaming/backend.py log-only fixed-stage/condition codes",
+      "permanent-streaming/lifecycle.py narrowly forward only sanitized backend diagnostic records",
+      "permanent-streaming/manifest.json reviewed diagnostic source hashes"
+    ],
+    "base": "actual installed original backend/lifecycle from validated227122d checkpoint, not the newer native candidate files",
+    "future_attempts": 1,
+    "no_retries": true,
+    "status": "PROPOSED_ONLY_NOT_IMPLEMENTED",
+    "unchanged": [
+      "readiness predicates",
+      "timeouts",
+      "admission",
+      "guard/grant/namespace enforcement",
+      "Compose/images/mounts",
+      "systemd ordering",
+      "scope of cleanup",
+      "database/provider/Jellyfin configuration"
+    ]
+  },
+  "retained_local_read_only_helper_hashes": {
+    "dispatcharr-recovery-archive-diagnostic-root.py": "b426902ab9e4c09ca751a7be1a39f58f7a2df5c37839dc0d80e17f6877ea020e",
+    "dispatcharr-recovery-diagnosis-root.py": "f6eb69237057a3af036f4e1eeaef2ced1bd225afb07a7d1578ce16de24655967",
+    "dispatcharr-recovery-final-read-root.py": "be385ef7a21a36e013fdc479c43fc267f7988d49f0fad96ad5025921d578a084",
+    "dispatcharr-recovery-timeline-root.py": "e50065f5a998f07c390baaa3c718cb842a6b44808c21a5e0ebf221d3e70e4c60"
+  },
+  "schema": 1,
+  "startup_race": "Plausible only: both Celery ready messages follow backend start; no actual inspect invocation/reply transcript retained",
+  "startup_timeline": {
+    "archive_control_queries": {
+      "/": {
+        "HTTP_status": 404
+      },
+      "/data": {
+        "HTTP_status": 404
+      },
+      "/opt/permanent/backend.py": {
+        "HTTP_status": 404
+      }
+    },
+    "bounded_startup_timeline": [
+      {
+        "UTC": "2026-11-18T20:36:10.156315914Z",
+        "event": "no_pending_migrations"
+      },
+      {
+        "UTC": "2026-11-18T20:36:14.233786468Z",
+        "event": "uWSGI_worker_spawn"
+      },
+      {
+        "UTC": "2026-11-18T20:36:14.233790712Z",
+        "event": "uWSGI_worker_spawn"
+      },
+      {
+        "UTC": "2026-11-18T20:36:30.015064672Z",
+        "event": "DVR_Celery_ready"
+      },
+      {
+        "UTC": "2026-11-18T20:36:31.869296682Z",
+        "event": "default_Celery_ready"
+      }
+    ]
+  },
+  "versioned_archive_metadata": {
+    "API_version": "1.56",
+    "archives": {
+      "/app": {
+        "GET_status": 404,
+        "HEAD_status": 404,
+        "error_sha256": "b252b1cd16503665ff081dbd2d4bc27da71515ba6156037b499f798bb6862005",
+        "fixed_error_classes": {
+          "bind": false,
+          "connection": false,
+          "could not find": true,
+          "mount": false,
+          "no such container": false,
+          "no such file": false,
+          "not found": false,
+          "permission denied": false,
+          "unknown": false
+        }
+      },
+      "/app/core": {
+        "GET_status": 404,
+        "HEAD_status": 404,
+        "error_sha256": "d6c00ca816f506270db24b5420f18766a11bca03b34e686e5fbb3c8f1cbae1c6",
+        "fixed_error_classes": {
+          "bind": false,
+          "connection": false,
+          "could not find": true,
+          "mount": false,
+          "no such container": false,
+          "no such file": false,
+          "not found": false,
+          "permission denied": false,
+          "unknown": false
+        }
+      },
+      "/app/core/api_urls.py": {
+        "GET_status": 404,
+        "HEAD_status": 404,
+        "error_sha256": "8dce876e07243cff42420c380d9706edff6c0d330c6a2acc68d2c5b4d00ecd91",
+        "fixed_error_classes": {
+          "bind": false,
+          "connection": false,
+          "could not find": true,
+          "mount": false,
+          "no such container": false,
+          "no such file": false,
+          "not found": false,
+          "permission denied": false,
+          "unknown": false
+        }
+      },
+      "/etc/profile.d/dispatcharr.sh": {
+        "GET_status": 404,
+        "HEAD_status": 404,
+        "error_sha256": "000950babdf84bf92925024c7d63c08883f1f5f39e31b7ee1b8392c48175a21e",
+        "fixed_error_classes": {
+          "bind": false,
+          "connection": false,
+          "could not find": true,
+          "mount": false,
+          "no such container": false,
+          "no such file": false,
+          "not found": false,
+          "permission denied": false,
+          "unknown": false
+        }
+      }
+    },
+    "inspected_same_stopped_container": "0d34537414caa0b788415ef7017e77687768fd9344353a34e882bd5a5c027a04",
+    "version_endpoint_status": 200
+  }
+}
