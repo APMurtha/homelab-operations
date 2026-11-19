@@ -30,12 +30,20 @@ awk '/^FROM / { print $2 }' Containerfile | while IFS= read -r ref; do
 done
 
 # Offline build. Keep the context and staged base images for reproduction.
-podman build --platform=linux/amd64 --network=none --pull=never --no-cache \
+# Budget space for the final image and Buildah's temporary compressed layer.
+podman build --platform=linux/amd64 --network=none --pull=never --no-cache --layers=false \
   --timestamp 0 -t localhost/samwise-offline:reviewed \
   -f "$build_dir/context/Containerfile" "$build_dir/context"
 image=$(podman image inspect --format '{{.Id}}' localhost/samwise-offline:reviewed)
+image="sha256:${image#sha256:}"
 python3 smoke_runtime.py "$image"
 ```
+
+The build copies the CPU runtime from the pinned Ollama image. The full source
+image still occupies about 5.5 GB in the Podman store. On Bag-End, keep the
+context and Podman store on disk and use `TMPDIR=/tmp` for the build after
+verifying at least 6 GB free on the root filesystem and 4 GB free on that
+tmpfs after the pulls.
 
 Record the image ID, Podman version, kernel, peak memory, cold inference time
 and probe output. The probe uses the same flags as the worker and checks the
@@ -54,13 +62,12 @@ image ID to the Bag-End probe. A tag alone is insufficient.
 
 ### Bag-End resource gate
 
-On 2026-11-19 Bag-End reported 7.18 GiB total RAM, about 4.60–4.63 GiB
-available and 4.00 GiB swap. The user slice exposed CPU, memory and PID
-controllers. The existing fixture unit reported `Delegate=no`. These
-observations do not establish enforcement inside a rootless container. Podman
-was absent from the host, so actual inference peak and latency are pending.
-The verified model weights are 2.50 GB on disk. A single 4,096-token context
-under the 3.5 GiB no-swap ceiling is plausible, with little host headroom.
+On 2026-11-19, after the RAM upgrade, Bag-End reported 15,778,512 KiB total
+RAM and 13,185,436 KiB available at preflight, with 15 GiB available on the
+disk-backed staging filesystem. Rootless Podman 5.7.0 used systemd cgroup v2
+with CPU, memory and PID delegation on kernel `7.0.0-43-generic`. The fixture
+worker was active and its unit reported `Delegate=no`. The probe checks the
+actual limits from inside a new container started by the same account.
 
 Before each cold run, check `awk '/MemAvailable/ {print $2}' /proc/meminfo`.
 Require at least 4,718,592 KiB available (4.5 GiB) to leave 1 GiB above the
@@ -69,6 +76,24 @@ cold runs must complete with no cgroup OOM, peak below 3.5 GiB and elapsed
 time below 145 seconds. If either host cannot meet those gates, stop before
 creating an issue and rerun after addressing the resource shortfall. The
 existing unit's systemd configuration stays untouched during acceptance.
+
+### Bag-End runtime evidence
+
+Image `sha256:db79c76fc71f354b20aa165d852eb70b9a0a6fbea568f2fa91f760a7b1302053`
+passed both Bag-End runs on 2026-11-19. Each run started a fresh container
+and Ollama process. The host page cache was left in place.
+
+| Run | MemAvailable before inference | Cold inference | Cgroup peak | OOM events |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 13,165,020 KiB | 66.7 s | 3,317,444,608 bytes | 0 |
+| 2 | 13,177,288 KiB | 65.7 s | 3,316,248,576 bytes | 0 |
+
+Both runs verified outbound network denial, working loopback, private
+namespaces, a read-only root filesystem, bounded scratch space, absent
+synthetic credentials, enforced cgroup and file-size limits, and automatic
+removal after success and timeout. Codex and Ollama returned the expected
+inventory for the one-file archive. The separate staging-host probe remains
+pending.
 
 ## Run controlled GitHub acceptance
 

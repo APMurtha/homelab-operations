@@ -57,7 +57,7 @@ def container_command(podman, image, name, *, timeout=175):
         "--pids-limit=128", f"--memory={MEMORY_MIB}m", f"--memory-swap={MEMORY_MIB}m",
         "--cpus=4", "--ulimit=fsize=67108864:67108864",
         "--unsetenv-all", "--cgroupns=private", "--ipc=private", "--pid=private",
-        "--uts=private", "--no-hosts",
+        "--uts=private", "--no-hosts", "--passwd=false",
         "--systemd=false", "--init=false", "--restart=no",
         "--tmpfs=/tmp:rw,nodev,nosuid,noexec,size=512m",
         "--user=65532:65532", "--entrypoint=/usr/local/bin/python3", image,

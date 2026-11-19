@@ -12,10 +12,14 @@ import uuid
 
 import runner
 
+MIN_AVAILABLE_KIB = 4_718_592
+MAX_COLD_SECONDS = 145
+
 PROBE = """
 import errno
 import os
 from pathlib import Path
+import resource
 import socket
 import sys
 
@@ -66,6 +70,7 @@ assert (cg / "memory.swap.max").read_text().strip() == "0"
 assert (cg / "pids.max").read_text().strip() == "128"
 quota, period = (cg / "cpu.max").read_text().split()
 assert int(quota) == 4 * int(period)
+assert resource.getrlimit(resource.RLIMIT_FSIZE) == (64 * 1024**2,) * 2
 """
 
 INFERENCE = """
@@ -73,11 +78,13 @@ from pathlib import Path
 import runpy
 import sys
 
-runpy.run_path("/opt/samwise/offline.py", run_name="__main__")
-cg = Path("/sys/fs/cgroup")
-print("Samwise peak bytes:", (cg / "memory.peak").read_text().strip(), file=sys.stderr)
-events = (cg / "memory.events").read_text().splitlines()
-assert {"oom 0", "oom_kill 0"} <= set(events)
+try:
+    runpy.run_path("/opt/samwise/offline.py", run_name="__main__")
+finally:
+    cg = Path("/sys/fs/cgroup")
+    print("Samwise peak bytes:", (cg / "memory.peak").read_text().strip(), file=sys.stderr)
+    events = (cg / "memory.events").read_text().splitlines()
+    assert {"oom 0", "oom_kill 0"} <= set(events), events
 """
 
 
@@ -98,16 +105,26 @@ def smoke(image):
         def probe(program, *args, timeout=175, payload=b"", expect_timeout=False):
             name = f"samwise-smoke-{uuid.uuid4().hex}"
             command = runner.container_command(podman, image, name, timeout=timeout)
-            env = {**runner.PODMAN_ENV, "GH_TOKEN": "synthetic", "OPENAI_API_KEY": "synthetic",
-                   "HTTPS_PROXY": "http://127.0.0.1:9"}
+            env = {**runner.PODMAN_ENV, "GH_TOKEN": "synthetic", "GITHUB_TOKEN": "synthetic",
+                   "OPENAI_API_KEY": "synthetic", "SSH_AUTH_SOCK": str(marker),
+                   "HTTP_PROXY": "http://127.0.0.1:9", "HTTPS_PROXY": "http://127.0.0.1:9"}
             try:
+                started = time.monotonic()
                 result = subprocess.run(command + ["-c", program, *args], input=payload,
                                         capture_output=True, timeout=timeout + 15, env=env)
                 if expect_timeout:
                     assert result.stdout == b"started\n", result
-                    assert result.returncode == 137, result
+                    # Podman can report an unknown exit status after conmon
+                    # kills the process and automatically removes the container.
+                    assert result.returncode in {137, 255}, result
+                    assert timeout - 1 <= time.monotonic() - started < timeout + 15
                 else:
-                    result.check_returncode()
+                    if result.returncode:
+                        raise RuntimeError(
+                            f"{name} exited with status {result.returncode} "
+                            f"after {time.monotonic() - started:.1f}s: "
+                            f"{result.stderr.decode(errors='replace').strip()}"
+                        )
                 assert invoke(["container", "exists", name], timeout=10).returncode == 1
                 return result
             finally:
@@ -115,7 +132,7 @@ def smoke(image):
 
         actual = invoke(["image", "inspect", "--format", "{{.Id}}", image],
                         capture_output=True, text=True, check=True, timeout=15).stdout.strip()
-        assert actual == image, actual
+        assert actual.removeprefix("sha256:") == image.removeprefix("sha256:"), actual
         namespaces = [os.readlink(f"/proc/self/ns/{ns}")
                       for ns in ("user", "net", "pid", "ipc", "uts", "mnt", "cgroup")]
         result = probe(PROBE, *namespaces, str(marker))
@@ -126,14 +143,24 @@ def smoke(image):
         snapshot = io.BytesIO()
         with tarfile.open(fileobj=snapshot, mode="w") as archive:
             archive.addfile(tarfile.TarInfo("example.md"))
+        with Path("/proc/meminfo").open() as meminfo:
+            available = next(int(line.split()[1]) for line in meminfo
+                             if line.startswith("MemAvailable:"))
+        if available < MIN_AVAILABLE_KIB:
+            raise RuntimeError(f"MemAvailable {available} KiB is below {MIN_AVAILABLE_KIB} KiB")
         start = time.monotonic()
         result = probe(INFERENCE, payload=snapshot.getvalue())
+        elapsed = time.monotonic() - start
         assert json.loads(result.stdout) == {"files": 1, "focus": "documentation"}
         peak_line, = [line for line in result.stderr.splitlines()
                       if line.startswith(b"Samwise peak bytes: ")]
-        peak = int(peak_line.split()[-1]) / 1024**2
+        peak = int(peak_line.split()[-1])
+        print(f"MemAvailable {available} KiB, cold inference {elapsed:.1f}s, "
+              f"cgroup peak {peak} bytes ({peak / 1024**2:.1f} MiB).")
+        if peak >= runner.MEMORY_MIB * 1024**2 or elapsed >= MAX_COLD_SECONDS:
+            raise RuntimeError("Cold inference exceeded the acceptance resource gate")
         print(f"{image} passed isolation, timeout and offline inference. "
-              f"Inference took {time.monotonic() - start:.1f}s, cgroup peak {peak:.0f} MiB.")
+              "No cgroup OOM events.")
 
 
 if __name__ == "__main__":

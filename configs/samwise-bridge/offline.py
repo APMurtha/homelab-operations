@@ -46,20 +46,30 @@ def run():
         checkout.mkdir()
         counts = unpack(sys.stdin.buffer, checkout)
         home = root / "home"
-        home.mkdir()
+        codex_home = home / ".codex"
+        codex_home.mkdir(parents=True)
         env = {
             "PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(home), "LANG": "C.UTF-8",
             "OLLAMA_HOST": "127.0.0.1:11434", "OLLAMA_MODELS": "/opt/samwise/models",
             "OLLAMA_NO_CLOUD": "1", "OLLAMA_CONTEXT_LENGTH": "4096",
             "OLLAMA_NUM_PARALLEL": "1", "OLLAMA_MAX_LOADED_MODELS": "1",
-            "CODEX_HOME": str(home / ".codex"),
+            "CODEX_HOME": str(codex_home),
+            "CODEX_OSS_BASE_URL": "http://127.0.0.1:11434/v1",
         }
         answer = root / "answer"
+        schema = root / "answer-schema.json"
+        schema.write_text(json.dumps({
+            "type": "object",
+            "properties": {"focus": {"type": "string", "enum": sorted(counts)}},
+            "required": ["focus"],
+            "additionalProperties": False,
+        }), encoding="utf-8")
         # Codex receives aggregate counts from the checkout. Run outside the
         # source tree so repository instructions and config cannot be loaded.
         prompt = (
             "Choose the most useful category to review next for this repository inventory. "
-            "Consider only these file counts. Return exactly one category from the input.\n"
+            "Consider only these file counts. Return a JSON object with one key, focus, "
+            "whose value is a category from the input.\n"
             + json.dumps(counts, sort_keys=True)
         )
         with subprocess.Popen(["/usr/local/bin/ollama", "serve"], env=env, cwd=home,
@@ -87,14 +97,19 @@ def run():
                     "--disable", "plugins", "--disable", "hooks", "--disable", "multi_agent",
                     "--disable", "apps", "--disable", "shell_snapshot",
                     "--enable", "skip_host_skill_discovery", "-c", 'web_search="disabled"',
-                    "-c", "model_context_window=4096", "--output-last-message", str(answer), "-",
+                    "-c", "model_context_window=4096", "--output-schema", str(schema),
+                    "--output-last-message", str(answer), "-",
                 ], env=env, cwd=home, input=prompt.encode(), timeout=145, check=True,
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 with answer.open("rb") as result:
-                    focus = result.read(32).strip().decode("ascii")
-                if focus not in counts:
+                    response = result.read(257)
+                if len(response) > 256:
+                    raise ValueError("oversized Codex answer")
+                data = json.loads(response)
+                if (not isinstance(data, dict) or set(data) != {"focus"}
+                        or not isinstance(data["focus"], str) or data["focus"] not in counts):
                     raise ValueError("unexpected Codex answer")
-                print(json.dumps({"files": sum(counts.values()), "focus": focus}))
+                print(json.dumps({"files": sum(counts.values()), "focus": data["focus"]}))
             finally:
                 if server.poll() is None:
                     server.kill()

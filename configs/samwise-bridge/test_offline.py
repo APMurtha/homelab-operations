@@ -86,7 +86,7 @@ class OfflineTests(unittest.TestCase):
             "--http-proxy=false", "--unsetenv-all", "--image-volume=ignore", "--cap-drop=ALL",
             "--security-opt=no-new-privileges", "--user=65532:65532", "--memory=3584m",
             "--memory-swap=3584m", "--cpus=4", "--pids-limit=128", "--pid=private",
-            "--ipc=private", "--uts=private", "--cgroupns=private", "--rm",
+            "--ipc=private", "--uts=private", "--cgroupns=private", "--passwd=false", "--rm",
         ):
             self.assertIn(flag, args)
         for mount_flag in ("--volume", "--mount", "--secret", "--env-host", "--privileged"):
