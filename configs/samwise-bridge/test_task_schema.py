@@ -1,17 +1,8 @@
 """Offline validation tests for the proposed v2 task envelope."""
-import importlib.util
 import json
-from pathlib import Path
 import unittest
 
-spec = importlib.util.spec_from_file_location(
-    "task_schema", Path(__file__).resolve().parent / "task_schema.py"
-)
-module = importlib.util.module_from_spec(spec)
-import sys
-sys.modules[spec.name] = module
-spec.loader.exec_module(module)
-
+import task_schema as module
 
 def body(**changes):
     data = {"kind": "repo-inventory", "revision": 1, "commit": "a" * 40}
@@ -30,7 +21,7 @@ class TaskSchemaTests(unittest.TestCase):
         self.assertFalse(module.same_authorized_content(body(commit="b" * 40), task.digest))
 
     def test_denied_kinds(self):
-        for kind in ("shell", "deploy", "ssh", "freeform"):
+        for kind in ("shell", "deploy", "ssh", "freeform", [], {}, None):
             with self.subTest(kind=kind), self.assertRaises(module.InvalidTask):
                 module.parse(body(kind=kind))
 
@@ -54,8 +45,18 @@ class TaskSchemaTests(unittest.TestCase):
             module.parse(body() + " " * 3000)
 
     def test_duplicate_or_nonobject(self):
-        with self.assertRaises(module.InvalidTask):
-            module.parse(module.PREFIX + "[]")
+        for value in (module.PREFIX + "[]", body().replace('"revision": 1', '"revision": 1, "revision": 1')):
+            with self.assertRaises(module.InvalidTask):
+                module.parse(value)
+
+    def test_deep_json_and_invalid_utf8_are_ineligible(self):
+        for value in ("[" * 1000 + "]" * 1000, chr(0xD800)):
+            with self.assertRaises(module.InvalidTask):
+                module.parse(module.PREFIX + value)
+
+    def test_whitespace_change_invalidates_approval(self):
+        approved = module.parse(body())
+        self.assertFalse(module.same_authorized_content(body() + "\n", approved.digest))
 
 
 if __name__ == "__main__":

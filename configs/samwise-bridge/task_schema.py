@@ -1,9 +1,4 @@
-"""Strict task-envelope validation for future Samwise repository work.
-
-This module is intentionally NOT wired into the running worker. A validated
-request is data, not authorization to execute. No shell commands or prompts
-are accepted from GitHub issue content.
-"""
+"""Strict task-envelope validation. Authorization is checked separately."""
 import hashlib
 import json
 import re
@@ -28,25 +23,41 @@ class Task:
     digest: str
 
 
+def unique_fields(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise InvalidTask("duplicate JSON field")
+        result[key] = value
+    return result
+
+
 def parse(body: str) -> Task:
-    if not isinstance(body, str) or len(body.encode("utf-8")) > MAX_BYTES:
+    if not isinstance(body, str) or len(body) > MAX_BYTES:
+        raise InvalidTask("invalid task size")
+    try:
+        raw = body.encode("utf-8")
+    except UnicodeError as exc:
+        raise InvalidTask("invalid UTF-8") from exc
+    if len(raw) > MAX_BYTES:
         raise InvalidTask("invalid task size")
     if not body.startswith(PREFIX):
         raise InvalidTask("missing v2 prefix")
     payload = body[len(PREFIX):].strip()
     try:
-        value = json.loads(payload)
-    except (ValueError, TypeError) as exc:
+        value = json.loads(payload, object_pairs_hook=unique_fields)
+    except (ValueError, RecursionError) as exc:
         raise InvalidTask("invalid JSON") from exc
     if not isinstance(value, dict) or set(value) != {"kind", "revision", "commit"}:
         raise InvalidTask("unknown or missing fields")
     kind, revision, commit = value["kind"], value["revision"], value["commit"]
-    if kind not in ALLOWED or type(revision) is not int or revision != REVISION:
+    if not isinstance(kind, str) or kind not in ALLOWED:
+        raise InvalidTask("unsupported task kind")
+    if type(revision) is not int or revision != REVISION:
         raise InvalidTask("unsupported task kind or revision")
     if not isinstance(commit, str) or not GIT_SHA.fullmatch(commit):
         raise InvalidTask("commit must be a pinned Git commit SHA")
-    canonical = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-    digest = hashlib.sha256(canonical.encode("ascii")).hexdigest()
+    digest = hashlib.sha256(raw).hexdigest()
     return Task(kind, revision, commit, digest)
 
 

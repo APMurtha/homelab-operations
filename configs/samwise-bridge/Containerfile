@@ -1,0 +1,4 @@
+# Use a reviewed local base image containing Python, Codex, Ollama and model data.
+ARG RUNTIME
+FROM ${RUNTIME}
+COPY --chmod=0444 offline.py /opt/samwise/offline.py
