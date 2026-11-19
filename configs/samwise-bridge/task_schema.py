@@ -13,7 +13,7 @@ PREFIX = "samwise-task-v2:"
 ALLOWED = frozenset({"repo-inventory"})
 REVISION = 1
 MAX_BYTES = 2048
-SHA256 = re.compile(r"^[0-9a-f]{64}$")
+GIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
 class InvalidTask(ValueError):
@@ -43,8 +43,8 @@ def parse(body: str) -> Task:
     kind, revision, commit = value["kind"], value["revision"], value["commit"]
     if kind not in ALLOWED or type(revision) is not int or revision != REVISION:
         raise InvalidTask("unsupported task kind or revision")
-    if not isinstance(commit, str) or not SHA256.fullmatch(commit):
-        raise InvalidTask("commit must be a pinned SHA-256 digest")
+    if not isinstance(commit, str) or not GIT_SHA.fullmatch(commit):
+        raise InvalidTask("commit must be a pinned Git commit SHA")
     canonical = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     digest = hashlib.sha256(canonical.encode("ascii")).hexdigest()
     return Task(kind, revision, commit, digest)
