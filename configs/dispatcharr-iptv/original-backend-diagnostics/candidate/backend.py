@@ -205,21 +205,36 @@ def classify_celery(returncode, stdout, stderr, complete=True):
     return unknown
 
 
-def valid_reply_output(stdout, stderr):
-    # Fixed human formatter, no unrecognized logs/errors or terminal controls.
-    if stderr or any(not c.isprintable() and c!='\n' for c in stdout):return False
-    match=re.fullmatch(r'(?P<replies>(?:->\s+[^:\s]+:\s+OK\s+pong\s*)+)(?:(?P<count>[0-9]+) nodes? online\.\s*)?',stdout)
-    if not match:return False
-    return match['count'] is None or int(match['count'])==len(re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',match['replies']))
+def structured_replies(stdout, stderr, complete=True):
+    # Return only validated positive role names, never worker identities/raw data.
+    if complete is not True or not isinstance(stdout,str) or not isinstance(stderr,str) or stderr:return [],False
+    try:
+        if len(stdout.encode('utf-8'))>OUTPUT_LIMIT:return [],False
+        def unique(items):
+            result={}
+            for key,value in items:
+                if key in result:raise ValueError('duplicate_JSON_key')
+                result[key]=value
+            return result
+        def constant(_):raise ValueError('nonfinite_JSON')
+        value=json.loads(stdout,object_pairs_hook=unique,parse_constant=constant)
+        if type(value) is not dict or len(value)>2:return [],False
+        roles=[]
+        for identity,reply in value.items():
+            if not isinstance(identity,str) or not re.fullmatch(r'(default|dvr)@[A-Za-z0-9_.-]{1,253}',identity):return [],False
+            role=identity.split('@',1)[0]
+            if role in roles or type(reply) is not dict or reply!={'ok':'pong'}:return [],False
+            roles.append(role)
+        return roles,True
+    except (ValueError,TypeError,UnicodeError,RecursionError):return [],False
 
 
-def celery_classification(process, nodes, complete):
-    if process.returncode==0 and complete and valid_reply_output(process.stdout,process.stderr):
-        roles={n.split('@')[0] for n in nodes}
+def celery_classification(process, roles, complete, valid):
+    if process.returncode==0 and complete and valid:
         if 'default' not in roles and 'dvr' not in roles:return 'celery_roles_missing'
         if 'default' not in roles:return 'celery_default_missing'
         if 'dvr' not in roles:return 'celery_dvr_missing'
-        if len(nodes)!=2:return 'celery_reply_count'
+        if len(roles)!=2:return 'celery_reply_count'
     return classify_celery(process.returncode,process.stdout,process.stderr,complete)
 
 
@@ -333,21 +348,19 @@ def check():
     with diagnostic.stage('celery'):
         command_start=time.monotonic()
         try:
-            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8'],
+            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8','--json'],
                            cwd='/app', capture_output=True, text=True, timeout=40)
         finally:
             command_end=time.monotonic()
             diagnostic.metrics(command_start_s=round(command_start,6),command_end_s=round(command_end,6),command_elapsed_s=round(command_end-command_start,6),**compare_brokers())
         complete=getattr(p,'complete',True)
         diagnostic.metrics(stdout_bytes=min(OUTPUT_LIMIT+1,getattr(p,'stdout_bytes',len(p.stdout.encode('utf-8')))),stderr_bytes=min(OUTPUT_LIMIT+1,getattr(p,'stderr_bytes',len(p.stderr.encode('utf-8')))),output_complete=complete)
-        diagnostic.metrics(reply_output_valid=valid_reply_output(p.stdout,p.stderr))
-        nodes = re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',p.stdout)
-        diagnostic.metrics(returncode=p.returncode, count=len(nodes),
-                           default_present=any(n.split('@')[0]=='default' for n in nodes),
-                           dvr_present=any(n.split('@')[0]=='dvr' for n in nodes))
-        diagnostic.metrics(celery_failure=celery_classification(p,nodes,complete))
-        if not complete or (p.returncode==0 and not valid_reply_output(p.stdout,p.stderr)): raise ValueError('Celery_not_ready')
-        if p.returncode or len(nodes) != 2 or {n.split('@')[0] for n in nodes} != {'default','dvr'}:
+        roles,valid=structured_replies(p.stdout,p.stderr,complete)
+        diagnostic.metrics(reply_output_valid=valid,returncode=p.returncode,count=len(roles),
+                           default_present='default' in roles,dvr_present='dvr' in roles)
+        diagnostic.metrics(celery_failure=celery_classification(p,roles,complete,valid))
+        if not complete or not valid:raise ValueError('Celery_not_ready')
+        if p.returncode or len(roles)!=2 or set(roles)!={'default','dvr'}:
             raise ValueError('Celery_not_ready')
 
 if __name__ == '__main__':

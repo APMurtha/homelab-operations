@@ -30,8 +30,8 @@ class ClassificationTests(unittest.TestCase):
     def test_broker_secret_never_emitted(self):
         f=BackendFixture();f.celery_code=69;f.celery_stdout='';f.celery_stderr=BROKER+'redis://user:'+SECRET+'@synthetic.invalid/0\n'
         rows,error,text=f.execute();self.assertIsNotNone(error);self.assertEqual(rows[-1]['classification'],'celery_broker_connection_failed');self.assertNotIn(SECRET,text);self.assertNotIn('redis://',text);self.assertNotIn('synthetic.invalid',text)
-    def test_success_retains_exact_roles_and_footer(self):
-        f=BackendFixture();f.celery_stdout+='\n2 nodes online.\n';rows,error,text=f.execute();self.assertIsNone(error);self.assertTrue(rows[-1]['reply_output_valid']);self.assertEqual(rows[-1]['classification'],'ready')
+    def test_success_retains_exact_roles_in_JSON(self):
+        f=BackendFixture();f.celery_stdout=json.dumps(json.loads(f.celery_stdout),indent=2)+'\n';rows,error,text=f.execute();self.assertIsNone(error);self.assertTrue(rows[-1]['reply_output_valid']);self.assertEqual(rows[-1]['classification'],'ready')
     def test_success_with_unknown_log_output_refused(self):
         for mode in ['stderr','terminal_control']:
             f=BackendFixture()
@@ -78,7 +78,7 @@ class CaptureTests(unittest.TestCase):
     def test_interrupted_deadline_still_fails(self):
         with self.assertRaises(subprocess.TimeoutExpired):self.run_child('import time;time.sleep(2)',timeout=.03)
     def test_exact_original_invocation_and_no_retry(self):
-        f=BackendFixture();rows,e,_=f.execute();args,kw=f.commands[-1];self.assertEqual(args,['celery','-A','dispatcharr','inspect','ping','--timeout=8']);self.assertEqual(kw,dict(cwd='/app',capture_output=True,text=True,timeout=40));self.assertEqual(len(f.commands),2)
+        f=BackendFixture();rows,e,_=f.execute();args,kw=f.commands[-1];self.assertEqual(args,['celery','-A','dispatcharr','inspect','ping','--timeout=8','--json']);self.assertEqual(kw,dict(cwd='/app',capture_output=True,text=True,timeout=40));self.assertEqual(len(f.commands),2)
     def test_precise_command_timing_schema(self):
         rows,e,_=BackendFixture().execute();r=rows[-1];self.assertGreaterEqual(r['command_end_s'],r['command_start_s']);self.assertAlmostEqual(r['command_end_s']-r['command_start_s'],r['command_elapsed_s']);self.assertIs(type(r['stdout_bytes']),int)
     def test_invalid_timing_and_byte_counts_refused(self):

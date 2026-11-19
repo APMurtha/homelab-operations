@@ -54,7 +54,7 @@ class BackendFixture:
         self.keys=[f'live:worker:{i}:heartbeat' for i in [21,22]]
         self.now=1000;self.redis_error=None;self.ping=True;self.value='999';self.ttl=10;self.commands=[]
         self.pg_code=0;self.pg_stdout='184:b00f51e91c5b882cd84d3b2579d074ca\n';self.pg_error=None
-        self.celery_code=0;self.celery_stdout='-> default@fixture: OK\n    pong\n-> dvr@fixture: OK\n    pong\n';self.celery_error=None;self.celery_stderr=''
+        self.celery_code=0;self.celery_stdout=json.dumps({'default@fixture':{'ok':'pong'},'dvr@fixture':{'ok':'pong'}});self.celery_error=None;self.celery_stderr=''
         self.pins={'files':{f'f{i}.py':hashlib.sha256(b'code').hexdigest() for i in range(14)}}
         self.file_error=None
     def Path(self,value):
@@ -76,7 +76,7 @@ class BackendFixture:
             if self.pg_error:raise self.pg_error
             return types.SimpleNamespace(returncode=self.pg_code,stdout=self.pg_stdout,stderr=SECRET)
         if self.celery_error:raise self.celery_error
-        return types.SimpleNamespace(returncode=self.celery_code,stdout=self.celery_stdout,stderr=self.celery_stderr)
+        return types.SimpleNamespace(returncode=self.celery_code,stdout=self.celery_stdout,stderr=self.celery_stderr,complete=max(len(self.celery_stdout.encode()),len(self.celery_stderr.encode()))<=B.OUTPUT_LIMIT,stdout_bytes=min(B.OUTPUT_LIMIT+1,len(self.celery_stdout.encode())),stderr_bytes=min(B.OUTPUT_LIMIT+1,len(self.celery_stderr.encode())))
     def Redis(self,**kwargs):
         fixture=self
         class R:
@@ -137,13 +137,13 @@ class BackendTests(unittest.TestCase):
     def test_worker_count_exceeded(self):
         f=BackendFixture();f.keys=[f'live:worker:{i}:heartbeat' for i in range(18)];self.assertFailure(f,'uwsgi','worker_count_exceeded')
     def test_missing_default(self):
-        f=BackendFixture();f.celery_stdout='-> dvr@fixture: OK\n pong\n';self.assertFailure(f,'celery','celery_default_missing')
+        f=BackendFixture();f.celery_stdout=json.dumps({'dvr@fixture':{'ok':'pong'}});self.assertFailure(f,'celery','celery_default_missing')
     def test_missing_DVR(self):
-        f=BackendFixture();f.celery_stdout='-> default@fixture: OK\n pong\n';self.assertFailure(f,'celery','celery_dvr_missing')
+        f=BackendFixture();f.celery_stdout=json.dumps({'default@fixture':{'ok':'pong'}});self.assertFailure(f,'celery','celery_dvr_missing')
     def test_no_Celery_roles(self):
         f=BackendFixture();f.celery_stdout=SECRET;self.assertFailure(f,'celery','celery_unclassified_failure')
     def test_Celery_extra_reply(self):
-        f=BackendFixture();f.celery_stdout+='-> default@duplicate: OK\n pong\n';self.assertFailure(f,'celery','celery_reply_count')
+        f=BackendFixture();f.celery_stdout=json.dumps({'default@fixture':{'ok':'pong'},'default@duplicate':{'ok':'pong'},'dvr@fixture':{'ok':'pong'}});self.assertFailure(f,'celery','celery_unclassified_failure')
     def test_Celery_command_failure(self):
         f=BackendFixture();f.celery_code=1;self.assertFailure(f,'celery','celery_unclassified_failure')
     def test_Celery_timeout(self):
@@ -239,28 +239,15 @@ class IntegrityTests(unittest.TestCase):
         def funcs(p):return {n.name:ast.dump(n,include_attributes=False) for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef)}
         a=funcs(HERE/'original/lifecycle.py');b=funcs(HERE/'candidate/lifecycle.py')
         for name in ['trusted','execute','prepare','start','rollback_integration','stop']:self.assertEqual(a[name],b[name],name)
-    def test_original_backend_logic_AST_preserved(self):
-        original=next(n for n in ast.parse((HERE/'original/backend.py').read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='check')
-        candidate=next(n for n in ast.parse((HERE/'candidate/backend.py').read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='check')
-        class Strip(ast.NodeTransformer):
-            def visit_Try(self,n):
-                if not n.handlers and n.finalbody and len(n.body)==1 and isinstance(n.body[0],ast.Assign) and isinstance(n.body[0].value,ast.Call) and isinstance(n.body[0].value.func,ast.Name) and n.body[0].value.func.id=='celery_capture':
-                    a=copy.deepcopy(n.body[0]);a.value.func=ast.Attribute(value=ast.Name(id='subprocess',ctx=ast.Load()),attr='run',ctx=ast.Load());return a
-                return self.generic_visit(n)
-            def visit_If(self,n):
-                if isinstance(n.test,ast.BoolOp) and isinstance(n.test.values[0],ast.UnaryOp) and isinstance(n.test.values[0].operand,ast.Name) and n.test.values[0].operand.id=='complete':return None
-                return self.generic_visit(n)
-            def visit_With(self,n):
-                if isinstance(n.items[0].context_expr,ast.Call) and isinstance(n.items[0].context_expr.func,ast.Attribute) and isinstance(n.items[0].context_expr.func.value,ast.Name) and n.items[0].context_expr.func.value.id=='diagnostic':
-                    return [v for child in n.body if (v:=self.visit(child)) is not None]
-                return self.generic_visit(n)
-            def visit_Expr(self,n):
-                if isinstance(n.value,ast.Call) and isinstance(n.value.func,ast.Attribute) and isinstance(n.value.func.value,ast.Name) and n.value.func.value.id=='diagnostic':return None
-                return self.generic_visit(n)
-            def visit_Assign(self,n):
-                if any(isinstance(t,ast.Name) and t.id in {'diagnostic','command_start','complete'} for t in n.targets):return None
-                return self.generic_visit(n)
-        stripped=Strip().visit(copy.deepcopy(candidate));self.assertEqual(ast.dump(original,include_attributes=False),ast.dump(stripped,include_attributes=False))
+    def test_non_Celery_backend_AST_preserved(self):
+        def first_stages(path):
+            node=next(n for n in ast.parse(path.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='check')
+            return [ast.dump(n,include_attributes=False) for n in node.body[:-1]]
+        self.assertEqual(first_stages(HERE/'structured-baseline/backend.py'),first_stages(HERE/'candidate/backend.py'))
+    def test_bounded_capture_and_broker_comparison_AST_unchanged(self):
+        def functions(path):return {n.name:ast.dump(n,include_attributes=False) for n in ast.parse(path.read_text()).body if isinstance(n,ast.FunctionDef)}
+        a=functions(HERE/'structured-baseline/backend.py');b=functions(HERE/'candidate/backend.py')
+        for name in ['celery_capture','compare_brokers','classify_celery','decode_record']:self.assertEqual(a[name],b[name])
 
 class AdditionalIntegrityTests(unittest.TestCase):
     def test_complete_candidate_manifest_and_install_closure(self):

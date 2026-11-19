@@ -1,0 +1,95 @@
+{
+  "CLI_contract": {
+    "JSON_mode": "callback=None; echo serialized reply mapping; return before human footer",
+    "historical_successful_JSON_flag_operations": [
+      "active",
+      "reserved",
+      "scheduled"
+    ],
+    "live_verification_performed": false,
+    "new_application_execution": false,
+    "reviewed_source_lines": "178-204",
+    "source_function": "celery.bin.control.inspect",
+    "source_sha256": "c1267b714e2100b4c7f9817833a985f6f4cf704da08485ddaaa33279f54efbdd",
+    "syntax": [
+      "celery",
+      "-A",
+      "dispatcharr",
+      "inspect",
+      "ping",
+      "--timeout=8",
+      "--json"
+    ],
+    "version": "5.6.3"
+  },
+  "Docker_systemd_operations": 0,
+  "added_delays_or_probes": 0,
+  "approved_review": "ec6963b4659e987946fd8db8a0fc9b148f2f83ce",
+  "baseline_sha256": {
+    "backend.py": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
+    "lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
+    "manifest.json": "52f8c8e14ecc33fec0b362b1ef32f7d79111ba9d127ee759bc08b939a8f1620b"
+  },
+  "broker_comparison": "unknown without authoritative snapshots; no inference from environment absence",
+  "candidate_sha256": {
+    "backend.py": "466b06a23af779d0093d2325d6dce3257a354e4d8899658fb849713e2b1a3065",
+    "lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
+    "manifest.json": "8c8ea65df72c6ce18238faeb7262c6946b821ad711bdbf9b06174c10b2dc2a5f"
+  },
+  "changed_files_sha256": {
+    "configs/dispatcharr-iptv/original-backend-diagnostics/README.md": "e9807dc54171a861ad64e2dae271a01fd57f16296eb5e76708fc2f7ec9a5aef1",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/candidate-inventory.json": "f154b0abdf524eac2c9ad882220945efbae6d5c97820ac9ebfe087439c8bdcaa",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/candidate.patch": "4983a79f3886d97e19556a12771e2bf72ed6d9d82ff85274927e2a78f87f1c2f",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/backend.py": "466b06a23af779d0093d2325d6dce3257a354e4d8899658fb849713e2b1a3065",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/manifest.json": "8c8ea65df72c6ce18238faeb7262c6946b821ad711bdbf9b06174c10b2dc2a5f",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/celery-json-cli-contract.json": "c6dd6adfc29d1a5b986ba919006dc1f743192f9393190cfe84b75b51ccf3aad9",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/structured-baseline-hashes.json": "711ef496bf8ebcb6da256c14fcee12659b6015350e9180bf8f6122805bf14096",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/structured-baseline/backend.py": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/structured-baseline/lifecycle.py": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/structured-baseline/manifest.json": "52f8c8e14ecc33fec0b362b1ef32f7d79111ba9d127ee759bc08b939a8f1620b",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/tests/test_celery_correction.py": "05ca8dff1b1c36c2ddf3873832bcda7675032b4eda607e9e1a303c7c5769d15b",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/tests/test_diagnostics.py": "171cd0f1023fe7bdc510b13c1188d8d98c12146477e8a4aa83338d742e5c40f4",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/tests/test_structured_celery.py": "13e1f710cb28dba68b61da4bb183930cd8e544faaf0b60f9950442c865dd0486",
+    "configs/dispatcharr-iptv/original-backend-diagnostics/verify_candidate.py": "e7e40480e78a13b6653a904ef8e30db9d2e8c4ade30ba58825b7a0a38c262b5c"
+  },
+  "command": [
+    "celery",
+    "-A",
+    "dispatcharr",
+    "inspect",
+    "ping",
+    "--timeout=8",
+    "--json"
+  ],
+  "current_installed_source_commit": "1f73b94f05888927626c69a1b3b0db4246a090ee",
+  "decision": "GO for review of one separately authorized diagnostic managed restoration attempt, contingent on fresh preflight; no deployment/start now",
+  "deployment_evidence": "f7df20f76c13d4b5c7385a3bc448366b08138ccc",
+  "deployment_targets": 2,
+  "diagnostic_schema_fields_changed": false,
+  "discarded_output_used_or_reconstructed": false,
+  "lifecycle_unchanged": true,
+  "manifest_closure": 67,
+  "production_contact": false,
+  "retries": 0,
+  "schema": 1,
+  "scope": "OFFLINE ONLY",
+  "single_command": true,
+  "tests": {
+    "admission": 28,
+    "all_passed": true,
+    "application_runtime_execution": false,
+    "diagnostic_and_structured": 138,
+    "fixtures": "synthetic only",
+    "permission_fixture_checks": 16,
+    "persistence": 12,
+    "rollback": 26,
+    "security_contract": 17,
+    "total_unit_tests": 221
+  },
+  "timeouts_seconds": {
+    "backend_invocation": 90,
+    "reply": 8,
+    "subprocess": 40
+  },
+  "unchanged_installed_targets": 65
+}

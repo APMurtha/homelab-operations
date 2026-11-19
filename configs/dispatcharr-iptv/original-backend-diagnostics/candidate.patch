@@ -1,190 +1,63 @@
---- installed-baseline/backend.py
+--- structured-baseline/backend.py
 +++ candidate/backend.py
-@@ -11,0 +12,3 @@
-+import selectors
-+import types
-+import ipaddress
-@@ -35,5 +38 @@
--            if metrics.get('returncode'): return 'celery_command_failed'
--            if not metrics.get('default_present') and not metrics.get('dvr_present'): return 'celery_roles_missing'
--            if not metrics.get('default_present'): return 'celery_default_missing'
--            if not metrics.get('dvr_present'): return 'celery_dvr_missing'
--            return 'celery_reply_count'
-+            return metrics.get('celery_failure', 'celery_unclassified_failure')
-@@ -64 +63 @@
--        if metrics: record.update(self.values)
-+        if metrics: record.update({k:v for k,v in self.values.items() if k!='celery_failure'})
-@@ -88 +87 @@
--    'celery': {'celery_command_failed','celery_roles_missing','celery_default_missing','celery_dvr_missing','celery_reply_count'},
-+    'celery': {'celery_no_replies','celery_broker_connection_failed','celery_remote_command_failed','celery_usage_or_import_failed','celery_unclassified_failure','celery_roles_missing','celery_default_missing','celery_dvr_missing','celery_reply_count'},
-@@ -91,2 +90,8 @@
--METRICS = {'api_sources': {'count'}, 'postgres': {'returncode'}, 'redis': set(),
--           'uwsgi': {'count'}, 'celery': {'count','returncode','default_present','dvr_present'}}
-+CELERY_CODES = {'celery_no_replies','celery_broker_connection_failed','celery_remote_command_failed','celery_usage_or_import_failed','celery_unclassified_failure'}
-+COMMAND_METRICS = {'command_start_s','command_end_s','command_elapsed_s','stdout_bytes','stderr_bytes',
-+                   'output_complete','reply_output_valid','broker_comparison_known','broker_endpoint_equal',
-+                   'broker_transport_equal','broker_auth_equal','broker_namespace_equal'}
-+OUTPUT_LIMIT = 16384
-+
-+METRICS = {'api_sources' : {'count'}, 'postgres': {'returncode'}, 'redis': set(),
-+           'uwsgi': {'count'}, 'celery': {'count','returncode','default_present','dvr_present'} | COMMAND_METRICS}
-@@ -121 +126 @@
--    for field in ['default_present','dvr_present']:
-+    for field in ['default_present','dvr_present','output_complete','reply_output_valid','broker_comparison_known','broker_endpoint_equal','broker_transport_equal','broker_auth_equal','broker_namespace_equal']:
-@@ -122,0 +128,10 @@
-+    if stage=='celery':
-+        for field in ['command_start_s','command_end_s','command_elapsed_s']:
-+            if field in value and (type(value[field]) not in (int,float) or not math.isfinite(value[field]) or not 0<=value[field]<=2**40):raise InvalidDiagnostics('command_clock')
-+        for field in ['stdout_bytes','stderr_bytes']:
-+            if field in value and (type(value[field]) is not int or not 0<=value[field]<=OUTPUT_LIMIT+1):raise InvalidDiagnostics('command_bytes')
-+        if {'count','default_present','dvr_present'}<=set(value) and value['count']<int(value['default_present'])+int(value['dvr_present']):raise InvalidDiagnostics('role_count')
-+        if COMMAND_METRICS<=set(value):
-+            if value['command_end_s']<value['command_start_s'] or abs(value['command_end_s']-value['command_start_s']-value['command_elapsed_s'])>0.000003 or value['command_elapsed_s']>50:raise InvalidDiagnostics('command_clock')
-+            if not value['broker_comparison_known'] and any(value[k] for k in ['broker_endpoint_equal','broker_transport_equal','broker_auth_equal','broker_namespace_equal']):raise InvalidDiagnostics('broker_unknown')
-+            if value['output_complete'] and max(value['stdout_bytes'],value['stderr_bytes'])>OUTPUT_LIMIT:raise InvalidDiagnostics('command_bytes')
-@@ -130 +145 @@
--        if stage=='celery' and (value['count']!=2 or value['default_present'] is not True or value['dvr_present'] is not True): raise InvalidDiagnostics('roles')
-+        if stage=='celery' and (not value['output_complete'] or not value['reply_output_valid'] or value['count']!=2 or value['default_present'] is not True or value['dvr_present'] is not True): raise InvalidDiagnostics('roles')
-@@ -137,2 +152,6 @@
--        if code in {'celery_roles_missing','celery_default_missing','celery_dvr_missing','celery_reply_count'}:
--            if not METRICS['celery']<=set(value) or value['returncode']!=0:raise InvalidDiagnostics('Celery_evidence')
-+        if stage=='celery' and code in CELERY_CODES:
-+            if not METRICS['celery']<=set(value):raise InvalidDiagnostics('Celery_evidence')
-+            if code!='celery_unclassified_failure' and (value['stdout_bytes']!=0 or value['stderr_bytes']==0 or value['reply_output_valid'] or not value['output_complete'] or value['count']!=0 or value['returncode'] not in ({2} if code=='celery_usage_or_import_failed' else {69})):raise InvalidDiagnostics('Celery_evidence')
-+            if value['returncode']==0 and value['count']==2 and value['default_present'] and value['dvr_present'] and value['output_complete'] and value['reply_output_valid']:raise InvalidDiagnostics('Celery_failure_contradiction')
-+        if stage=='celery' and code in FAILURES['celery']-CELERY_CODES:
-+            if not METRICS['celery']<=set(value) or value['returncode']!=0 or not value['output_complete'] or not value['reply_output_valid']:raise InvalidDiagnostics('Celery_evidence')
-@@ -162,0 +182,113 @@
-+
-+def classify_celery(returncode, stdout, stderr, complete=True):
-+    # Source-reviewed Celery 5.6.3/Click text only. No error text is returned.
-+    unknown='celery_unclassified_failure'
-+    if not complete or not isinstance(stdout,str) or not isinstance(stderr,str):return unknown
+@@ -208,6 +208,22 @@
+-def valid_reply_output(stdout, stderr):
+-    # Fixed human formatter, no unrecognized logs/errors or terminal controls.
+-    if stderr or any(not c.isprintable() and c!='\n' for c in stdout):return False
+-    match=re.fullmatch(r'(?P<replies>(?:->\s+[^:\s]+:\s+OK\s+pong\s*)+)(?:(?P<count>[0-9]+) nodes? online\.\s*)?',stdout)
+-    if not match:return False
+-    return match['count'] is None or int(match['count'])==len(re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',match['replies']))
++def structured_replies(stdout, stderr, complete=True):
++    # Return only validated positive role names, never worker identities/raw data.
++    if complete is not True or not isinstance(stdout,str) or not isinstance(stderr,str) or stderr:return [],False
 +    try:
-+        if len(stdout.encode('utf-8'))>OUTPUT_LIMIT or len(stderr.encode('utf-8'))>OUTPUT_LIMIT:return unknown
-+    except UnicodeError:return unknown
-+    if stdout or not stderr.endswith('\n') or any(not c.isprintable() and c!='\n' for c in stderr):return unknown
-+    if returncode==69:
-+        if stderr=='Error: No nodes replied within time constraint\n':return 'celery_no_replies'
-+        prefixes={
-+            'celery_broker_connection_failed':'Error: Could not connect to the message broker. Please make sure your broker (e.g., RabbitMQ or Redis) is running and the connection settings are correct. Reason: ',
-+            'celery_remote_command_failed':'Error: Unable to run the `inspect ping` command. Reason: ',
-+        }
-+        for code,prefix in prefixes.items():
-+            if stderr.startswith(prefix):
-+                tail=stderr[len(prefix):-1]
-+                if tail.strip() and tail==tail.strip() and not any(x in tail.lower() for x in ['[truncated]','<truncated>','...','…','\ufffd']) and '\n' not in tail and '\r' not in tail and not any(x in tail for x in ['Error:','Usage:','Traceback']):return code
-+    if returncode==2:
-+        error='Error: \nUnable to load celery application.\nThe module dispatcharr was not found.\n'
-+        usage="Usage: celery [OPTIONS] COMMAND [ARGS]...\nTry 'celery --help' for help.\n\n"
-+        if stderr in (error,usage+error):return 'celery_usage_or_import_failed'
-+    return unknown
-+
-+
-+def valid_reply_output(stdout, stderr):
-+    # Fixed human formatter, no unrecognized logs/errors or terminal controls.
-+    if stderr or any(not c.isprintable() and c!='\n' for c in stdout):return False
-+    match=re.fullmatch(r'(?P<replies>(?:->\s+[^:\s]+:\s+OK\s+pong\s*)+)(?:(?P<count>[0-9]+) nodes? online\.\s*)?',stdout)
-+    if not match:return False
-+    return match['count'] is None or int(match['count'])==len(re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',match['replies']))
-+
-+
-+def celery_classification(process, nodes, complete):
-+    if process.returncode==0 and complete and valid_reply_output(process.stdout,process.stderr):
-+        roles={n.split('@')[0] for n in nodes}
-+        if 'default' not in roles and 'dvr' not in roles:return 'celery_roles_missing'
-+        if 'default' not in roles:return 'celery_default_missing'
-+        if 'dvr' not in roles:return 'celery_dvr_missing'
-+        if len(nodes)!=2:return 'celery_reply_count'
-+    return classify_celery(process.returncode,process.stdout,process.stderr,complete)
-+
-+
-+def compare_brokers(snapshots=None):
-+    # Only already-resolved, authoritative effective configuration is accepted.
-+    # No environment inference, Django import, process scan, DNS or broker I/O.
-+    result={k:False for k in ['broker_comparison_known','broker_endpoint_equal','broker_transport_equal','broker_auth_equal','broker_namespace_equal']}
-+    def normalize(value):
-+        required={'transport','host','port','database','username','password','control_exchange','global_keyprefix','fanout_prefix','fanout_patterns','tls'}
-+        if not isinstance(value,dict) or set(value)!=required:raise ValueError()
-+        if value['transport'] not in {'redis','rediss'}:raise ValueError()
-+        if not isinstance(value['host'],str) or not 1<=len(value['host'])<=253 or not re.fullmatch(r'[a-zA-Z0-9.:-]+',value['host']):raise ValueError()
-+        host=value['host'].lower().rstrip('.')
-+        try:host=str(ipaddress.ip_address(host))
-+        except ValueError:pass
-+        if type(value['port']) is not int or not 1<=value['port']<=65535:raise ValueError()
-+        if type(value['database']) is not int or not 0<=value['database']<=65535:raise ValueError()
-+        for field in ['username','password','control_exchange','global_keyprefix']:
-+            if not isinstance(value[field],str) or len(value[field])>8192:raise ValueError()
-+        if any(type(value[k]) is not bool for k in ['fanout_prefix','fanout_patterns']):raise ValueError()
-+        if ':' in host:
-+            try:ipaddress.ip_address(host)
-+            except ValueError:raise ValueError()
-+        tls=value['tls']
-+        if value['transport']=='redis':
-+            if tls is not None:raise ValueError()
-+            tls_identity=None
-+        else:
-+            if not isinstance(tls,dict) or set(tls)!={'verify','ca_identity','client_identity'} or tls['verify'] is not True:raise ValueError()
-+            if any(not isinstance(tls[k],str) or len(tls[k])>8192 for k in ['ca_identity','client_identity']):raise ValueError()
-+            tls_identity=(True,tls['ca_identity'],tls['client_identity'])
-+        return {'endpoint':(host,value['port']), 'transport':(value['transport'],tls_identity),
-+                'auth':(value['username'],value['password']),
-+                'namespace':(value['database'],value['control_exchange'],value['global_keyprefix'],value['fanout_prefix'],value['fanout_patterns'])}
-+    try:
-+        if not isinstance(snapshots,dict) or set(snapshots)!={'inspection','default','dvr'}:return result
-+        values={k:normalize(v) for k,v in snapshots.items()}
-+        for field in ['endpoint','transport','auth','namespace']:
-+            result['broker_'+field+'_equal']=all(values['inspection'][field]==values[k][field] for k in ['default','dvr'])
-+        result['broker_comparison_known']=True
-+    except Exception:return {k:False for k in result}
-+    return result
-+
-+
-+def celery_capture(args, **kwargs):
-+    # Preserve the one invocation/40s bound, but cap both child pipes in memory.
-+    timeout=kwargs['timeout'];started=time.monotonic();buffers=[bytearray(),bytearray()];sizes=[0,0];complete=True
-+    process=None;selector=selectors.DefaultSelector()
-+    try:
-+        process=subprocess.Popen(args,cwd=kwargs['cwd'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-+        for i,pipe in enumerate([process.stdout,process.stderr]):selector.register(pipe,selectors.EVENT_READ,i)
-+        while selector.get_map():
-+            remaining=timeout-(time.monotonic()-started)
-+            if remaining<=0:raise subprocess.TimeoutExpired(args,timeout)
-+            for key,_ in selector.select(remaining):
-+                data=os.read(key.fileobj.fileno(),4096);i=key.data
-+                if not data:selector.unregister(key.fileobj);continue
-+                sizes[i]=min(OUTPUT_LIMIT+1,sizes[i]+len(data));buffers[i].extend(data[:max(0,OUTPUT_LIMIT-len(buffers[i]))])
-+                if sizes[i]>OUTPUT_LIMIT:
-+                    complete=False;process.kill();selector.close();break
-+            if not complete:break
-+        code=process.wait(timeout=max(.001,timeout-(time.monotonic()-started)))
-+        try:out,err=[bytes(b).decode('utf-8','strict') for b in buffers]
-+        except UnicodeError:out=err='';complete=False
-+        return types.SimpleNamespace(returncode=code,stdout=out,stderr=err,complete=complete,stdout_bytes=sizes[0],stderr_bytes=sizes[1])
-+    finally:
-+        if process is not None:
-+            if process.poll() is None:process.kill();process.wait(timeout=1)
-+            for pipe in [process.stdout,process.stderr]:pipe.close()
-+        selector.close()
-+
-+
-@@ -202 +334,3 @@
--        p = subprocess.run(['celery','-A','dispatcharr','inspect','ping','--timeout=8'],
-+        command_start=time.monotonic()
-+        try:
-+            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8'],
-@@ -203,0 +338,6 @@
-+        finally:
-+            command_end=time.monotonic()
-+            diagnostic.metrics(command_start_s=round(command_start,6),command_end_s=round(command_end,6),command_elapsed_s=round(command_end-command_start,6),**compare_brokers())
-+        complete=getattr(p,'complete',True)
-+        diagnostic.metrics(stdout_bytes=min(OUTPUT_LIMIT+1,getattr(p,'stdout_bytes',len(p.stdout.encode('utf-8')))),stderr_bytes=min(OUTPUT_LIMIT+1,getattr(p,'stderr_bytes',len(p.stderr.encode('utf-8')))),output_complete=complete)
-+        diagnostic.metrics(reply_output_valid=valid_reply_output(p.stdout,p.stderr))
-@@ -207,0 +348,2 @@
-+        diagnostic.metrics(celery_failure=celery_classification(p,nodes,complete))
-+        if not complete or (p.returncode==0 and not valid_reply_output(p.stdout,p.stderr)): raise ValueError('Celery_not_ready')
---- installed-baseline/manifest.json
++        if len(stdout.encode('utf-8'))>OUTPUT_LIMIT:return [],False
++        def unique(items):
++            result={}
++            for key,value in items:
++                if key in result:raise ValueError('duplicate_JSON_key')
++                result[key]=value
++            return result
++        def constant(_):raise ValueError('nonfinite_JSON')
++        value=json.loads(stdout,object_pairs_hook=unique,parse_constant=constant)
++        if type(value) is not dict or len(value)>2:return [],False
++        roles=[]
++        for identity,reply in value.items():
++            if not isinstance(identity,str) or not re.fullmatch(r'(default|dvr)@[A-Za-z0-9_.-]{1,253}',identity):return [],False
++            role=identity.split('@',1)[0]
++            if role in roles or type(reply) is not dict or reply!={'ok':'pong'}:return [],False
++            roles.append(role)
++        return roles,True
++    except (ValueError,TypeError,UnicodeError,RecursionError):return [],False
+@@ -216,3 +232,2 @@
+-def celery_classification(process, nodes, complete):
+-    if process.returncode==0 and complete and valid_reply_output(process.stdout,process.stderr):
+-        roles={n.split('@')[0] for n in nodes}
++def celery_classification(process, roles, complete, valid):
++    if process.returncode==0 and complete and valid:
+@@ -222 +237 @@
+-        if len(nodes)!=2:return 'celery_reply_count'
++        if len(roles)!=2:return 'celery_reply_count'
+@@ -336 +351 @@
+-            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8'],
++            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8','--json'],
+@@ -343,8 +358,6 @@
+-        diagnostic.metrics(reply_output_valid=valid_reply_output(p.stdout,p.stderr))
+-        nodes = re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',p.stdout)
+-        diagnostic.metrics(returncode=p.returncode, count=len(nodes),
+-                           default_present=any(n.split('@')[0]=='default' for n in nodes),
+-                           dvr_present=any(n.split('@')[0]=='dvr' for n in nodes))
+-        diagnostic.metrics(celery_failure=celery_classification(p,nodes,complete))
+-        if not complete or (p.returncode==0 and not valid_reply_output(p.stdout,p.stderr)): raise ValueError('Celery_not_ready')
+-        if p.returncode or len(nodes) != 2 or {n.split('@')[0] for n in nodes} != {'default','dvr'}:
++        roles,valid=structured_replies(p.stdout,p.stderr,complete)
++        diagnostic.metrics(reply_output_valid=valid,returncode=p.returncode,count=len(roles),
++                           default_present='default' in roles,dvr_present='dvr' in roles)
++        diagnostic.metrics(celery_failure=celery_classification(p,roles,complete,valid))
++        if not complete or not valid:raise ValueError('Celery_not_ready')
++        if p.returncode or len(roles)!=2 or set(roles)!={'default','dvr'}:
+--- structured-baseline/manifest.json
 +++ candidate/manifest.json
 @@ -11 +11 @@
--    "backend.py": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
-+    "backend.py": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
+-    "backend.py": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
++    "backend.py": "466b06a23af779d0093d2325d6dce3257a354e4d8899658fb849713e2b1a3065",

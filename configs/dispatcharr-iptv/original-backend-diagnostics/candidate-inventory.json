@@ -205,8 +205,8 @@
     "tools/dispatcharr_provider/synthetic.py": "f718ebde15e1564c7c6b3ac826d00435b40576c5d83b14e7a12b56ff17bb8dad",
     "tools/dispatcharr_provider/validation-results.json": "f598cdd992df9e6ccf6700f85a6e0995a010f2bf83e7af3bed4c53d1194e8450"
   },
-  "installed_diagnostic_baseline_commit": "f4298da612300a9024ac8302c8db1252d8d69fc6",
-  "mode": "offline diagnostic-only two-file correction from installed f4298da; no installation authorized",
+  "installed_diagnostic_baseline_commit": "1f73b94f05888927626c69a1b3b0db4246a090ee",
+  "mode": "OFFLINE structured Celery readiness candidate; two replacement files; separate installation/start authorization required",
   "receipt_directory": {
     "files_mode": "0600",
     "gid": 0,
@@ -219,14 +219,14 @@
     "/docker/dispatcharr-iptv/permanent-streaming/backend.py": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
+      "sha256": "466b06a23af779d0093d2325d6dce3257a354e4d8899658fb849713e2b1a3065",
       "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/backend.py",
       "uid": 0
     },
     "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "52f8c8e14ecc33fec0b362b1ef32f7d79111ba9d127ee759bc08b939a8f1620b",
+      "sha256": "8c8ea65df72c6ce18238faeb7262c6946b821ad711bdbf9b06174c10b2dc2a5f",
       "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/manifest.json",
       "uid": 0
     }
@@ -235,15 +235,15 @@
     "/docker/dispatcharr-iptv/permanent-streaming/backend.py": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "c3b52ec9ca05909375c531389376653c6f9e77051fa4ca4922a6d145235710f8",
-      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/installed-baseline/backend.py",
+      "sha256": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
+      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/structured-baseline/backend.py",
       "uid": 0
     },
     "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "07faa8cce4c643c0a580787b2514c955ddbc4cd0cbff77b61209de9dd97815a4",
-      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/installed-baseline/manifest.json",
+      "sha256": "52f8c8e14ecc33fec0b362b1ef32f7d79111ba9d127ee759bc08b939a8f1620b",
+      "source": "configs/dispatcharr-iptv/original-backend-diagnostics/structured-baseline/manifest.json",
       "uid": 0
     }
   },
