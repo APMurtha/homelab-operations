@@ -1,0 +1,27 @@
+{
+  "status": "prepared_not_executed",
+  "python_syntax": "passed",
+  "source_sha256": "b956b51176e279a93d80537e42d71d00fa6c1a49e292acfc95821519a72e0643",
+  "audit_os": "Debian 12 bookworm amd64 LXC",
+  "package": "prometheus-node-exporter",
+  "reviewed_version": "1.5.0-1+b6",
+  "upstream_package_sha256_from_palantir_apt_metadata": "8cb5b39627595ea2cf3cd27be593e0e9af87023d29e1c5b8487e2f9510097e09",
+  "simulated_transaction": {
+    "install": 1,
+    "upgrade": 0,
+    "remove": 0
+  },
+  "runtime_install_verify_rollback": "not executed; separate authorization required",
+  "no_remote_changes": true,
+  "debian_archive_sha256_verified": true,
+  "packaged_service": {
+    "./lib/systemd/system/prometheus-node-exporter.service": "[Unit]\nDescription=Prometheus exporter for machine metrics\nDocumentation=https://github.com/prometheus/node_exporter\n\n[Service]\nRestart=on-failure\nUser=prometheus\nEnvironmentFile=/etc/default/prometheus-node-exporter\nExecStart=/usr/bin/prometheus-node-exporter $ARGS\nExecReload=/bin/kill -HUP $MAINPID\nTimeoutStopSec=20s\nSendSIGKILL=no\n\n[Install]\nWantedBy=multi-user.target\n"
+  },
+  "runtime_executed": false,
+  "maintainer_hook_dns_firewall_keyword_scan": "No direct matches; not a complete semantic review of maintainer hooks.",
+  "review_notes": [
+    "Protected snapshot uses JSON-stable lists; dynamic iptables timestamps and packet counters excluded.",
+    "No package refresh/upgrade, sudo policy changes, or protected service restore/restart paths.",
+    "Runtime install, service/cgroup startup, verify and rollback have not been executed."
+  ]
+}
