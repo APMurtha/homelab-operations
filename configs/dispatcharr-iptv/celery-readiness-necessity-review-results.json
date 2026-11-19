@@ -1,0 +1,212 @@
+{
+  "Docker_systemd_or_application_operations": 0,
+  "code_changes": false,
+  "conclusions": {
+    "DVR_recording_task_consumes_proxy_not_evidence_proxy_requires_DVR": true,
+    "default_worker_omission_safety_proven": false,
+    "discarded_stdout_reconstructed": false,
+    "incident_parser_defect_proven": false,
+    "registrar_relay_gateway_exports_have_no_direct_Celery_await": true,
+    "two_pong_gate_is_explicit_full_backend_policy": true
+  },
+  "latest_Celery_record": {
+    "broker_auth_equal": false,
+    "broker_comparison_known": false,
+    "broker_endpoint_equal": false,
+    "broker_namespace_equal": false,
+    "broker_transport_equal": false,
+    "classification": "celery_unclassified_failure",
+    "command_elapsed_s": 9.147665,
+    "command_end_s": 184644.852156,
+    "command_start_s": 184635.704491,
+    "count": 1,
+    "default_present": false,
+    "dvr_present": true,
+    "elapsed_s": 9.748854,
+    "event": "fail",
+    "output_complete": true,
+    "reply_output_valid": false,
+    "returncode": 0,
+    "stage": "celery",
+    "stderr_bytes": 0,
+    "stdout_bytes": 267
+  },
+  "latest_backend_invocation": "1f131f6a3a1ee5d26654b9fbe7cc4065",
+  "latest_evidence_commit": "f7df20f76c13d4b5c7385a3bc448366b08138ccc",
+  "mode": "offline read-only source/dependency review",
+  "options": {
+    "A": "GO for preparing a minimal structured-reply correction retaining both positive roles and existing bounds; no demonstrated root-cause fix or start approved",
+    "B": "NO_GO to prepare an omitted-default/both-worker recovery policy from incomplete hot-path source; DVR-only omission does not resolve latest missing default proof"
+  },
+  "pinned_retained_upstream_files_verified": 26,
+  "production_contact": false,
+  "schema": 1,
+  "source_coverage_gaps": [
+    "complete original apps/proxy/live_proxy handler/server/input/output/cleanup call graph",
+    "exact four-file patched input/readiness/output bodies; hashes and artifact-review summary retained, not full source locally",
+    "actual discarded 267-byte CLI stdout"
+  ],
+  "verified_sources": {
+    "apps/accounts/api_urls.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/accounts/api_urls.py",
+      "sha256": "aa2ddbb0a87e5d68e89d674dd144cf753798115f1c89a6ade15eb4baa3ca8523"
+    },
+    "apps/api/urls.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/api/urls.py",
+      "sha256": "ee72fb6d564ac86a5a9fcea794a8039bdbc2b4d3d5cf7035dd084500e3d039c6"
+    },
+    "apps/channels/api_urls.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/channels/api_urls.py",
+      "sha256": "51ed630131a4bcc1c88188f181af33945948beb8a4363676b293d654fd9b1dc4"
+    },
+    "apps/channels/api_views.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/channels/api_views.py",
+      "sha256": "0d211a4287943b47999f642fdaaec1e368ad331943901e2237c60b09474c38fa"
+    },
+    "apps/channels/models.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/channels/models.py",
+      "sha256": "f76cd4a71a2997b04ce836fc3191d56755c26b88fcdfb9caec85b3c67d119f04"
+    },
+    "apps/channels/serializers.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/channels/serializers.py",
+      "sha256": "c5f0e2e6ea45c3f8f9839fd178aa6bea4e0c781af931be41e13c1cd4d7bb9e53"
+    },
+    "apps/channels/signals.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/channels/signals.py",
+      "sha256": "06485b52efcc01864d67ff422dcff28f5937791e822e0061b883baf049a4b8cf"
+    },
+    "apps/channels/tasks.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/channels/tasks.py",
+      "sha256": "92fd879189109310b58b9cdd684b4e00cb5e1d62b6931e975ab41f68ab8a6279"
+    },
+    "apps/channels/utils.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/channels/utils.py",
+      "sha256": "212c56502bfe5f1baa1a4806d4382af6ce0de55daedc246397ca08d2a286a682"
+    },
+    "apps/epg/api_views.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/epg/api_views.py",
+      "sha256": "df6ebcd84afe9237cb8ca2989d572170a2c8a325b85f8781d1d8becb217e2e4f"
+    },
+    "apps/epg/models.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/epg/models.py",
+      "sha256": "975b645dee46899dec59f5620c664de9c246045d437b66c3edd52b1948589178"
+    },
+    "apps/epg/serializers.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/epg/serializers.py",
+      "sha256": "0d84a6664f5cfa53fc44cb1ed32a8ca6994def5756105f6d65050e40afd446b4"
+    },
+    "apps/epg/signals.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/epg/signals.py",
+      "sha256": "541c1157f01b794d05cf74b58eeaab521fa161273ce3430bb705955b94153e7a"
+    },
+    "apps/epg/tasks.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/epg/tasks.py",
+      "sha256": "deb4792a39ed93c57da435ecc2a4fcdf5b4dad8f4e087d3afdb5d4f2b7932ff9"
+    },
+    "apps/m3u/api_urls.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/m3u/api_urls.py",
+      "sha256": "492bbd9c4c8127a55cde251c00bb565aa5c8ef2d6a26999b2e70059781cdc81a"
+    },
+    "apps/m3u/api_views.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/m3u/api_views.py",
+      "sha256": "1299f6d86af5bd86ca04087f3ca70120ee1b04686c182ea0682560f0b7165d63"
+    },
+    "apps/m3u/models.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/m3u/models.py",
+      "sha256": "f8e0cd0862d9c576cbd7ac6af71c195a1fde8eaa1b3ea5f225c3b8b56ead7219"
+    },
+    "apps/m3u/serializers.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/apps/m3u/serializers.py",
+      "sha256": "4ef8f623a187fe411674b4ab41338dfd41c20f66cd6b8b1c5279109a33fe5821"
+    },
+    "apps/m3u/signals.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/m3u/signals.py",
+      "sha256": "854c44f190e57a262e474e0d24a237c004a557a036a7dc527f05b1381ecd4bd3"
+    },
+    "apps/m3u/tasks.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/apps/m3u/tasks.py",
+      "sha256": "921e0fea7273c0ce7d1b1380a4f675718fbc5cdb3bb0d38005cdae2b73cce981"
+    },
+    "core/api_urls.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/core/api_urls.py",
+      "sha256": "aa780f16f02f7bcffe5fdf26aa3f658a0e91190e84377540c75ec73b1dbce81e"
+    },
+    "core/api_views.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/core/api_views.py",
+      "sha256": "2600b850ae65f6e160951024a777e51ae6f05ab8573eae23b4109d941989fbb8"
+    },
+    "core/scheduling.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/audit-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/core/scheduling.py",
+      "sha256": "48ec9620fa122f56c589e295442c98efdd8fcb858528522329ae581ae907c489"
+    },
+    "core/serializers.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/core/serializers.py",
+      "sha256": "8f5c68238e2757f34fde5e0548ff5ca86a4e97fadae71ed694507e29c6db5688"
+    },
+    "core/xtream_codes.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/native-provider-hardening/source-pins.json",
+      "retained_source": "/tmp/dispatcharr-provider-source/core/xtream_codes.py",
+      "sha256": "702aa9eae38cc3fce733a2f42e66f5b2b68458a22fd95d57ed0dc14a9231c76d"
+    },
+    "dispatcharr/urls.py": {
+      "pin_inventory": "configs/dispatcharr-iptv/permanent-streaming/api-source-pins.json",
+      "retained_source": "/tmp/dispatcharr-api-source/dispatcharr/urls.py",
+      "sha256": "98266b2fc6ce2e495dfc6840589691b1ab67015d49c3596c6ddb764ec593429f"
+    },
+    "installed-lifecycle": {
+      "sha256": "0df62a9448618f63e1e3c9e04f4d36a8a30d804c0f0c8418b4633e4dd07099ac"
+    },
+    "permanent-streaming/Caddyfile": {
+      "pin_inventory": "original/manifest.json",
+      "sha256": "8b7b661f80ab157957480b330d96861d3980370fd1830d0cb36df93b79a08ba6"
+    },
+    "permanent-streaming/exports.py": {
+      "pin_inventory": "original/manifest.json",
+      "sha256": "460291da7961b9463420cec14c19648f4e33ad21eef82af271d3d1d830bb9c44"
+    },
+    "permanent-streaming/health.py": {
+      "pin_inventory": "original/manifest.json",
+      "sha256": "f4da54dece514ea24df5a6561ce52b883a1737213634b95bb1eab94a1b4ec6db"
+    },
+    "permanent-streaming/hls_relay.py": {
+      "pin_inventory": "original/manifest.json",
+      "sha256": "171461eb4bb83170a83d4b52aeca90d3f7ebc5d8486b615cdf654b7fc98078f5"
+    },
+    "permanent-streaming/register.py": {
+      "pin_inventory": "original/manifest.json",
+      "sha256": "a92d5cbba346238d8c2807587be02201d4fa93e50a416bc5975ba4fe7eb16055"
+    },
+    "permanent-streaming/relay_main.py": {
+      "pin_inventory": "original/manifest.json",
+      "sha256": "830c87685643af37b9f008640b457d1a4e77bdf1fdef554f36fd82cec589f356"
+    },
+    "permanent-streaming/verify_binding.py": {
+      "pin_inventory": "original/manifest.json",
+      "sha256": "cf9d079d720c952c7a2368a568d9d73595f12cd05889aac33775ef0cacc1c4f8"
+    }
+  }
+}
