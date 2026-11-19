@@ -87,34 +87,11 @@ one ready event. Reapplying the label requires a new approval comment.
 GitHub issue reads and local launch are separate operations. A cancellation
 after the last successful check can arrive too late to stop the claimed job.
 
-### Offline runtime setup and acceptance
+### Offline runtime and Bag-End acceptance
 
-Use a reviewed local rootless Podman image with Python 3.12 or newer at
-`/usr/bin/python3`, Codex CLI 0.170.0 at `/usr/local/bin/codex`, and an Ollama
-build supporting streaming `/v1/responses` at `/usr/local/bin/ollama`.
-Include the Ollama model `qwen3:4b-instruct-2507-q4_K_M` under
-`/opt/samwise/models`. Model files must be readable by UID 65532. Review the
-base image, binaries, model, and resulting image ID offline. Use a staging
-host with rootless UID/GID mappings and cgroup v2 CPU, memory and PID
-delegation. The image must be preloaded on the intended host.
-
-From this directory, with the reviewed runtime base already available locally,
-build the final wrapper with Podman:
-
-```sh
-podman build --network=none --pull=never --build-arg RUNTIME=REVIEWED_LOCAL_BASE \
-  -t localhost/samwise-offline:reviewed -f Containerfile .
-podman image inspect --format '{{.Id}}' localhost/samwise-offline:reviewed
-python3 -m unittest discover -s . -v
-```
-
-After separate approval for live acceptance, configure
-`SAMWISE_RUNNER_IMAGE` with the full `sha256:…` image ID, ensure the trusted
-checkout contains the approved Git objects, and run the v2 entry point on
-Bag-End with `--once --issue ISSUE_NUMBER` for the first authorized test.
-Then acceptance requires the same workflow through polling, with Samwise
-able to read the terminal GitHub result and draft PR. Confirm success with a
-fresh benign inventory issue and use a fresh issue for any retry.
+Follow [ACCEPTANCE.md](ACCEPTANCE.md) to stage the pinned Linux amd64 inputs,
+build the image offline, run the isolation and inference probe, and test a
+pair of fresh GitHub issues through an isolated acceptance instance.
 
 Podman receives a bounded archive of the pinned Git tree over stdin. It uses
 a private network namespace, a read-only image and a bounded temporary
@@ -127,7 +104,7 @@ instructions, file contents, model-generated commands, and arbitrary edits
 are outside this task. The host validates the bounded result and creates only
 `samwise-results/issue-N.json` on `samwise/results/issue-N`. It opens a draft PR
 against `main` and links it from the issue. Review and merge are manual.
-Resource limits include a 32 MiB archive, 10,000 files, 8 GiB memory, four CPUs,
+Resource limits include a 32 MiB archive, 10,000 files, 3.5 GiB memory with no swap, four CPUs,
 128 processes, and a 175-second container deadline.
 
 ### Recovery and rollback

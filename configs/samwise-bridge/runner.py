@@ -39,21 +39,43 @@ def inventory(task, image):
         return run_container(task, image, name, hooks)
 
 
-def run_container(task, image, name, hooks):
-    podman = ["/usr/bin/podman", "--remote=false", "--default-mounts-file=/dev/null",
+def podman_command(hooks):
+    return ["/usr/bin/podman", "--remote=false", "--default-mounts-file=/dev/null",
               f"--hooks-dir={hooks}"]
-    podman_env = {**ENV, "CONTAINERS_CONF": "/dev/null"}
-    command = podman + [
+
+
+PODMAN_ENV = {**ENV, "CONTAINERS_CONF": "/dev/null", "CONTAINERS_CONF_OVERRIDE": "/dev/null"}
+MEMORY_MIB = 3584
+
+
+def container_command(podman, image, name, *, timeout=175):
+    return podman + [
         "run", "--name", name, "--rm", "--interactive", "--pull=never",
         "--network=none", "--http-proxy=false", "--read-only", "--read-only-tmpfs=false",
-        "--image-volume=ignore", "--no-healthcheck", "--log-driver=none", "--timeout=175",
+        "--image-volume=ignore", "--no-healthcheck", "--log-driver=none", f"--timeout={timeout}",
         "--cap-drop=ALL", "--security-opt=no-new-privileges",
-        "--pids-limit=128", "--memory=8g", "--cpus=4", "--ulimit=fsize=67108864:67108864",
-        "--ipc=private", "--pid=private", "--uts=private", "--no-hosts",
+        "--pids-limit=128", f"--memory={MEMORY_MIB}m", f"--memory-swap={MEMORY_MIB}m",
+        "--cpus=4", "--ulimit=fsize=67108864:67108864",
+        "--unsetenv-all", "--cgroupns=private", "--ipc=private", "--pid=private",
+        "--uts=private", "--no-hosts",
         "--systemd=false", "--init=false", "--restart=no",
         "--tmpfs=/tmp:rw,nodev,nosuid,noexec,size=512m",
-        "--user=65532:65532", "--entrypoint=/usr/bin/python3", image, "/opt/samwise/offline.py",
+        "--user=65532:65532", "--entrypoint=/usr/local/bin/python3", image,
     ]
+
+
+def cleanup(podman, name):
+    try:
+        subprocess.run(podman + ["rm", "--force", "--ignore", name], env=PODMAN_ENV,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       stdin=subprocess.DEVNULL, timeout=15, check=True)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise BridgeError(f"offline container cleanup failed for {name}") from exc
+
+
+def run_container(task, image, name, hooks):
+    podman = podman_command(hooks)
+    command = container_command(podman, image, name) + ["/opt/samwise/offline.py"]
     try:
         with tempfile.TemporaryFile() as snapshot, tempfile.TemporaryFile() as output:
             # An archive from the exact Git object excludes checkout state, config and hooks.
@@ -69,7 +91,7 @@ def run_container(task, image, name, hooks):
                         process.kill()
                         process.wait()
             snapshot.seek(0)
-            with subprocess.Popen(command, env=podman_env, stdin=snapshot, stdout=subprocess.PIPE,
+            with subprocess.Popen(command, env=PODMAN_ENV, stdin=snapshot, stdout=subprocess.PIPE,
                                   stderr=subprocess.DEVNULL, start_new_session=True) as process:
                 try:
                     if not bounded_output(process, output, 4096, 180) or process.wait(timeout=5):
@@ -93,10 +115,4 @@ def run_container(task, image, name, hooks):
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         raise BridgeError("offline runner unavailable or returned invalid data") from exc
     finally:
-        # Container teardown is independent of the podman client's lifetime.
-        try:
-            subprocess.run(podman + ["rm", "--force", "--ignore", name], env=podman_env,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                           stdin=subprocess.DEVNULL, timeout=15)
-        except (OSError, subprocess.TimeoutExpired):
-            pass
+        cleanup(podman, name)

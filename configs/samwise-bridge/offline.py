@@ -50,7 +50,9 @@ def run():
         env = {
             "PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(home), "LANG": "C.UTF-8",
             "OLLAMA_HOST": "127.0.0.1:11434", "OLLAMA_MODELS": "/opt/samwise/models",
-            "OLLAMA_NO_CLOUD": "1", "CODEX_HOME": str(home / ".codex"),
+            "OLLAMA_NO_CLOUD": "1", "OLLAMA_CONTEXT_LENGTH": "4096",
+            "OLLAMA_NUM_PARALLEL": "1", "OLLAMA_MAX_LOADED_MODELS": "1",
+            "CODEX_HOME": str(home / ".codex"),
         }
         answer = root / "answer"
         # Codex receives aggregate counts from the checkout. Run outside the
@@ -85,7 +87,7 @@ def run():
                     "--disable", "plugins", "--disable", "hooks", "--disable", "multi_agent",
                     "--disable", "apps", "--disable", "shell_snapshot",
                     "--enable", "skip_host_skill_discovery", "-c", 'web_search="disabled"',
-                    "--output-last-message", str(answer), "-",
+                    "-c", "model_context_window=4096", "--output-last-message", str(answer), "-",
                 ], env=env, cwd=home, input=prompt.encode(), timeout=145, check=True,
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 with answer.open("rb") as result:
