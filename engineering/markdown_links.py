@@ -64,7 +64,7 @@ def fence_state_transition(line: str, active_fence: tuple[str, int] | None) -> t
     if active_fence is None:
         return (fence_char, fence_length)
     active_char, active_length = active_fence
-    if fence_char == active_char and fence_length >= active_length:
+    if fence_char == active_char and fence_length >= active_length and not match['rest'].strip(' \t'):
         return None
     return active_fence
 
