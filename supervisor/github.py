@@ -56,7 +56,10 @@ class Github:
                        'Reply with the following exact line to authorize up to three attempts.')
 
     def api(self, path, method='GET', data=None):
-        cmd = ['gh', 'api', '--method', method, path]
+        cmd = ['gh', 'api']
+        if getattr(self, 'hostname', None):
+            cmd += ['--hostname', self.hostname]
+        cmd += ['--method', method, path]
         if data is not None:
             cmd += ['--input', '-']
         try:
