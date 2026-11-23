@@ -1,0 +1,14 @@
+{
+  "approval_comment": 7089035964,
+  "commit": "529c3cff904d84d100d037b1925c8fcd99de97b5",
+  "digest": "75aa2b9c7015f5f6faa0aa7a2bceaf6639d7462ce934d1ffe4d29cef471484df",
+  "inventory": {
+    "files": 40,
+    "focus": "documentation"
+  },
+  "issue": 8,
+  "kind": "repo-inventory",
+  "ready_event": 36959810726,
+  "revision": 1,
+  "runner_image": "sha256:db79c76fc71f354b20aa165d852eb70b9a0a6fbea568f2fa91f760a7b1302053"
+}
