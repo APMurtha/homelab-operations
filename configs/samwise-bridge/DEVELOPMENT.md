@@ -93,3 +93,41 @@ label and approval IDs, one execution and receipt, the one-file draft diff,
 provenance, and Samwise's independent readback. Repeat one-shot for the
 completed issue and verify exit 1 with no new job, PR or receipt. Preserve
 the running v2 service and its existing lock, ledger and rollback artifacts.
+
+### Independent staging results, 2026-11-23 UTC
+
+Staging passed at reviewed commit `506ff9c1b41fdcbde71b536bb38a1269c228ceb7`.
+The transferred Git archive of `configs/samwise-bridge` matched its local
+SHA-256, `0c2859f35fc0ddd7088741e4130dc778552821b13c505939ecfd9da135aec206`.
+The staging host ran Ubuntu 26.04 amd64, kernel 7.0.0-43-generic, Python
+3.14.4, and rootless Podman 5.7.0 with systemd cgroup v2. Its local image ID
+matched `sha256:db79c76fc71f354b20aa165d852eb70b9a0a6fbea568f2fa91f760a7b1302053`.
+All 46 unit and security tests passed.
+
+| Run | Available memory before run (KiB) | Elapsed (s) | Observed cgroup memory.peak (bytes) | OOM events |
+| --- | ---: | ---: | ---: | ---: |
+| Runtime probe, inventory inference | 6,919,404 | 69.7 | 3,523,829,760 | 0 |
+| Development job 1 | 6,909,236 | 72.52 | 3,430,391,808 | 0 |
+| Development job 2 | 6,927,964 | 72.75 | 3,344,805,888 | 0 |
+
+Each development run started a fresh container and model process. Elapsed
+time covers the host invocation through cleanup. A host observer sampled the
+kernel peak counter and OOM events every 50 ms while the cgroup existed.
+Both runs returned identical 59-byte modules using `return value % 2 == 0`.
+Each passed the in-container test. A second isolated Python process checked
+the returned file against explicit expected booleans for −3, −2, −1, 0, 1, 2,
+3 and 2⁶⁴ after its bytes matched an approved implementation. File SHA-256
+was `a7877448c9dd132e46ca2af9ed528d88d78c0806b5a327ecaf3adce807de95d7`.
+
+The runtime probe confirmed working loopback, outbound network denial, private
+namespaces, read-only root, bounded scratch space, and credential isolation.
+Both development containers used network mode `none`, a four-CPU quota, a
+128-PID limit, a 3,584 MiB memory limit, a 3,360 MiB reclaim threshold and
+zero swap. Podman recorded removal of both development containers and all
+three probe containers, including the deliberately timed-out probe. The final
+container list was empty.
+
+Staging retains the source archive, test log, probe log, measurement script,
+per-run results and returned modules in `/var/tmp/samwise-v3-stage.NFSpkjAM`.
+Independent staging passed without implementation fixes. The next gate is
+separately authorized live GitHub acceptance and Samwise readback.
