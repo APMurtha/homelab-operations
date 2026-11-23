@@ -7,6 +7,7 @@ The inspection covers the Git tree at ca0a7d7dab101a20b5a0a4d91e18585fe1acda92 o
 | Inspected repository evidence | What it establishes |
 |---|---|
 | docs/dispatcharr-permanent-streaming-artifact-review.md | Summarizes Phase 5B stale Redis singleton and two later Phase 5H successful H.264/AAC remux sessions. The referenced private phase5h-analysis and phase5i-closure copies, original session logs and linked Phase 5G report were not inspected. |
+| configs/dispatcharr-iptv/permanent-streaming/compose.yaml and Caddyfile in the same directory | Original pinned AIO, relay and gateway share the VPN namespace. Host port 9191 maps to the filtered gateway listener on 9192. compose.native.yaml describes a separate hardening overlay. |
 | configs/dispatcharr-iptv/permanent-streaming/tests/fixtures/relay-stopped-18bdf54.json and tests/test_candidate.py in that directory | Sanitized stopped-relay mount projection and offline tests of generation identity, budgets and allowed HLS content. Neither measures broadcaster health. |
 | docs/dispatcharr-jellyfin-integration.md and docs/dispatcharr-xteve-retirement.md | Channel 9001 and local placeholder XMLTV were discovered. An API-client capability negotiation stopped an attempt before decode. Retirement report records prior owner playback confirmation. |
 | docs/dispatcharr-celery-readiness-necessity-review.md and configs/dispatcharr-iptv/celery-readiness-necessity-review-results.json | Dependency analysis and pin inventory. Original live_proxy handler and four-file readiness patch bodies were incompletely retained. |
@@ -42,3 +43,18 @@ The controller reads fixed ordinary blobs from Git objects, with a size cap and 
 1. Independently review this diff against samwise/bridge-v3. Install reviewed code in a separate staging checkout/account with private state, no SSH agent, production tokens, mounts or V2/V3 database access. Do not install a service for this milestone.
 2. On separately authorized staging 10.10.20.201, pre-provision the exact local rootless image identified in development.py, Podman, cgroup v2 delegation and enough RAM/disk. Under a credential-free account run the offline tests and the local staging probe documented below. Capture image identity, cgroup limits, network/mount inspection, output hashes, exit and container removal, including timeout/failure cleanup. V3 staging evidence does not qualify V4.
 3. A later live acceptance needs independent approval, a main tip containing the four inputs and an absent output, a dedicated controller checkout with the same objects, restricted GitHub credentials and a fresh issue. Use an independent V4 state directory/service identity on Bag-End if subsequently deployed. Issue 20 is specification text. This implementation PR targets the evidence-bearing v3 branch; no deployment or integration into main is implied.
+
+## Operator interface and verification evidence
+
+Keep the trusted program checkout fixed and provision a complete local Git object database. The worker reads objects by SHA and never switches branches to execute code from a task. For a future approved live run, the newest issue comment must be the literal line below, with the GitHub label event node ID and lowercase SHA-256 of the exact issue body bytes substituted. No trailing newline is included in the task body.
+
+    samwise-approve-v4: <event-node-id> <body-sha256>
+
+The command for that later gate is `python3 worker_v4.py --issue NUMBER` from configs/samwise-bridge. A positive issue number is required. The private receipt lives in ~/.local/state/samwise-dispatcharr-v4/jobs.sqlite3. A residual claimed row indicates an interrupted or active execution. A publication-uncertain row requires inspection of the expected branch, parent, sole diff and open draft before an operator makes any recovery decision.
+
+For the credential-free staging probe, use Python 3.11+ and run these commands from configs/samwise-bridge in the reviewed V4 checkout:
+
+    python3 -m unittest discover -v
+    python3 evidence_v4.py ca0a7d7dab101a20b5a0a4d91e18585fe1acda92
+
+The second command takes the isolated runner path without opening GitHub or creating a ledger. The local pre-staging check ran the actual fingerprint program under isolated-mode Python against the same four committed blobs. The sizes in manifest order were 23509, 13421, 11462 and 30685 bytes. The machine receipt SHA-256 was fcdb2c7923f2b74787a7b40ceb8222420884e40e86feab9bce472973c07836d0. Unit tests exercise the Podman invocation with a process double. Effective limits, namespace isolation and cleanup under real Podman on staging remain to be demonstrated.
