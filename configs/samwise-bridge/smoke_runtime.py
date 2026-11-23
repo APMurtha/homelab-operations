@@ -66,6 +66,7 @@ Path("/tmp/isolated").write_text("ok")
 print("Container mounts:", sorted(mounts))
 cg = Path("/sys/fs/cgroup")
 assert (cg / "memory.max").read_text().strip() == str(3584 * 1024**2)
+assert (cg / "memory.high").read_text().strip() == str(3360 * 1024**2)
 assert (cg / "memory.swap.max").read_text().strip() == "0"
 assert (cg / "pids.max").read_text().strip() == "128"
 quota, period = (cg / "cpu.max").read_text().split()

@@ -92,8 +92,38 @@ Both runs verified outbound network denial, working loopback, private
 namespaces, a read-only root filesystem, bounded scratch space, absent
 synthetic credentials, enforced cgroup and file-size limits, and automatic
 removal after success and timeout. Codex and Ollama returned the expected
-inventory for the one-file archive. The separate staging-host probe remains
-pending.
+inventory for the one-file archive.
+
+### Independent staging gate, 2026-11-22
+
+Staging independently built the same full image ID recorded above from PR
+implementation `3c3aab5`. The staging script verified the Codex archive, Qwen
+manifest, and every model blob. Both OCI platform manifest digests matched the
+Containerfile. Podman built offline with the flags above. Staging ran Ubuntu
+26.04 amd64, kernel `7.0.0-43-generic`, and rootless Podman 5.7.0 with
+systemd cgroup v2 CPU, memory and PID controllers. Preflight showed 7,533,252
+KiB total RAM, 6,953,864 KiB available and 47 GiB free on the root filesystem.
+
+The original staging probes took 71.2 and 70.3 seconds. Peak usage rose from
+3,323,834,368 bytes to the 3,758,096,384-byte hard limit on run 2, failing
+the strict peak gate despite zero OOM events. A diagnostic run reproduced
+the peak and sampled approximately 447 MB of file-backed memory alongside
+3.29 GB of anonymous memory. The runner now requests reclaim at 3,360 MiB
+via `memory.high`. The probe checks that setting inside the container.
+
+| Host and run after fix | MemAvailable before inference | Cold inference | Cgroup peak (bytes) | OOM events |
+| --- | ---: | ---: | ---: | ---: |
+| Staging 1 | 6,925,968 KiB | 70.7 s | 3,523,760,128 | 0 |
+| Staging 2 | 6,926,528 KiB | 70.5 s | 3,523,817,472 | 0 |
+| Bag-End 1 | 12,934,720 KiB | 65.7 s | 3,314,384,896 | 0 |
+| Bag-End 2 | 12,938,304 KiB | 65.0 s | 3,313,332,224 | 0 |
+
+All four runs passed by full image ID with fresh containers and Ollama
+processes. Each verified outbound denial, loopback connectivity, namespace,
+filesystem and credential isolation, cgroup and file-size limits, automatic
+removal after success and timeout, and the expected one-file inventory.
+The independent staging gate passed. Staging retains the context and logs in
+`/var/tmp/samwise-build.j4dRSq7L`. Live GitHub acceptance awaits approval.
 
 ## Run controlled GitHub acceptance
 

@@ -55,6 +55,8 @@ def container_command(podman, image, name, *, timeout=175):
         "--image-volume=ignore", "--no-healthcheck", "--log-driver=none", f"--timeout={timeout}",
         "--cap-drop=ALL", "--security-opt=no-new-privileges",
         "--pids-limit=128", f"--memory={MEMORY_MIB}m", f"--memory-swap={MEMORY_MIB}m",
+        # Reclaim file cache before the model load reaches the hard limit.
+        "--cgroup-conf=memory.high=3523215360",  # 3360 MiB
         "--cpus=4", "--ulimit=fsize=67108864:67108864",
         "--unsetenv-all", "--cgroupns=private", "--ipc=private", "--pid=private",
         "--uts=private", "--no-hosts", "--passwd=false",
