@@ -1,6 +1,11 @@
 [Unit]
 Description=Read fixed stored health results for four media containers
 
+# A monitoring tick may use an active engine but must not activate its socket service.
+Requisite=docker.service
+After=docker.service
+ConditionPathIsSocket=/run/docker.sock
+
 [Service]
 Type=oneshot
 User=samwise-engine-health
