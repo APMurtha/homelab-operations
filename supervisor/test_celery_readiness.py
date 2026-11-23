@@ -133,6 +133,22 @@ class Readiness(unittest.TestCase):
                 lease_write(reader.fileno())
             self.assertEqual(self.observed(), 'unavailable')
 
+    def test_capture_cannot_inherit_publisher_lease(self):
+        def ping(_):
+            code = """
+from pathlib import Path
+import os
+for item in Path('/proc/self/fd').iterdir():
+    try:
+        assert not os.readlink(item).endswith('.celery-publisher.lease')
+    except FileNotFoundError:
+        pass
+"""
+            rc, stdout, stderr = capture([sys.executable,'-c',code], '/', {})
+            self.assertEqual((rc,stdout,stderr),(0,b'',b''))
+            return self.result()
+        self.assertEqual(self.run_capture(ping), 'both-ready')
+
     def test_invalid_lock_output_or_marker_rejects_current_result(self):
         for target, tamper in (
             (ANCHOR, lambda p: p.chmod(0o644)),

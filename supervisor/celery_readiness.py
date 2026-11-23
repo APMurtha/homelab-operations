@@ -53,6 +53,7 @@ def capture(command, cwd, env, timeout=DEADLINE_SECONDS):
     end = time.monotonic() + timeout
     buffers = [bytearray(), bytearray()]
     with subprocess.Popen(command, cwd=cwd, env=env, start_new_session=True,
+                          close_fds=True,
                           stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE) as child:
         try:
@@ -163,7 +164,7 @@ def leased_acquisition(output, owner, boot, names, inspect, ping, *,
             info = os.fstat(fd)
             check(stat.S_IMODE(info.st_mode) in (0o700, 0o750, 0o2750))
             group = info.st_gid
-            anchor = os.open(ANCHOR, os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK,
+            anchor = os.open(ANCHOR, os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
                              dir_fd=fd)
             resources.callback(os.close, anchor)
             anchor_sig = eligible(os.fstat(anchor), owner, group)
@@ -190,7 +191,7 @@ def leased_acquisition(output, owner, boot, names, inspect, ping, *,
                     vacuum(fd, COMMIT)
                     remove_projection(fd)
                     atomic_control(fd, LEASE)
-                    lease = os.open(LEASE, os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK,
+                    lease = os.open(LEASE, os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
                                     dir_fd=fd)
                     resources.callback(os.close, lease)
                     lease_sig = eligible(os.fstat(lease), owner, group)

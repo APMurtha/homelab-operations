@@ -68,6 +68,10 @@ to be qualified under a separate grant.
   or incomplete commit, receipt replacement, unsafe directory, wrong
   group, or expired observation cannot return a current positive. The
   result is point-in-time during the active lease only; expiry still wins.
+  An OFD lock follows its open file description, not a PID: the
+  anchor and lease are CLOEXEC, the capture uses close_fds with no passed
+  descriptors, and the pinned publisher must never fork an inheriting
+  child or transfer the lease descriptor. Enforce whole-cgroup teardown.
   Read-time revalidation is not an assurance about a future operation or
   a restart after the final worker bracket. An unprivileged reader may
   contend for its read lock; this can withhold but cannot forge evidence.
