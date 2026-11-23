@@ -1,0 +1,116 @@
+"""Forced-command entry point. No shell, subprocess, service APIs or network clients."""
+import json
+import os
+import re
+import signal
+import stat
+import sys
+import time
+from pathlib import Path
+
+if __name__ == '__main__':
+    # The sshd ForceCommand uses Python isolated mode and this administrator-owned directory.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from ops_protocol import STATES, TAG, check, decode, observations
+
+EVIDENCE = Path('/run/samwise-observations')
+LIMIT = 65536
+AGE = 300
+ATTRIBUTE = re.compile(r'[ \t]+([\w-]+)="([^"]*)"')
+END_HEADER = re.compile(r'[ \t]*,')
+
+
+def observe(dirfd, name, owner):
+    # A single fixed component; never follow a symlink or block opening a FIFO.
+    fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=dirfd)
+    with os.fdopen(fd, 'rb') as source:
+        before = os.fstat(fd)
+        check(stat.S_ISREG(before.st_mode) and before.st_uid == owner and not before.st_mode & 0o022)
+        if not 0 <= time.time() - before.st_mtime <= AGE:
+            return 'stale'
+        check(before.st_size <= LIMIT)
+        data = source.read(LIMIT + 1)
+        check(len(data) <= LIMIT and os.fstat(fd).st_mtime_ns == before.st_mtime_ns)
+    if name == 'playlist':
+        lines = data.decode('utf-8-sig').splitlines()
+        check(lines and lines[0].strip() == '#EXTM3U')
+        for line in lines:
+            if not line.startswith('#EXTINF:'):
+                continue
+            # Match attributes from the start of the header. Never search the display name,
+            # URL, or a different quoted attribute for something resembling a channel ID.
+            header = re.match(r'^#EXTINF:[^ ,\t]+', line)
+            check(header is not None)
+            pos = header.end()
+            channel_id = None
+            while True:
+                if END_HEADER.match(line, pos):
+                    break
+                attr = ATTRIBUTE.match(line, pos)
+                check(attr is not None)
+                if attr[1] == 'tvg-id':
+                    check(channel_id is None)
+                    channel_id = attr[2]
+                pos = attr.end()
+            if channel_id == 'dw-english-permanent':
+                return 'present'
+        return 'absent'
+    if name == 'logs':
+        # Input is a bounded projection of Dispatcharr severity records only.
+        levels = data.decode('ascii').splitlines()
+        check(levels and all(level in ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL') for level in levels))
+        return 'warning-or-error' if set(levels) & {'WARNING', 'ERROR', 'CRITICAL'} else 'no-warning-in-sample'
+    if name == 'celery':
+        record = decode(data)
+        keys = ('output_complete', 'reply_output_valid', 'default_present', 'dvr_present')
+        check(type(record) is dict and all(type(record.get(k)) is bool for k in keys))
+        return 'both-ready' if all(record[k] for k in keys) else 'readiness-failed'
+    if name == 'jellyfin-channel':
+        inventory = decode(data)
+        items = inventory['Items']
+        check(type(items) is list and type(inventory.get('TotalRecordCount')) is int and
+              inventory['TotalRecordCount'] == len(items))
+        check(all(type(i) is dict and type(i.get('Number')) is str and
+                                          type(i.get('Name')) is str for i in items))
+        return 'present' if any(i['Number'] == '9001' and i['Name'] == 'DW English' for i in items) else 'absent'
+    if name == 'jellyfin-guide':
+        count = decode(data)['TotalRecordCount']
+        check(type(count) is int and count >= 0)
+        return 'current' if count else 'empty'
+    value = data.decode('ascii').strip()
+    check(value in STATES[name])
+    return value
+
+
+def collect(raw, directory=EVIDENCE, owner=0):
+    req = decode(raw)
+    check(type(req) is dict and set(req) == {'observations'})
+    names = observations(req['observations'])
+    result = dict.fromkeys(names, 'unavailable')
+    try:
+        fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    except OSError:
+        return result
+    try:
+        info = os.fstat(fd)
+        check(info.st_uid == owner and not info.st_mode & 0o022)
+        for n in names:
+            try:
+                result[n] = observe(fd, n, owner)
+            except (OSError, ValueError, TypeError, KeyError):
+                pass
+    finally:
+        os.close(fd)
+    return result
+
+
+if __name__ == '__main__':
+    signal.alarm(10)
+    try:
+        check(os.getuid() != 0 and os.environ.get('SSH_ORIGINAL_COMMAND') == TAG and len(sys.argv) == 1)
+        raw = sys.stdin.buffer.read(1025)
+        check(len(raw) <= 1024)
+        print(json.dumps(collect(raw), separators=(',', ':')))
+    except (OSError, ValueError):
+        sys.exit(64)
