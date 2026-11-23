@@ -91,6 +91,20 @@ class MarkdownLinksTest(unittest.TestCase):
             ],
         )
 
+    def test_closing_fence_requires_only_trailing_spaces_or_tabs(self):
+        for fence in ('````', '~~~'):
+            with self.subTest(fence=fence):
+                readme = self.write('README.md', '\n'.join([
+                    fence + 'python',
+                    fence + ' still code',
+                    '[hidden](inside.md)',
+                    fence + ' \t',
+                    '[visible](outside.md)',
+                ]))
+                broken = markdown_links.find_broken_links_in_file(readme)
+                self.assertEqual([(item.line_number, item.destination) for item in broken],
+                                 [(5, 'outside.md')])
+
     def test_main_returns_nonzero_and_reports_source_line(self):
         readme = self.write(
             'docs/readme.md',
