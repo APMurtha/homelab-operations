@@ -1,0 +1,11 @@
+[Unit]
+Description=Four-container stored health evidence every fifteen seconds
+
+[Timer]
+OnActiveSec=1s
+OnUnitActiveSec=15s
+AccuracySec=500ms
+Unit=samwise-engine-health-publish.service
+
+[Install]
+WantedBy=timers.target
