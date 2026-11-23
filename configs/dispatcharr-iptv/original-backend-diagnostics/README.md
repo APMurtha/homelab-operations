@@ -45,3 +45,14 @@ their missing-role classifications. Historical receipts remain readable without
 the field. The November 19 stdout was discarded, so its specific rejection
 cannot be recovered. The baseline inventory here describes the historical
 structured candidate and is not a deployment or rollback plan for this change.
+
+The reader checks a present reason against the recorded capture. An overflow
+on either pipe takes precedence over decoding, and capture stops at the first
+overflow sentinel (16,385 bytes). Invalid UTF-8 requires a nonempty,
+incomplete capture within the pipe limits. A generic incomplete capture
+requires bounded counts. Complete captures with stderr report stderr presence.
+With empty stderr, empty stdout can only fail JSON decoding. The non-text
+reason is available to direct validator callers; completed pipes yield strings.
+A rejected reply contributes zero role witnesses. Records without a reason
+retain their original schema. Byte counts cannot identify which JSON rule
+failed on nonempty stdout.

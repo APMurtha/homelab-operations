@@ -116,6 +116,40 @@ class ReplyRejection(str, Enum):
 class InvalidDiagnostics(ValueError): pass
 
 
+def validate_reply_rejection(record):
+    """Validate only new receipt evidence, after required metrics have been checked."""
+    try:
+        reason = ReplyRejection(record['reply_rejection'])
+    except ValueError:
+        raise InvalidDiagnostics('reply_rejection') from None
+
+    stdout = record['stdout_bytes']
+    stderr = record['stderr_bytes']
+    complete = record['output_complete']
+    if record['count'] or record['default_present'] or record['dvr_present']:
+        raise InvalidDiagnostics('rejected_role_witness')
+
+    if max(stdout, stderr) > OUTPUT_LIMIT:
+        # Capture stops on the first oversized pipe, even if its prefix cannot decode.
+        consistent = (not complete and min(stdout, stderr) <= OUTPUT_LIMIT
+                      and reason is ReplyRejection.OUTPUT_OVERSIZED)
+    elif not complete:
+        consistent = (reason is ReplyRejection.CAPTURE_INCOMPLETE
+                      or (reason is ReplyRejection.INVALID_UTF8 and max(stdout, stderr) > 0))
+    elif stderr:
+        consistent = reason is ReplyRejection.STDERR_PRESENT
+    else:
+        # A completed pipe capture supplies decoded strings. NON_TEXT applies only
+        # to direct validator callers. Empty stdout fails at the JSON decoder.
+        consistent = reason is ReplyRejection.MALFORMED_JSON or (stdout > 0 and reason in {
+            ReplyRejection.DUPLICATE_KEY, ReplyRejection.NONFINITE_CONSTANT,
+            ReplyRejection.INVALID_TOP_LEVEL, ReplyRejection.INVALID_IDENTITY,
+            ReplyRejection.DUPLICATE_ROLE, ReplyRejection.INVALID_PAYLOAD,
+        })
+    if not consistent:
+        raise InvalidDiagnostics('reply_rejection_evidence')
+
+
 def decode_record(raw):
     def pairs(items):
         value = {}
@@ -137,11 +171,6 @@ def decode_record(raw):
     allowed = base | METRICS[stage]
     if stage == 'celery' and event == 'fail' and value.get('reply_output_valid') is False and code in CELERY_CODES:
         allowed.add('reply_rejection')
-        if 'reply_rejection' in value:
-            try:
-                ReplyRejection(value['reply_rejection'])
-            except ValueError:
-                raise InvalidDiagnostics('reply_rejection') from None
     if set(value) - allowed: raise InvalidDiagnostics('fields')
     elapsed=value['elapsed_s']
     if type(elapsed) not in (int,float) or not 0 <= elapsed <= 90 or not math.isfinite(elapsed): raise InvalidDiagnostics('elapsed')
@@ -175,6 +204,8 @@ def decode_record(raw):
         if code=='worker_count_exceeded' and value.get('count',0)<=16:raise InvalidDiagnostics('worker_evidence')
         if stage=='celery' and code in CELERY_CODES:
             if not METRICS['celery']<=set(value):raise InvalidDiagnostics('Celery_evidence')
+            if 'reply_rejection' in value:
+                validate_reply_rejection(value)
             if code!='celery_unclassified_failure' and (value['stdout_bytes']!=0 or value['stderr_bytes']==0 or value['reply_output_valid'] or not value['output_complete'] or value['count']!=0 or value['returncode'] not in ({2} if code=='celery_usage_or_import_failed' else {69})):raise InvalidDiagnostics('Celery_evidence')
             if value['returncode']==0 and value['count']==2 and value['default_present'] and value['dvr_present'] and value['output_complete'] and value['reply_output_valid']:raise InvalidDiagnostics('Celery_failure_contradiction')
         if stage=='celery' and code in FAILURES['celery']-CELERY_CODES:

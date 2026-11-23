@@ -18,18 +18,51 @@
 +    INVALID_PAYLOAD = 'invalid_payload'
 +
 +
-@@ -121 +137,9 @@
+@@ -100,0 +117,34 @@
++
++
++def validate_reply_rejection(record):
++    """Validate only new receipt evidence, after required metrics have been checked."""
++    try:
++        reason = ReplyRejection(record['reply_rejection'])
++    except ValueError:
++        raise InvalidDiagnostics('reply_rejection') from None
++
++    stdout = record['stdout_bytes']
++    stderr = record['stderr_bytes']
++    complete = record['output_complete']
++    if record['count'] or record['default_present'] or record['dvr_present']:
++        raise InvalidDiagnostics('rejected_role_witness')
++
++    if max(stdout, stderr) > OUTPUT_LIMIT:
++        # Capture stops on the first oversized pipe, even if its prefix cannot decode.
++        consistent = (not complete and min(stdout, stderr) <= OUTPUT_LIMIT
++                      and reason is ReplyRejection.OUTPUT_OVERSIZED)
++    elif not complete:
++        consistent = (reason is ReplyRejection.CAPTURE_INCOMPLETE
++                      or (reason is ReplyRejection.INVALID_UTF8 and max(stdout, stderr) > 0))
++    elif stderr:
++        consistent = reason is ReplyRejection.STDERR_PRESENT
++    else:
++        # A completed pipe capture supplies decoded strings. NON_TEXT applies only
++        # to direct validator callers. Empty stdout fails at the JSON decoder.
++        consistent = reason is ReplyRejection.MALFORMED_JSON or (stdout > 0 and reason in {
++            ReplyRejection.DUPLICATE_KEY, ReplyRejection.NONFINITE_CONSTANT,
++            ReplyRejection.INVALID_TOP_LEVEL, ReplyRejection.INVALID_IDENTITY,
++            ReplyRejection.DUPLICATE_ROLE, ReplyRejection.INVALID_PAYLOAD,
++        })
++    if not consistent:
++        raise InvalidDiagnostics('reply_rejection_evidence')
+@@ -121 +171,4 @@
 -    if set(value)-base-METRICS[stage]: raise InvalidDiagnostics('fields')
 +    allowed = base | METRICS[stage]
 +    if stage == 'celery' and event == 'fail' and value.get('reply_output_valid') is False and code in CELERY_CODES:
 +        allowed.add('reply_rejection')
-+        if 'reply_rejection' in value:
-+            try:
-+                ReplyRejection(value['reply_rejection'])
-+            except ValueError:
-+                raise InvalidDiagnostics('reply_rejection') from None
 +    if set(value) - allowed: raise InvalidDiagnostics('fields')
-@@ -208,11 +232,56 @@
+@@ -153,0 +207,2 @@
++            if 'reply_rejection' in value:
++                validate_reply_rejection(value)
+@@ -208,11 +263,56 @@
 -def valid_reply_output(stdout, stderr):
 -    # Fixed human formatter, no unrecognized logs/errors or terminal controls.
 -    if stderr or any(not c.isprintable() and c!='\n' for c in stdout):return False
@@ -97,12 +130,12 @@
 +
 +def celery_classification(process, roles, complete, valid):
 +    if process.returncode==0 and complete and valid:
-@@ -222 +291 @@
+@@ -222 +322 @@
 -        if len(nodes)!=2:return 'celery_reply_count'
 +        if len(roles)!=2:return 'celery_reply_count'
-@@ -284,0 +354 @@
+@@ -284,0 +385 @@
 +        capture_rejection = None if complete else ReplyRejection.OUTPUT_OVERSIZED
-@@ -286,2 +356,6 @@
+@@ -286,2 +387,6 @@
 -        except UnicodeError:out=err='';complete=False
 -        return types.SimpleNamespace(returncode=code,stdout=out,stderr=err,complete=complete,stdout_bytes=sizes[0],stderr_bytes=sizes[1])
 +        except UnicodeError:
@@ -111,10 +144,10 @@
 +            # A size-limited prefix may end inside a valid UTF-8 sequence.
 +            capture_rejection = capture_rejection or ReplyRejection.INVALID_UTF8
 +        return types.SimpleNamespace(returncode=code,stdout=out,stderr=err,complete=complete,capture_rejection=capture_rejection,stdout_bytes=sizes[0],stderr_bytes=sizes[1])
-@@ -336 +410 @@
+@@ -336 +441 @@
 -            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8'],
 +            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8','--json'],
-@@ -343,8 +417,11 @@
+@@ -343,8 +448,11 @@
 -        diagnostic.metrics(reply_output_valid=valid_reply_output(p.stdout,p.stderr))
 -        nodes = re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',p.stdout)
 -        diagnostic.metrics(returncode=p.returncode, count=len(nodes),
@@ -138,4 +171,4 @@
 +++ candidate/manifest.json
 @@ -11 +11 @@
 -    "backend.py": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
-+    "backend.py": "3c0fcca4cfbfdb34f217bb95a525b8b218885baa40d45781ba324b7c00ebc039",
++    "backend.py": "040c28facf839b7afe5b6a37021dde195eaea04e43e71ce557784843542e17af",

@@ -76,7 +76,14 @@ class BackendFixture:
             if self.pg_error:raise self.pg_error
             return types.SimpleNamespace(returncode=self.pg_code,stdout=self.pg_stdout,stderr=SECRET)
         if self.celery_error:raise self.celery_error
-        return types.SimpleNamespace(returncode=self.celery_code,stdout=self.celery_stdout,stderr=self.celery_stderr,complete=max(len(self.celery_stdout.encode()),len(self.celery_stderr.encode()))<=B.OUTPUT_LIMIT,stdout_bytes=min(B.OUTPUT_LIMIT+1,len(self.celery_stdout.encode())),stderr_bytes=min(B.OUTPUT_LIMIT+1,len(self.celery_stderr.encode())))
+        stdout_bytes = len(self.celery_stdout.encode())
+        stderr_bytes = len(self.celery_stderr.encode())
+        complete = max(stdout_bytes, stderr_bytes) <= B.OUTPUT_LIMIT
+        return types.SimpleNamespace(returncode=self.celery_code, stdout=self.celery_stdout,
+                                     stderr=self.celery_stderr, complete=complete,
+                                     capture_rejection=None if complete else B.ReplyRejection.OUTPUT_OVERSIZED,
+                                     stdout_bytes=min(B.OUTPUT_LIMIT + 1, stdout_bytes),
+                                     stderr_bytes=min(B.OUTPUT_LIMIT + 1, stderr_bytes))
     def Redis(self,**kwargs):
         fixture=self
         class R:

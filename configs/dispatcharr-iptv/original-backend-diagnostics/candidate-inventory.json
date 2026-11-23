@@ -219,14 +219,14 @@
     "/docker/dispatcharr-iptv/permanent-streaming/backend.py": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "3c0fcca4cfbfdb34f217bb95a525b8b218885baa40d45781ba324b7c00ebc039",
+      "sha256": "040c28facf839b7afe5b6a37021dde195eaea04e43e71ce557784843542e17af",
       "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/backend.py",
       "uid": 0
     },
     "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": {
       "gid": 0,
       "mode": "0644",
-      "sha256": "300343cce95c26f57f251dc1f6018b0548348eeed98b75873ae0caccf016852a",
+      "sha256": "218ca99c53d08ea9ce355dcb3d1fa14eb811a50c33c66a1ebfb5f72b54b82475",
       "source": "configs/dispatcharr-iptv/original-backend-diagnostics/candidate/manifest.json",
       "uid": 0
     }

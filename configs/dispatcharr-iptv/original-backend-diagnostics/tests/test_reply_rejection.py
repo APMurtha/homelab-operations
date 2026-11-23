@@ -90,3 +90,61 @@ class ReplyRejectionTests(unittest.TestCase):
                 self.assertIsNotNone(error)
                 self.assertEqual(rows[-1]['classification'], 'celery_unclassified_failure')
                 self.assertEqual(capture(text, 1)['records'][-1]['reply_rejection'], expected)
+
+
+class ReplyEvidenceTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        evidence = json.loads((HERE.parent / 'structured-celery-restoration-results.json').read_text())
+        cls.records = evidence['terminal_status']['backend_receipts'][0]['records']
+
+    def assert_allowed(self, complete, stdout, stderr, *allowed):
+        for reason in B.ReplyRejection:
+            with self.subTest(reason=reason.value, complete=complete, stdout=stdout, stderr=stderr):
+                row = dict(self.records[-1], reply_rejection=reason.value, output_complete=complete,
+                           stdout_bytes=stdout, stderr_bytes=stderr)
+                if reason.value in allowed:
+                    self.assertEqual(B.decode_record(json.dumps(row)), row)
+                else:
+                    with self.assertRaises(B.InvalidDiagnostics):
+                        B.decode_record(json.dumps(row))
+
+    def test_complete_text_precedence(self):
+        limit = B.OUTPUT_LIMIT
+        self.assert_allowed(True, 0, 0, 'malformed_json')
+        self.assert_allowed(True, 0, 1, 'stderr_present')
+        self.assert_allowed(True, limit, limit, 'stderr_present')
+        for size in (290, limit):
+            self.assert_allowed(True, size, 0, 'malformed_json', 'duplicate_key', 'nonfinite_constant',
+                                'invalid_top_level', 'invalid_identity', 'duplicate_role', 'invalid_payload')
+
+    def test_incomplete_and_decode_failure_require_bounded_counts(self):
+        self.assert_allowed(False, 0, 0, 'capture_incomplete')
+        for stdout, stderr in [(1, 0), (0, 1), (B.OUTPUT_LIMIT, B.OUTPUT_LIMIT)]:
+            self.assert_allowed(False, stdout, stderr, 'capture_incomplete', 'invalid_utf8')
+
+    def test_overflow_requires_exactly_one_sentinel(self):
+        limit = B.OUTPUT_LIMIT
+        for stdout, stderr in [(limit + 1, 0), (limit, limit + 1)]:
+            self.assert_allowed(False, stdout, stderr, 'output_oversized')
+            self.assert_allowed(True, stdout, stderr)
+        self.assert_allowed(False, limit + 1, limit + 1)
+        self.assert_allowed(False, limit + 2, 0)
+
+    def test_rejection_discards_positive_witnesses(self):
+        row = dict(self.records[-1], reply_rejection='malformed_json')
+        self.assertEqual(B.decode_record(json.dumps(row)), row)
+        for changed in [dict(count=1), dict(count=1, default_present=True), dict(count=1, dvr_present=True)]:
+            with self.subTest(changed=changed), self.assertRaises(B.InvalidDiagnostics):
+                B.decode_record(json.dumps(dict(row, **changed)))
+
+    def test_contradictions_do_not_enter_private_receipt(self):
+        from test_diagnostics import output
+        for reason in ('stderr_present', 'invalid_utf8', 'capture_incomplete', 'output_oversized'):
+            rows = self.records[:-1] + [dict(self.records[-1], reply_rejection=reason)]
+            result = capture(output(rows), 1)
+            self.assertEqual(result['reason'], 'invalid_diagnostics')
+            self.assertEqual(result['records'], self.records[:-1])
+        historical = capture(output(self.records), 1)
+        self.assertEqual(historical['reason'], 'backend_stage_failed')
+        self.assertEqual(historical['records'], self.records)
