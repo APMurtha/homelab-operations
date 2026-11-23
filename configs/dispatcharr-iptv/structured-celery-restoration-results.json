@@ -1,0 +1,791 @@
+{
+  "DW_English_availability": "unavailable: protected stack stopped; registration/export rebind not reached",
+  "approved_correction": "ee7e6c85258d707bcab35f7521157bb26f9099ac",
+  "automatic_retries": 0,
+  "broker_comparison": "unknown, not mismatch",
+  "diagnostic_rollback_performed": false,
+  "final_state": {
+    "Docker_process_networks_volumes_unchanged": true,
+    "Jellyfin_LiveTV_checkpoint_hash_unchanged": true,
+    "Jellyfin_LiveTV_files_checked": 1,
+    "Jellyfin_healthy": true,
+    "all29_unrelated_rows_unchanged": true,
+    "all67_matched_files": true,
+    "automatic_retries": 0,
+    "current": {
+      "Docker": "MainPID=1112\nActiveEnterTimestampMonotonic=82174686\n",
+      "containers": {
+        "audiobookshelf": {
+          "configuration_sha256": "aca96b6d340f540426b07306bbf51ce6eb6663b66ed021b01b17d51146f3dacb",
+          "health": null,
+          "id": "e73dc188981868b84ce3aee6a74e0c8ba06a6e30ce754532d6e60a693c8b2b81",
+          "image": "sha256:180acad33d69c99ed208676465d8edcb268fa46967735579a7810859885b1a8e",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.224299034Z",
+          "status": "running"
+        },
+        "audiobookshelf-trial": {
+          "configuration_sha256": "b5ab16caafab9069a6ce375eb58506eaa6482efa3c97b8f91c38049bf11d366a",
+          "health": null,
+          "id": "118ffa920acdad0cd5349d83169576b094c8bf43fc92d684070e2bd9dc1a40b1",
+          "image": "sha256:180acad33d69c99ed208676465d8edcb268fa46967735579a7810859885b1a8e",
+          "restarts": 0,
+          "started": "2026-11-01T20:44:54.94432778Z",
+          "status": "exited"
+        },
+        "bazarr": {
+          "configuration_sha256": "542cef5d90c0d2ff6d3442a2c186d5a91f638eac5a18c595f63246bf528d97c2",
+          "health": null,
+          "id": "5bf744ab82c6b753279f0337655ab5f81f1cec9fc66178e781f7623d15acaede",
+          "image": "sha256:84b6f05a7a4194fafe5a0bec062d32f6ae9ea74db33d43d678cb9a3191f31c24",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.401723516Z",
+          "status": "running"
+        },
+        "chaptarr": {
+          "configuration_sha256": "cd68b64214ddb8c16f70beb72719b02dbbfbefd0a7ade1d778b5bb9747a678e4",
+          "health": null,
+          "id": "745612b8baafb0a9114e41acba58c0957b2db43cc6d37080542849707e42b9ab",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.872079651Z",
+          "status": "running"
+        },
+        "chaptarr-import-review": {
+          "configuration_sha256": "078b11d370b5fa432c64e108045b7adb9a001746c4eeed2454a1b87c0fca8263",
+          "health": null,
+          "id": "2a7b362e56d2886606e231bfba1e0fb490dbcbff63674eae99463a4065e2b279",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T00:56:11.626114678Z",
+          "status": "exited"
+        },
+        "chaptarr-restore-check": {
+          "configuration_sha256": "97f2ed0926dbde8ebb0785ee53c425c7647a1d52a0093e81e533fc168f386512",
+          "health": null,
+          "id": "b0da11b391a7ece1e042fae1284d76f9503fcec37438440ab474edff5164d0ea",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T05:30:12.593957567Z",
+          "status": "exited"
+        },
+        "chaptarr-search-check": {
+          "configuration_sha256": "cde7342af2074b566521063ed7fd4d81caf652f16fcb2d2d096364e37426c026",
+          "health": null,
+          "id": "5e3c0448fc95a95489eace99c307f238c797a258ffeab6fc0470bf5285b8a8dd",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T21:57:31.776712122Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-batch": {
+          "configuration_sha256": "32cda3f85bbc6ba224548a97f96502562a3dbcfa6d4529bd9ea50121cc89885c",
+          "health": null,
+          "id": "6dc80f64f902f2bda42e291c129002e2450945a541e150ca1338f12ca959fd0a",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T02:10:49.239791631Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-full": {
+          "configuration_sha256": "00cd9469cce50ff433fbb2fbee7c9d1ec2af2dab6bd1b7dc04442aa982d75ae9",
+          "health": null,
+          "id": "02b92bf90c67632f1b9a7f2d0d8b78581fece7a97d06e4e92b0a1536958423b7",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T04:14:43.396806278Z",
+          "status": "exited"
+        },
+        "chaptarr-stock-rebuild-check": {
+          "configuration_sha256": "73e3fa9d86a531a8ec32c9a894744d2ea8bc2caedcbfde54682c3111acbc3d5a",
+          "health": null,
+          "id": "5d495a0dfd6923a913fcbfdcdfdcd1447b17da02f4ae4cd087993a554cd2c549",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-02T05:13:02.464690376Z",
+          "status": "exited"
+        },
+        "chaptarr-trial": {
+          "configuration_sha256": "4a97a0b4f8fe49a00cca7c6223ede69e5e19369a1acac3e3236f97085bda4a76",
+          "health": null,
+          "id": "fa01bb4227669a43059a5b2dfebcf8e0641210647755d57b312246b0a68b0a7a",
+          "image": "sha256:bb00d67cbe1485d1cd61ef178362a29b42aa08f86b290841aab4b115ad2647a6",
+          "restarts": 0,
+          "started": "2026-11-01T20:54:32.894807834Z",
+          "status": "exited"
+        },
+        "chaptarr-west-regression": {
+          "configuration_sha256": "c56c38dc174a1494857fc260013f2c350434aeda5f0bae11bbdfeb240d14a9d9",
+          "health": null,
+          "id": "ef1eb6151ad366dba319b29a9b30102ad11c19676e090810457a974cceea1e89",
+          "image": "sha256:b182902dc2a7a3f8df6b1774cb4c2aacbb49111f698f9ac15608b36f94079508",
+          "restarts": 0,
+          "started": "2026-11-02T01:41:33.027640983Z",
+          "status": "exited"
+        },
+        "chaptarr-west-regression-v2": {
+          "configuration_sha256": "cc6e0329ea3fa259382a1fe047933848b5063ccd076f1b8c40a1b3457ca4adf0",
+          "health": null,
+          "id": "a1dbf8bbc83f6dec4a70467a5fff8861719ef457b46c51a6a419834fe385dc6c",
+          "image": "sha256:b182902dc2a7a3f8df6b1774cb4c2aacbb49111f698f9ac15608b36f94079508",
+          "restarts": 0,
+          "started": "2026-11-02T01:47:48.830279316Z",
+          "status": "exited"
+        },
+        "deunhealth": {
+          "configuration_sha256": "25663743a522d547c4db3a3e8af091e489246ae966aa5bbcf694cc0a54255a5f",
+          "health": "healthy",
+          "id": "4494379057b5b50612529f9ccad48ee211e8f46db2766b391a276a60b1c28e17",
+          "image": "sha256:db1e4fcd3aceeb0da34a83f7a8a5432df586e6d0388ddb6ad8dd7b479e4aa25d",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.103179554Z",
+          "status": "running"
+        },
+        "dispatcharr": {
+          "configuration_sha256": "05afe99d9591388c308d1513f0ad4a2e0f91b4eb7847e61b732c4b0ef4646459",
+          "health": "unhealthy",
+          "id": "0d34537414caa0b788415ef7017e77687768fd9344353a34e882bd5a5c027a04",
+          "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+          "restarts": 0,
+          "started": "2026-11-19T00:43:05.162174312Z",
+          "status": "exited"
+        },
+        "gluetun": {
+          "configuration_sha256": "c7df9eccf807238f161f20258ab31379c2ab85bcadceb52287f5a2b70cfa8229",
+          "health": "healthy",
+          "id": "1d1c69791f681528ed021bbd9af1ca15d0461602c79b8eb17298ef1f3a04ef7b",
+          "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.124486724Z",
+          "status": "running"
+        },
+        "jellyfin": {
+          "configuration_sha256": "ffc0f9acb8f959637893770a3223685cfb2bd3f4ff3fde80729b3ccf2ec3fa8c",
+          "health": "healthy",
+          "id": "6798247b9099bc791892f7118f598aa48d0b7c21ecfc616bbbebfee43c22763b",
+          "image": "sha256:baba630419915985442f315f08b0cf46d9f4c8a0cc4bd38e94a6d35751dd5ef5",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.260706697Z",
+          "status": "running"
+        },
+        "lidarr": {
+          "configuration_sha256": "a474d2526972bd9246e2a2ea428d1f13e73226f96478693e38ba6e52234633da",
+          "health": null,
+          "id": "2e677d5112ba8dcfff62c3843318ea52eb46416861f4b919a687c4c7646b1328",
+          "image": "sha256:8ab0fd370b604ae034d9a9c261a9d8d873bece33d9736852e7ce4f3566e4a35d",
+          "restarts": 0,
+          "started": "2026-10-20T22:51:54.249627307Z",
+          "status": "exited"
+        },
+        "n8n": {
+          "configuration_sha256": "2f9b6b251577fb1072468014bb7aeeb552602df9d5f175a498d6d31269cee5e4",
+          "health": null,
+          "id": "2a4bdfbf8a82339f2c44023f704ba9e9aa2de15579c8e7e12252985ade4cfbbb",
+          "image": "sha256:a293b89bac876872a0c1ef0fbbb7ce056aa2d215f62917acf032ecb8010199af",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.314322466Z",
+          "status": "running"
+        },
+        "nzbget": {
+          "configuration_sha256": "1c8f38521c255ae8b11dae18986c39f79cac7ce3b79973d7e7614c3be3e09716",
+          "health": null,
+          "id": "1c6fa534fe68e4b71c9c26aa3c5f48dc13e4fc0bab967022dfa8755c69514354",
+          "image": "sha256:24951ff9689ddbc0843e309ed16db74409a077541a8aeaecca606ae3565768f2",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.280703714Z",
+          "status": "running"
+        },
+        "pairdrop": {
+          "configuration_sha256": "78d692f260c9f3942fb1ce98ae6e80ac27db1bdf5680a4a0a5b16da260b78c05",
+          "health": null,
+          "id": "041b220217e2328e70f8716bfc6ba85ea72fa97e3e35c2e1e7b77d2ddfd44bc2",
+          "image": "sha256:830bd38a0bff0befbb5353c44a30d366f8ed692e68318a03939041e624b30c58",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.19244424Z",
+          "status": "running"
+        },
+        "profilarr": {
+          "configuration_sha256": "20833fc35c476cd5005840b1b62ca420459f3e7dc651a78a763a29eb3e9afa8b",
+          "health": "healthy",
+          "id": "a3ae6b9d9451b277adde23cff8a1ba6e6a7bf478c046bb40934d0c8b51fa4372",
+          "image": "sha256:ddcdd0f340043c2ec0a85ca74b9a6be9be42b1c0288c75fc36a26a43f695860b",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.294765911Z",
+          "status": "running"
+        },
+        "profilarr-parser": {
+          "configuration_sha256": "bf91f1dc12b16e180c28173b8e08e3632a77ea0927d005dc32a2eb50f4d6e8f1",
+          "health": "starting",
+          "id": "aaf7f660a136487042f3e4aae94d633702af4d0db466becbc950e1e067696a0d",
+          "image": "sha256:3cd3f8c4979ee66304a518462cc6c5b59825bae6b25e7dfa51b30178b9265df7",
+          "restarts": 0,
+          "started": "2026-10-20T22:50:07.974132314Z",
+          "status": "exited"
+        },
+        "prowlarr": {
+          "configuration_sha256": "22167536d628d2b5e4ab2d7715b9764512caaee02fa3f63fb06d8e5ba72d29fb",
+          "health": null,
+          "id": "c483390b08bab2e18d26a8977582d01dd52d8dfbc587e27757260ad58d4119b4",
+          "image": "sha256:c7502a75b021d964481c129c84590b9cbc40f83aadd4e553f173871bc0deaa3c",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.117978599Z",
+          "status": "running"
+        },
+        "qbittorrent": {
+          "configuration_sha256": "44119d65e26be4c01d1d2016549ffd039651b6de2fafa1df3a6669c2ac58c658",
+          "health": "healthy",
+          "id": "512885aff720a4582e3ac02550a8fe58f620a75df5f9ccc336e0c7744cf150db",
+          "image": "sha256:2be038f3421f60f62e8e4bf201f66f385b68e4fbc9ed3ab79051069ea22e2650",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.313296914Z",
+          "status": "running"
+        },
+        "radarr": {
+          "configuration_sha256": "34c680fa59c2da595e4f92e40666c95faeebb5f3168084c2a45001108b466a36",
+          "health": null,
+          "id": "d721f472d63be4d6187d35ee1a9bcdd1bf250dd50ad847032aae6c4e11d85f59",
+          "image": "sha256:fe051413dfd91b383ba04910552e83fb0306895fefee275c48dafe7bb90807dc",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:36.278303434Z",
+          "status": "running"
+        },
+        "rivendell-iptv-gateway": {
+          "configuration_sha256": "6e8909c4d8cb00f8d3fac0c61c42a67694a755a5ddb813107560d40c54f9a63e",
+          "health": "unhealthy",
+          "id": "448ceeb80a51e6660a04cda3449a140052c2cb0984040d727824894413606199",
+          "image": "sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9",
+          "restarts": 0,
+          "started": "2026-11-17T05:41:52.932663045Z",
+          "status": "exited"
+        },
+        "rivendell-iptv-relay": {
+          "configuration_sha256": "5644a36879499badd036c989926439e1c42699304e524c120b516270b7e40918",
+          "health": "unhealthy",
+          "id": "3aa41213fdc8cacb88f18ce20136bec082e55490baf58d79f2e01d55ba85be27",
+          "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+          "restarts": 0,
+          "started": "2026-11-19T00:43:05.360757762Z",
+          "status": "exited"
+        },
+        "rivendell-iptv-vpn": {
+          "configuration_sha256": "24e276151455d9e35e4ad260a88f82639e551ea424d8755f20ce3ac58190c68c",
+          "health": "unhealthy",
+          "id": "1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e",
+          "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+          "restarts": 0,
+          "started": "2026-11-19T00:42:58.034093091Z",
+          "status": "exited"
+        },
+        "seedboxapi": {
+          "configuration_sha256": "756427cb67d62bf7a36c34db483c67d49380035e72b8dce3595265f0b033036a",
+          "health": null,
+          "id": "752af963b61000c253c8a8d1734c84d71272499e06f95987db830788b1429dbf",
+          "image": "sha256:4712ede49e8c17ca1aee4cf61a145e249ddbb9498390b469c64b0b3086628259",
+          "restarts": 3,
+          "started": "2026-11-18T10:53:51.220324711Z",
+          "status": "running"
+        },
+        "seerr": {
+          "configuration_sha256": "6bcdcbb31e76b16d3338f5ed18bc9a8442ef8262b68dc977d152c0e04778fbb1",
+          "health": null,
+          "id": "67133cc6e4fc70b66c3beb3b19c55cdb111753d2dc5802f29657df6e24daaae2",
+          "image": "sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:27.303752701Z",
+          "status": "running"
+        },
+        "shelfarr": {
+          "configuration_sha256": "ee2f8d0e53d3c6927b186507d2d89fd09ecfb56fd074c2fe17269cac92c98899",
+          "health": "unhealthy",
+          "id": "f7a4f452b947478301ca5e1bf8925c2f3c0031f2f76fe5bc2bdacc9d70a79be9",
+          "image": "sha256:942ba37d51b4ed7fe08a25a58d2f69e354bd5baa3c3b7fa6655650c7cf57d9c2",
+          "restarts": 0,
+          "started": "2026-10-20T22:52:14.18489768Z",
+          "status": "exited"
+        },
+        "sonarr": {
+          "configuration_sha256": "d2b350570b5cb723d7e132d21436b0aa96c14f82d68a808faff9d7eb26d8301d",
+          "health": null,
+          "id": "f438ff1017bbf08e157da6061dc8d6436e77be0b04b7d7c7efbca72e442fd51c",
+          "image": "sha256:82172b363f9eddc02aca544f880a044f2ceb9aaf190bc87e4454e2f705eb91d0",
+          "restarts": 0,
+          "started": "2026-11-16T20:39:35.993518009Z",
+          "status": "running"
+        }
+      },
+      "network_sha256": "323f303c08b51c7ca59bd25a054ca89276b5e6bd182c570000bdaa1e14382c01",
+      "volume_sha256": "62bba3105a84730f80f6a2027aab8ef6bda044be99c2d5375c5f8e98b9d2248a"
+    },
+    "diagnostic_receipts": [
+      {
+        "bytes": 78,
+        "file": "c6ff584cb5743e874bfbe94e45863d8b.intent.json",
+        "gid": 0,
+        "mode": "0600",
+        "sha256": "9ed1e5aceb547c4711f7f249c7515fc53cc08672d540d2bd7f9dd1ef4ad2deb2",
+        "uid": 0
+      },
+      {
+        "bytes": 1495,
+        "file": "c6ff584cb5743e874bfbe94e45863d8b.result.json",
+        "gid": 0,
+        "mode": "0600",
+        "sha256": "7280a73a8a7dcc08b05c7a4cb39018acbb1122782d441734f77c4c0add826838",
+        "uid": 0
+      },
+      {
+        "bytes": 78,
+        "file": "3bb14e388660a22ed7f62a9aacb795ea.intent.json",
+        "gid": 0,
+        "mode": "0600",
+        "sha256": "2aa3e9bda05b94a8995f4d437455b66a0b35d455b2e16c3d76f70d64f89f9e14",
+        "uid": 0
+      },
+      {
+        "bytes": 78,
+        "file": "1f131f6a3a1ee5d26654b9fbe7cc4065.intent.json",
+        "gid": 0,
+        "mode": "0600",
+        "sha256": "7d755b9c89b7669de9f000d60ebd53c951d7037dafa8d2e0e646299729e67566",
+        "uid": 0
+      },
+      {
+        "bytes": 1497,
+        "file": "1f131f6a3a1ee5d26654b9fbe7cc4065.result.json",
+        "gid": 0,
+        "mode": "0600",
+        "sha256": "c0ba54ea4ec5bc600d9669afb0425637e1aff96cc56d50635b9440fd69ccf895",
+        "uid": 0
+      },
+      {
+        "bytes": 1166,
+        "file": "3bb14e388660a22ed7f62a9aacb795ea.result.json",
+        "gid": 0,
+        "mode": "0600",
+        "sha256": "5f5efba1fc7374931345410e247b7359df95ee319b1bcffe29535946b7e9fa51",
+        "uid": 0
+      }
+    ],
+    "existing_export_files_checked": 0,
+    "existing_export_hashes_unchanged": null,
+    "four_IPTV_stopped": true,
+    "managed_start_calls": 1,
+    "ownership_ledger_checkpoint_hash_unchanged": true,
+    "protected_id_image_config_restart_counts_unchanged": true,
+    "protection": {
+      "anchors_valid": true,
+      "kernel_exact": true,
+      "ownership_no_pending_transaction": true,
+      "private_permissions_valid": true,
+      "provider_inactive": true,
+      "public_assertions_withdrawn": true,
+      "receipt_path_compatible": true,
+      "transaction_revoked_unblocked": true
+    },
+    "receipt_directory": "/root/dispatcharr-backend-diagnostics",
+    "restoration": "FAIL_STRUCTURED_CELERY_RESPONSE_UNCLASSIFIED",
+    "utc": "2026-11-19T00:45:11Z"
+  },
+  "first_status": {
+    "admission": [
+      {
+        "consecutive": 3,
+        "elapsed_s": 0.0,
+        "event": "waiting",
+        "expected_cpus": 4,
+        "idle_min_pct": 50,
+        "interval_s": 5,
+        "load1_below": 4,
+        "max_wait_s": 300,
+        "steal_max_pct": 10
+      },
+      {
+        "elapsed_s": 5.001,
+        "event": "sample",
+        "idle_pct": 96.886,
+        "load1": 0.38,
+        "steal_pct": 0.0,
+        "streak": 1
+      },
+      {
+        "elapsed_s": 10.001,
+        "event": "sample",
+        "idle_pct": 94.198,
+        "load1": 0.35,
+        "steal_pct": 0.0,
+        "streak": 2
+      },
+      {
+        "elapsed_s": 15.002,
+        "event": "sample",
+        "idle_pct": 96.884,
+        "load1": 0.4,
+        "steal_pct": 0.05,
+        "streak": 3
+      },
+      {
+        "elapsed_s": 15.002,
+        "event": "capacity_ready"
+      }
+    ],
+    "backend_receipts": [],
+    "containers": {
+      "dispatcharr": {
+        "health": "healthy",
+        "id": "0d34537414caa0b788415ef7017e77687768fd9344353a34e882bd5a5c027a04",
+        "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+        "restarts": 0,
+        "status": "running"
+      },
+      "rivendell-iptv-gateway": {
+        "health": "unhealthy",
+        "id": "448ceeb80a51e6660a04cda3449a140052c2cb0984040d727824894413606199",
+        "image": "sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9",
+        "restarts": 0,
+        "status": "exited"
+      },
+      "rivendell-iptv-relay": {
+        "health": "healthy",
+        "id": "3aa41213fdc8cacb88f18ce20136bec082e55490baf58d79f2e01d55ba85be27",
+        "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+        "restarts": 0,
+        "status": "running"
+      },
+      "rivendell-iptv-vpn": {
+        "health": "healthy",
+        "id": "1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e",
+        "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+        "restarts": 0,
+        "status": "running"
+      }
+    },
+    "kernel_policy_exact": true,
+    "managed_start_calls": 1,
+    "provider_projection_empty": true,
+    "units": {
+      "dispatcharr-egress-guard.service": {
+        "ActiveEnterTimestamp": "Mon 2026-11-16 20:39:15 UTC",
+        "ActiveState": "active",
+        "ExecMainCode": "1",
+        "ExecMainStatus": "0",
+        "InvocationID": "c7115bde09d349efa9a9250d367b6af6",
+        "Result": "success",
+        "StateChangeTimestamp": "Mon 2026-11-16 20:39:15 UTC",
+        "SubState": "exited"
+      },
+      "dispatcharr-stack.service": {
+        "ActiveEnterTimestamp": "Tue 2026-11-17 05:42:24 UTC",
+        "ActiveState": "activating",
+        "ExecMainCode": "0",
+        "ExecMainStatus": "0",
+        "InvocationID": "a5faf94c2eb046ae95e7980b02e38591",
+        "Result": "success",
+        "StateChangeTimestamp": "Thu 2026-11-19 00:42:57 UTC",
+        "SubState": "start"
+      }
+    },
+    "utc": "2026-11-19T00:43:41Z"
+  },
+  "hardened_deployment_provider_activation_or_playback": false,
+  "independent_recovery": {
+    "archive_mode": "0600",
+    "bytes": 236147,
+    "directory_mode": "0700",
+    "fresh_task_verification": true,
+    "fresh_verification": true,
+    "owner_UID": 1000,
+    "path": "/mnt/data/Backups/Rivendell/dispatcharr-checkpoints/dispatcharr-hardening-20261118T201302Z/recovery.tar.gz",
+    "sha256": "ce8e254f78972dd7b1a14012e3a5b2cbc9c8c9fa506054b1e920ad8dc4d3deb7",
+    "verified": true
+  },
+  "installation": {
+    "all67_verified": true,
+    "inputs_verifier": "PASS",
+    "installed": {
+      "/docker/dispatcharr-iptv/permanent-streaming/backend.py": "466b06a23af779d0093d2325d6dce3257a354e4d8899658fb849713e2b1a3065",
+      "/docker/dispatcharr-iptv/permanent-streaming/manifest.json": "8c8ea65df72c6ce18238faeb7262c6946b821ad711bdbf9b06174c10b2dc2a5f"
+    },
+    "managed_starts": 0,
+    "mode": "0644",
+    "originals_preserved": true,
+    "ownership": "root:root",
+    "receipt_directory_verified": true,
+    "unchanged_files": 65,
+    "utc": "2026-11-19T00:42:11Z"
+  },
+  "managed_start": {
+    "completion_not_inferred": true,
+    "request_returncode": 0,
+    "start_invocations": 1,
+    "unit": "dispatcharr-stack.service",
+    "utc": "2026-11-19T00:42:40Z"
+  },
+  "managed_start_calls": 1,
+  "preflight": {
+    "SSH_UID": 1000,
+    "SSH_account": "murth",
+    "admission": [
+      {
+        "consecutive": 3,
+        "elapsed_s": 0.0,
+        "event": "waiting",
+        "expected_cpus": 4,
+        "idle_min_pct": 50,
+        "interval_s": 5,
+        "load1_below": 4,
+        "max_wait_s": 300,
+        "steal_max_pct": 10
+      },
+      {
+        "elapsed_s": 5.001,
+        "event": "sample",
+        "idle_pct": 96.531,
+        "load1": 0.47,
+        "steal_pct": 0.05,
+        "streak": 1
+      },
+      {
+        "elapsed_s": 10.002,
+        "event": "sample",
+        "idle_pct": 95.219,
+        "load1": 0.43,
+        "steal_pct": 0.0,
+        "streak": 2
+      },
+      {
+        "elapsed_s": 15.002,
+        "event": "sample",
+        "idle_pct": 97.685,
+        "load1": 0.4,
+        "steal_pct": 0.0,
+        "streak": 3
+      },
+      {
+        "elapsed_s": 15.002,
+        "event": "capacity_ready"
+      }
+    ],
+    "all33_fingerprints_unchanged": true,
+    "current_diagnostic_67_files": true,
+    "database_cluster_available": true,
+    "disk_available_bytes": 7657435136,
+    "exclusive_administration": "owner-confirmed existing restoration window",
+    "four_stopped": true,
+    "historical_receipts_and_rollback_verified": true,
+    "host": "rivendell",
+    "memory_available_bytes": 4624494592,
+    "no_interactive_logins": true,
+    "original_image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+    "persistent_data_available": true,
+    "protection": {
+      "anchors_valid": true,
+      "kernel_exact": true,
+      "ownership_no_pending_transaction": true,
+      "private_permissions_valid": true,
+      "provider_inactive": true,
+      "public_assertions_withdrawn": true,
+      "receipt_path_compatible": true,
+      "transaction_revoked_unblocked": true
+    },
+    "receipt_directory_already_exists": true,
+    "recovery_sha256": "ce8e254f78972dd7b1a14012e3a5b2cbc9c8c9fa506054b1e920ad8dc4d3deb7",
+    "root_lifecycle_verified": true,
+    "utc": "2026-11-19T00:41:23Z"
+  },
+  "private_journal": "/root/dispatcharr-structured-restoration-20261119T004101Z",
+  "raw_Celery_JSON_or_output_retained": false,
+  "result": "FAIL_STRUCTURED_CELERY_RECOVERY_INCOMPLETE",
+  "schema": 1,
+  "structured_response_rejection_cause": "unresolved; flags do not distinguish malformed/mixed JSON from unexpected/error mapping",
+  "terminal_status": {
+    "admission": [
+      {
+        "consecutive": 3,
+        "elapsed_s": 0.0,
+        "event": "waiting",
+        "expected_cpus": 4,
+        "idle_min_pct": 50,
+        "interval_s": 5,
+        "load1_below": 4,
+        "max_wait_s": 300,
+        "steal_max_pct": 10
+      },
+      {
+        "elapsed_s": 5.001,
+        "event": "sample",
+        "idle_pct": 96.886,
+        "load1": 0.38,
+        "steal_pct": 0.0,
+        "streak": 1
+      },
+      {
+        "elapsed_s": 10.001,
+        "event": "sample",
+        "idle_pct": 94.198,
+        "load1": 0.35,
+        "steal_pct": 0.0,
+        "streak": 2
+      },
+      {
+        "elapsed_s": 15.002,
+        "event": "sample",
+        "idle_pct": 96.884,
+        "load1": 0.4,
+        "steal_pct": 0.05,
+        "streak": 3
+      },
+      {
+        "elapsed_s": 15.002,
+        "event": "capacity_ready"
+      }
+    ],
+    "backend_receipts": [
+      {
+        "boundary": "inside_readiness",
+        "captured_bytes": 1574,
+        "invocation": "c6ff584cb5743e874bfbe94e45863d8b",
+        "producer_entered": true,
+        "reason": "backend_stage_failed",
+        "records": [
+          {
+            "classification": "checking",
+            "elapsed_s": 2e-05,
+            "event": "start",
+            "stage": "api_sources"
+          },
+          {
+            "classification": "ready",
+            "count": 14,
+            "elapsed_s": 0.003423,
+            "event": "pass",
+            "stage": "api_sources"
+          },
+          {
+            "classification": "checking",
+            "elapsed_s": 0.003503,
+            "event": "start",
+            "stage": "postgres"
+          },
+          {
+            "classification": "ready",
+            "elapsed_s": 0.093354,
+            "event": "pass",
+            "returncode": 0,
+            "stage": "postgres"
+          },
+          {
+            "classification": "checking",
+            "elapsed_s": 0.09359,
+            "event": "start",
+            "stage": "redis"
+          },
+          {
+            "classification": "ready",
+            "elapsed_s": 0.335667,
+            "event": "pass",
+            "stage": "redis"
+          },
+          {
+            "classification": "checking",
+            "elapsed_s": 0.335768,
+            "event": "start",
+            "stage": "uwsgi"
+          },
+          {
+            "classification": "ready",
+            "count": 2,
+            "elapsed_s": 0.337854,
+            "event": "pass",
+            "stage": "uwsgi"
+          },
+          {
+            "classification": "checking",
+            "elapsed_s": 0.337946,
+            "event": "start",
+            "stage": "celery"
+          },
+          {
+            "broker_auth_equal": false,
+            "broker_comparison_known": false,
+            "broker_endpoint_equal": false,
+            "broker_namespace_equal": false,
+            "broker_transport_equal": false,
+            "classification": "celery_unclassified_failure",
+            "command_elapsed_s": 9.257686,
+            "command_end_s": 187490.390313,
+            "command_start_s": 187481.132627,
+            "count": 0,
+            "default_present": false,
+            "dvr_present": false,
+            "elapsed_s": 9.595837,
+            "event": "fail",
+            "output_complete": true,
+            "reply_output_valid": false,
+            "returncode": 0,
+            "stage": "celery",
+            "stderr_bytes": 0,
+            "stdout_bytes": 290
+          }
+        ],
+        "returncode": 1,
+        "state": "complete"
+      }
+    ],
+    "containers": {
+      "dispatcharr": {
+        "health": "unhealthy",
+        "id": "0d34537414caa0b788415ef7017e77687768fd9344353a34e882bd5a5c027a04",
+        "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+        "restarts": 0,
+        "status": "exited"
+      },
+      "rivendell-iptv-gateway": {
+        "health": "unhealthy",
+        "id": "448ceeb80a51e6660a04cda3449a140052c2cb0984040d727824894413606199",
+        "image": "sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9",
+        "restarts": 0,
+        "status": "exited"
+      },
+      "rivendell-iptv-relay": {
+        "health": "unhealthy",
+        "id": "3aa41213fdc8cacb88f18ce20136bec082e55490baf58d79f2e01d55ba85be27",
+        "image": "sha256:14c8373377b8a7244e9b49d65a364798d02e2ace405b04730dba7a149f7cad21",
+        "restarts": 0,
+        "status": "exited"
+      },
+      "rivendell-iptv-vpn": {
+        "health": "unhealthy",
+        "id": "1b9d20c931948aee6e12bc97401c1626e3ecf42962b06dfd46d8308e95d44d2e",
+        "image": "sha256:a2d96492aaac1e57d91e324fcf32382fc3c4b4f1fb59997fcf7c93effc582209",
+        "restarts": 0,
+        "status": "exited"
+      }
+    },
+    "kernel_policy_exact": true,
+    "managed_start_calls": 1,
+    "provider_projection_empty": true,
+    "units": {
+      "dispatcharr-egress-guard.service": {
+        "ActiveEnterTimestamp": "Mon 2026-11-16 20:39:15 UTC",
+        "ActiveState": "active",
+        "ExecMainCode": "1",
+        "ExecMainStatus": "0",
+        "InvocationID": "c7115bde09d349efa9a9250d367b6af6",
+        "Result": "success",
+        "StateChangeTimestamp": "Mon 2026-11-16 20:39:15 UTC",
+        "SubState": "exited"
+      },
+      "dispatcharr-stack.service": {
+        "ActiveEnterTimestamp": "Tue 2026-11-17 05:42:24 UTC",
+        "ActiveState": "failed",
+        "ExecMainCode": "1",
+        "ExecMainStatus": "1",
+        "InvocationID": "a5faf94c2eb046ae95e7980b02e38591",
+        "Result": "exit-code",
+        "StateChangeTimestamp": "Thu 2026-11-19 00:43:46 UTC",
+        "SubState": "failed"
+      }
+    },
+    "utc": "2026-11-19T00:44:17Z"
+  }
+}
