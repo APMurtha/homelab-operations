@@ -50,7 +50,6 @@ def capture(command, cwd, env, timeout=DEADLINE_SECONDS):
     check(0 < timeout <= DEADLINE_SECONDS)
     end = time.monotonic() + timeout
     buffers = [bytearray(), bytearray()]
-    clean = False
     with subprocess.Popen(command, cwd=cwd, env=env, start_new_session=True,
                           stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE) as child:
@@ -70,16 +69,22 @@ def capture(command, cwd, env, timeout=DEADLINE_SECONDS):
                         b = buffers[key.data]
                         check(len(b) + len(chunk) <= LIMIT)
                         b.extend(chunk)
-                left = end - time.monotonic()
-                if left <= 0:
-                    raise TimeoutError('capture_deadline')
-                result = child.wait(timeout=left), bytes(buffers[0]), bytes(buffers[1])
-                clean = True
-                return result
+                # Observe leader exit without reaping it. Keeping its PID reserved
+                # anchors the PGID until our cleanup signal has been sent.
+                while True:
+                    left = end - time.monotonic()
+                    if left <= 0:
+                        raise TimeoutError('capture_deadline')
+                    exited = os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                    if exited is not None:
+                        break
+                    time.sleep(min(0.01, left))
         finally:
-            if not clean:
-                with suppress(ProcessLookupError):
-                    os.killpg(child.pid, signal.SIGKILL)
+            # Even a clean leader may leave a descendant that closed both pipes.
+            # Signal before any Popen wait/poll can release the original PGID.
+            with suppress(ProcessLookupError):
+                os.killpg(child.pid, signal.SIGKILL)
+        return child.wait(), bytes(buffers[0]), bytes(buffers[1])
 
 
 def pongs(result, names):
@@ -130,19 +135,34 @@ def acquire(output, owner, boot, names, inspect, ping, *,
 
     Publish only the existing sanitized projection. Keep its source contract,
     using the oldest actual observation time from the bracket and backend health.
-    Never run beside another writer of the celery projection.
+    Never run beside another writer of the celery projection. Setup failures
+    return unavailable without mutating state we cannot prove we own.
     """
+    try:
+        return acquire_locked(output, owner, boot, names, inspect, ping, now, monotonic)
+    except (OSError, ValueError):
+        return 'unavailable'
+
+
+def eligible_lock(st, owner):
+    return (stat.S_ISREG(st.st_mode) and st.st_uid == owner and
+            stat.S_IMODE(st.st_mode) == 0o600 and st.st_nlink == 1)
+
+
+def acquire_locked(output, owner, boot, names, inspect, ping, now, monotonic):
     with directory(output, owner, private=True) as fd:
         lock = os.open('.celery-acquisition.lock', os.O_RDWR | os.O_CREAT |
                        os.O_NOFOLLOW | os.O_NONBLOCK, 0o600, dir_fd=fd)
         try:
-            lock_stat = os.fstat(lock)
-            check(stat.S_ISREG(lock_stat.st_mode) and lock_stat.st_uid == owner and
-                  stat.S_IMODE(lock_stat.st_mode) == 0o600 and lock_stat.st_nlink == 1)
+            check(eligible_lock(os.fstat(lock), owner))
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
                 return 'busy'
+            opened = os.fstat(lock)
+            named = os.stat('.celery-acquisition.lock', dir_fd=fd, follow_symlinks=False)
+            check(eligible_lock(opened, owner) and eligible_lock(named, owner) and
+                  os.path.samestat(opened, named))
             remove_projection(fd)
             try:
                 names = destinations(names)

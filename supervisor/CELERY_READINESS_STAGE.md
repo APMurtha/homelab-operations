@@ -12,7 +12,7 @@ Leave the current production Celery observation unavailable.
 The acquisition core accepts owner-enrolled **full, distinct nodenames** with
 the exact default/DVR roles, and one Celery 5.6.3 destination-scoped
 `inspect ping --timeout=8 --json`. No task is invoked. The subprocess has a
-12-second deadline, process-group cleanup on timeout/overflow, and a 16 KiB
+12-second deadline, original process-group cleanup before reaping on all exits, and a 16 KiB
 limit per in-memory pipe. It accepts only complete, strict UTF-8 JSON with no
 stderr, exit 0, unique keys at every depth, known exact destination names,
 and exact pong objects. An empty capture, malformed or ambiguous structure,
@@ -25,14 +25,19 @@ the full backend ID/PID/start-time tuple and both enrolled worker PID/start
 ticks pairs. The engine row must be healthy in both witnesses. Duplicate PIDs,
 wrong boot, restarts/name reuse, bad clocks and stale health fail closed.
 Expiry is 60 seconds from the **earliest** bracket time or contributing engine
-probe, not the publication time. A nonblocking lock allows only one scoped
-acquisition and the prior projection is withdrawn before acquisition, including
-while a subsequently failed probe is in flight. Publication atomically replaces
+probe, not the publication time. A valid nonblocking lock allows only one scoped
+acquisition. The prior projection is withdrawn after acquiring that lock and
+before starting a probe, including while a subsequently failed probe is in
+flight. Contention cannot withdraw another admitted writer's result. An
+invalid lock/output setup returns unavailable without a probe or projection
+mutation because exclusivity is not established; a previously published
+file retains its original time and the legacy reader can see it until its
+independently enforced TTL. Publication atomically replaces
 only the existing sanitized Celery observation, using the current wire format
 and projector validation; there is no second raw receipt or new vocabulary
 and no credential, broker URL, worker name or raw output in the projection.
 The existing consumer can read the existing file format. A nonqualifying
-or failed acquisition cannot keep the previous pass authoritative.
+or failed acquisition after locking cannot keep the previous pass authoritative.
 
 Two actual unprivileged Celery workers (separate PIDs/start ticks) and a
 disposable Redis broker used a private Unix-domain socket on Bag-End with
@@ -64,7 +69,10 @@ integration test is opt-in; normal tests never start it.
   installed unit, timer, network rule, host-policy change or transport selector.
   The trusted before/after adapters must each have independently enforced
   short deadlines (budget 2 seconds total), exact name/host scope, and
-  no general shell, environment dumps or raw output. The capture adapter
+  no general shell, environment dumps or raw output. Children that escape the
+  original process group cannot be stopped by this core. Require a confined
+  launcher with an independently enforced deadline and cgroup-wide teardown.
+  The capture adapter
   should use only the approved executable/app, fixed broker and two exact
   destinations. Do not let an issue value choose a command, destination,
   app, endpoint, identity or output path. Run in a reviewed constrained
@@ -76,7 +84,10 @@ integration test is opt-in; normal tests never start it.
   requires a private 0700 output directory and runs with test ownership;
   do not point it at the shared production directory or run it next to the
   multi-observation projector. Review an exclusive publication handoff and
-  reader/writer ownership/permissions before any installation. Verify other
+  reader/writer ownership/permissions before any installation. Prove trusted
+  atomic publisher/lock eligibility and a reader-facing fail-closed gate
+  on detected publisher setup faults; do not deploy if invalid setup can
+  leave a previous pass usable as current until TTL. Verify other
   observations, four-container publisher, relay, V2/V3 and media services
   byte-for-byte or with known continuing health before and after.
 - Start with an independently approved one-shot, not a production timer.

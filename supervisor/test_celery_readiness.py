@@ -3,6 +3,7 @@ import fcntl
 import os
 from pathlib import Path
 import subprocess
+import time
 import sys
 import unittest
 
@@ -109,6 +110,46 @@ class Readiness(unittest.TestCase):
             self.assertEqual(acquire(self.out, os.getuid(), BOOT, self.names,
                              lambda: calls.append('unexpected'), ping), 'busy')
         self.assertEqual(calls, [])
+
+    def test_invalid_lock_disables_acquisition_without_unowned_withdrawal(self):
+        self.assertEqual(self.run_capture(), 'both-ready')
+        result = self.out/'celery'
+        before = result.read_bytes(), result.stat().st_mtime_ns
+        (self.out/'.celery-acquisition.lock').chmod(0o644)
+        calls = []
+        self.assertEqual(self.run_capture(lambda _: calls.append('unexpected')), 'unavailable')
+        self.assertEqual(calls, [])
+        self.assertEqual((result.read_bytes(), result.stat().st_mtime_ns), before)
+        expiry = self.fixture.s + 60*NS
+        self.assertEqual(self.fixture.read('celery', now=expiry+1)['celery'], 'stale')
+
+    def test_success_terminates_same_group_descendant_that_closed_pipes(self):
+        # A positive result cannot leave a second process executing after the
+        # non-overlap lock is released. Child starts in our original PGID.
+        code = """
+import os, time
+pid = os.fork()
+if pid:
+    print(pid, flush=True)
+else:
+    for fd in (0, 1, 2):
+        os.close(fd)
+    time.sleep(20)
+"""
+        rc, stdout, stderr = capture([sys.executable, '-c', code], '/', {}, 3)
+        self.assertEqual((rc, stderr), (0, b''))
+        child = int(stdout)
+        proc = Path(f'/proc/{child}/stat')
+        deadline = time.monotonic()+1
+        while time.monotonic() < deadline:
+            try:
+                state = proc.read_text().rsplit(')', 1)[1].split()[0]
+            except FileNotFoundError:
+                return
+            if state in ('Z', 'X'):  # Terminated; the system will reap it.
+                return
+            time.sleep(.01)
+        self.fail('capture left a live same-group descendant')
 
     def test_real_subprocess_bounds_and_fixed_argv(self):
         def python(code, seconds=1):
