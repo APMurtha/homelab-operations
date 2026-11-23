@@ -1,0 +1,11 @@
+# linux/amd64 OCI manifests. Stage both by digest before building offline.
+FROM docker.io/ollama/ollama@sha256:aa6f86f01fee264c81f1edd9083ebfb07c8116d95d8bedd1ad470874b66a40b4 AS ollama
+FROM docker.io/library/python@sha256:2986c55feb36e6cae00fa1fefb454283e4b33f35e75ff8bdd123b134130be301
+COPY --from=ollama /usr/bin/ollama /usr/local/bin/ollama
+# The runner uses CPU inference and has no GPU devices.
+COPY --from=ollama ["/usr/lib/ollama/*.so*", "/usr/lib/ollama/llama-server", "/usr/lib/ollama/*LICENSE*", "/usr/lib/ollama/*NOTICE", "/usr/local/lib/ollama/"]
+COPY --chmod=0555 codex /usr/local/bin/codex
+COPY models /opt/samwise/models
+COPY --chmod=0444 offline.py /opt/samwise/offline.py
+USER 65532:65532
+ENTRYPOINT ["/usr/local/bin/python3", "/opt/samwise/offline.py"]

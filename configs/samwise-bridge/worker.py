@@ -192,7 +192,7 @@ def cycle(db, only_issue):
     return False
 
 
-def main():
+def main(run_cycle=cycle):
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--once", action="store_true")
@@ -219,7 +219,7 @@ def main():
             db.commit()
             while True:
                 try:
-                    passed = cycle(db, args.issue)
+                    passed = run_cycle(db, args.issue)
                     if args.once:
                         return int(bool(args.issue) and not passed)
                 except BridgeError as exc:
