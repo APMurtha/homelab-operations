@@ -126,16 +126,32 @@ def tick(directory):
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return
-        api, runner, store = Github(), Runner(directory), Store(directory)
         try:
-            runner.cleanup()
-            for n in store.pending():
+            poll_engineering(directory)
+        except (Denied, Unavailable):
+            # A scoped engineering dependency failure must not starve approved observations.
+            poll_operations(directory)
+            raise
+        poll_operations(directory)
+
+
+def poll_engineering(directory):
+    api, runner, store = Github(), Runner(directory), Store(directory)
+    try:
+        runner.cleanup()
+        for n in store.pending():
+            advance(n, api, runner, store)
+        for n in api.candidates():
+            if store.get(n) is None:
                 advance(n, api, runner, store)
-            for n in api.candidates():
-                if store.get(n) is None:
-                    advance(n, api, runner, store)
-        finally:
-            store.db.close()
+    finally:
+        store.db.close()
+
+
+def poll_operations(directory):
+    if os.environ.get('SAMWISE_OPERATIONS_V1') == 'enabled':
+        from operations import poll
+        poll(directory, Store)
 
 
 if __name__ == '__main__':

@@ -49,6 +49,12 @@ def spec(body):
 
 
 class Github:
+    label = LABEL
+    version = 'engineering-v1'
+    parse_spec = staticmethod(spec)
+    challenge_intro = ('Samwise engineering approval requested for this immutable issue. '
+                       'Reply with the following exact line to authorize up to three attempts.')
+
     def api(self, path, method='GET', data=None):
         cmd = ['gh', 'api', '--method', method, path]
         if data is not None:
@@ -82,34 +88,32 @@ class Github:
 
     def candidates(self):
         self.identity()
-        return [i['number'] for i in self.pages('issues?' + urlencode({'labels': LABEL, 'state': 'open'}))
+        return [i['number'] for i in self.pages('issues?' + urlencode({'labels': self.label, 'state': 'open'}))
                 if 'pull_request' not in i and i['user']['id'] == OWNER]
 
     def authorization(self, n, challenge=False):
         self.identity()
         i = self.get(f'issues/{n}')
         require(i['number'] == n and 'pull_request' not in i and i['state'] == 'open'
-                and i['user']['id'] == OWNER and LABEL in [l['name'] for l in i['labels']], 'inactive')
+                and i['user']['id'] == OWNER and self.label in [l['name'] for l in i['labels']], 'inactive')
         query = ('query($n:Int!){repository(owner:"APMurtha",name:"homelab-operations")'
                  '{issue(number:$n){body lastEditedAt}}}')
         graph = self.api('graphql', 'POST', {'query': query, 'variables': {'n': n}})
         snapshot = graph['data']['repository']['issue']
         require(snapshot and snapshot['lastEditedAt'] is None and snapshot['body'] == i['body'], 'edited')
-        d = spec(i['body'])
+        d = self.parse_spec(i['body'])
         events = [e for e in self.pages(f'issues/{n}/events')
-                  if e['event'] in ('labeled', 'unlabeled') and e['label']['name'] == LABEL]
+                  if e['event'] in ('labeled', 'unlabeled') and e['label']['name'] == self.label]
         require(events and events[-1]['event'] == 'labeled' and events[-1]['actor']['id'] == OWNER, 'ready')
         event = events[-1]
         digest = sha(i['body'])
-        approval = f'approve engineering-v1 #{n} {event["id"]} {digest} {d["base"]}'
+        approval = f'approve {self.version} #{n} {event["id"]} {digest} {d["base"]}'
         comments = [c for c in self.pages(f'issues/{n}/comments') if c['user']['id'] == OWNER]
-        require(all(c['body'].strip() != f'cancel engineering-v1 #{n}' for c in comments), 'cancelled')
+        require(all(c['body'].strip() != f'cancel {self.version} #{n}' for c in comments), 'cancelled')
         valid = [c for c in comments if c['body'] == approval and c['updated_at'] == c['created_at']
                  and c['created_at'] >= event['created_at']]
         if not valid and challenge:
-            message = ('Samwise engineering approval requested for this immutable issue. '
-                       'Reply with the following exact line to authorize up to three attempts.\n\n'
-                       + approval)
+            message = self.challenge_intro + '\n\n' + approval
             if not any(c['body'] == message for c in comments):
                 require(self.base() == d['base'], 'base-moved')
                 self.get(f'issues/{n}/comments', 'POST', {'body': message})

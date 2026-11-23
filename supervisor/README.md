@@ -62,3 +62,7 @@ The API-key transport remains an explicit deployment choice. To enable a real-mo
 Run `python3 -m unittest discover -s supervisor -v`. For the container tests set `SAMWISE_ISOLATION_TEST=1`, `SAMWISE_CODEX_BINARY` and the reviewed `SAMWISE_CODEX_SHA256` in a credential-free account with the pinned image. The upstream Responses stream and GitHub transport are deterministic doubles. The CLI binary, socket bridge, Linux isolation, offline Python execution, state transitions and publication checks are real.
 
 For an unattended timer rehearsal in a disposable staging user's home, place the staging checkout's supervisor directory under `~/accept/`. Override only the staging service's working directory and ExecStart to run `/usr/bin/python3 %h/accept/supervisor/stage_tick.py`. Install a dummy systemd credential, configure the binary pin and shorten the staging timer to a one-second initial trigger and three seconds between ticks. Start the timer once. Check for two model calls, one failed first test, a lost response after draft creation, and one verified draft. The adapter writes synthetic remote state in `~/accept/timer-state/`. Stop the staging timer after the verdict. This override belongs exclusively to the independent test account.
+
+## Read-only operations
+
+The opt-in operations-v1 capability shares this timer and lock. Its separate label, host enrollment, data sources and live approval gates are described in [Read-only Dispatcharr observations](OPERATIONS.md).
