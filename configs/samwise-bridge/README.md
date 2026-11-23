@@ -122,3 +122,9 @@ Before rolling back to the fixture-only entry point, stop polling, let active
 work finish, and confirm every v2 receipt is terminal and published. Preserve
 the shared database and lock path so a past issue cannot become eligible again.
 Rollback changes only the worker entry point after approval.
+
+## Repository development v3
+
+The opt-in development companion supports the reviewed addition of a small
+Python helper. See [the task envelope, connector approval flow, execution
+policy, and staging procedure](DEVELOPMENT.md).

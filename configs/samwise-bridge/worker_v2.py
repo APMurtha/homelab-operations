@@ -15,7 +15,7 @@ OWNER = fixture.OWNER
 REPO_ID = 1126036330
 
 
-def authorization(number, *, claimed=False):
+def authorization(number, *, claimed=False, parse_task=parse, version="v2", offer=None):
     path = f"{REPO}/issues/{number}"
 
     def candidate(issue):
@@ -31,7 +31,7 @@ def authorization(number, *, claimed=False):
     if not candidate(issue):
         return None
     try:
-        task = parse(issue.get("body"))
+        task = parse_task(issue.get("body"))
     except InvalidTask:
         return None
     events = list(publisher.pages(f"{path}/events"))
@@ -40,7 +40,7 @@ def authorization(number, *, claimed=False):
     if (not ready or ready["event"] != "labeled"
             or (ready.get("actor") or {}).get("id") != OWNER or type(ready["id"]) is not int):
         return None
-    expected = f"samwise-approve-v2: {ready['id']} {task.digest}"
+    expected = f"samwise-approve-{version}: {ready['id']} {task.digest}"
     comments = list(publisher.pages(f"{path}/comments"))
     approvals = [
         comment for comment in comments
@@ -49,8 +49,12 @@ def authorization(number, *, claimed=False):
         and comment["created_at"] >= ready["created_at"]
     ]
     current = fixture.gh(path)
-    if (len(approvals) != 1 or not candidate(current)
+    if (not candidate(current)
             or current["body"] != issue["body"] or current["updated_at"] != issue["updated_at"]):
+        return None
+    if len(approvals) != 1:
+        if not approvals and not claimed and offer:
+            offer(path, expected, task, comments)
         return None
     return task, ready["id"], approvals[0]["id"]
 
