@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # The sshd ForceCommand uses Python isolated mode and this administrator-owned directory.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ops_protocol import STATES, TAG, check, decode, observations
+from ops_protocol import PROJECTIONS, STATES, TAG, check, decode, observations, projected_value
 
 EVIDENCE = Path('/run/samwise-observations')
 LIMIT = 65536
@@ -27,11 +27,22 @@ def observe(dirfd, name, owner):
     with os.fdopen(fd, 'rb') as source:
         before = os.fstat(fd)
         check(stat.S_ISREG(before.st_mode) and before.st_uid == owner and not before.st_mode & 0o022)
-        if not 0 <= time.time() - before.st_mtime <= AGE:
+        check(before.st_nlink == 1)
+        if name in PROJECTIONS:
+            check(stat.S_IMODE(before.st_mode) in (0o600, 0o640))
+        if name not in PROJECTIONS and not 0 <= time.time() - before.st_mtime <= AGE:
             return 'stale'
         check(before.st_size <= LIMIT)
         data = source.read(LIMIT + 1)
-        check(len(data) <= LIMIT and os.fstat(fd).st_mtime_ns == before.st_mtime_ns)
+        after = os.stat(name, dir_fd=dirfd, follow_symlinks=False)
+        check(len(data) == before.st_size and os.path.samestat(before, after)
+              and before.st_ctime_ns == after.st_ctime_ns)
+    if name in PROJECTIONS:
+        return projected_value(data, name, before.st_mtime_ns, time.time_ns())
+    if name == 'relay':
+        value = data.decode('ascii').strip()
+        check(value in STATES[name])
+        return value
     if name == 'playlist':
         lines = data.decode('utf-8-sig').splitlines()
         check(lines and lines[0].strip() == '#EXTM3U')
@@ -61,26 +72,7 @@ def observe(dirfd, name, owner):
         levels = data.decode('ascii').splitlines()
         check(levels and all(level in ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL') for level in levels))
         return 'warning-or-error' if set(levels) & {'WARNING', 'ERROR', 'CRITICAL'} else 'no-warning-in-sample'
-    if name == 'celery':
-        record = decode(data)
-        keys = ('output_complete', 'reply_output_valid', 'default_present', 'dvr_present')
-        check(type(record) is dict and all(type(record.get(k)) is bool for k in keys))
-        return 'both-ready' if all(record[k] for k in keys) else 'readiness-failed'
-    if name == 'jellyfin-channel':
-        inventory = decode(data)
-        items = inventory['Items']
-        check(type(items) is list and type(inventory.get('TotalRecordCount')) is int and
-              inventory['TotalRecordCount'] == len(items))
-        check(all(type(i) is dict and type(i.get('Number')) is str and
-                                          type(i.get('Name')) is str for i in items))
-        return 'present' if any(i['Number'] == '9001' and i['Name'] == 'DW English' for i in items) else 'absent'
-    if name == 'jellyfin-guide':
-        count = decode(data)['TotalRecordCount']
-        check(type(count) is int and count >= 0)
-        return 'current' if count else 'empty'
-    value = data.decode('ascii').strip()
-    check(value in STATES[name])
-    return value
+    raise ValueError('unsupported observation')
 
 
 def collect(raw, directory=EVIDENCE, owner=0):

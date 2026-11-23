@@ -182,14 +182,14 @@ class Boundary(unittest.TestCase):
                 (p/n).chmod(0o600)
             req=json.dumps({'observations':list(inputs)})
             result=collect(req,p,os.getuid())
-            self.assertEqual(list(result.values()), ['warning-or-error','present','both-ready','withdrawn','present','empty'])
+            self.assertEqual(list(result.values()), ['warning-or-error','present','unavailable','unavailable','unavailable','unavailable'])
             (p/'celery').write_text('{}')
             (p/'logs').write_text('token private-canary')
             (p/'playlist').write_text('#EXTM3U\n')
             (p/'jellyfin-channel').write_text('{"TotalRecordCount":0,"Items":[]}')
             result=collect(req,p,os.getuid())
             self.assertEqual([result[k] for k in ('logs','celery','playlist','jellyfin-channel')],
-                             ['unavailable','unavailable','absent','absent'])
+                             ['unavailable','unavailable','absent','unavailable'])
 
     def test_partial_inventory_and_unrelated_playlist_attribute(self):
         with tempfile.TemporaryDirectory() as temp:
