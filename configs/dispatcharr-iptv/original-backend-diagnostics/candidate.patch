@@ -1,47 +1,153 @@
 --- structured-baseline/backend.py
 +++ candidate/backend.py
-@@ -208,6 +208,22 @@
+@@ -1,0 +2 @@
++from enum import Enum
+@@ -99,0 +101,15 @@
++class ReplyRejection(str, Enum):
++    CAPTURE_INCOMPLETE = 'capture_incomplete'
++    NON_TEXT = 'non_text'
++    STDERR_PRESENT = 'stderr_present'
++    OUTPUT_OVERSIZED = 'output_oversized'
++    INVALID_UTF8 = 'invalid_utf8'
++    MALFORMED_JSON = 'malformed_json'
++    DUPLICATE_KEY = 'duplicate_key'
++    NONFINITE_CONSTANT = 'nonfinite_constant'
++    INVALID_TOP_LEVEL = 'invalid_top_level'
++    INVALID_IDENTITY = 'invalid_identity'
++    DUPLICATE_ROLE = 'duplicate_role'
++    INVALID_PAYLOAD = 'invalid_payload'
++
++
+@@ -100,0 +117,34 @@
++
++
++def validate_reply_rejection(record):
++    """Validate only new receipt evidence, after required metrics have been checked."""
++    try:
++        reason = ReplyRejection(record['reply_rejection'])
++    except ValueError:
++        raise InvalidDiagnostics('reply_rejection') from None
++
++    stdout = record['stdout_bytes']
++    stderr = record['stderr_bytes']
++    complete = record['output_complete']
++    if record['count'] or record['default_present'] or record['dvr_present']:
++        raise InvalidDiagnostics('rejected_role_witness')
++
++    if max(stdout, stderr) > OUTPUT_LIMIT:
++        # Capture stops on the first oversized pipe, even if its prefix cannot decode.
++        consistent = (not complete and min(stdout, stderr) <= OUTPUT_LIMIT
++                      and reason is ReplyRejection.OUTPUT_OVERSIZED)
++    elif not complete:
++        consistent = (reason is ReplyRejection.CAPTURE_INCOMPLETE
++                      or (reason is ReplyRejection.INVALID_UTF8 and max(stdout, stderr) > 0))
++    elif stderr:
++        consistent = reason is ReplyRejection.STDERR_PRESENT
++    else:
++        # A completed pipe capture supplies decoded strings. NON_TEXT applies only
++        # to direct validator callers. Empty stdout fails at the JSON decoder.
++        consistent = reason is ReplyRejection.MALFORMED_JSON or (stdout > 0 and reason in {
++            ReplyRejection.DUPLICATE_KEY, ReplyRejection.NONFINITE_CONSTANT,
++            ReplyRejection.INVALID_TOP_LEVEL, ReplyRejection.INVALID_IDENTITY,
++            ReplyRejection.DUPLICATE_ROLE, ReplyRejection.INVALID_PAYLOAD,
++        })
++    if not consistent:
++        raise InvalidDiagnostics('reply_rejection_evidence')
+@@ -121 +171,4 @@
+-    if set(value)-base-METRICS[stage]: raise InvalidDiagnostics('fields')
++    allowed = base | METRICS[stage]
++    if stage == 'celery' and event == 'fail' and value.get('reply_output_valid') is False and code in CELERY_CODES:
++        allowed.add('reply_rejection')
++    if set(value) - allowed: raise InvalidDiagnostics('fields')
+@@ -153,0 +207,2 @@
++            if 'reply_rejection' in value:
++                validate_reply_rejection(value)
+@@ -208,11 +263,56 @@
 -def valid_reply_output(stdout, stderr):
 -    # Fixed human formatter, no unrecognized logs/errors or terminal controls.
 -    if stderr or any(not c.isprintable() and c!='\n' for c in stdout):return False
 -    match=re.fullmatch(r'(?P<replies>(?:->\s+[^:\s]+:\s+OK\s+pong\s*)+)(?:(?P<count>[0-9]+) nodes? online\.\s*)?',stdout)
 -    if not match:return False
 -    return match['count'] is None or int(match['count'])==len(re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',match['replies']))
-+def structured_replies(stdout, stderr, complete=True):
-+    # Return only validated positive role names, never worker identities/raw data.
-+    if complete is not True or not isinstance(stdout,str) or not isinstance(stderr,str) or stderr:return [],False
-+    try:
-+        if len(stdout.encode('utf-8'))>OUTPUT_LIMIT:return [],False
-+        def unique(items):
-+            result={}
-+            for key,value in items:
-+                if key in result:raise ValueError('duplicate_JSON_key')
-+                result[key]=value
-+            return result
-+        def constant(_):raise ValueError('nonfinite_JSON')
-+        value=json.loads(stdout,object_pairs_hook=unique,parse_constant=constant)
-+        if type(value) is not dict or len(value)>2:return [],False
-+        roles=[]
-+        for identity,reply in value.items():
-+            if not isinstance(identity,str) or not re.fullmatch(r'(default|dvr)@[A-Za-z0-9_.-]{1,253}',identity):return [],False
-+            role=identity.split('@',1)[0]
-+            if role in roles or type(reply) is not dict or reply!={'ok':'pong'}:return [],False
-+            roles.append(role)
-+        return roles,True
-+    except (ValueError,TypeError,UnicodeError,RecursionError):return [],False
-@@ -216,3 +232,2 @@
+-
+-
 -def celery_classification(process, nodes, complete):
 -    if process.returncode==0 and complete and valid_reply_output(process.stdout,process.stderr):
 -        roles={n.split('@')[0] for n in nodes}
++class _JSONRejection(ValueError):
++    """Carries only the fixed reason selected by a JSON parser hook."""
++
++
++def structured_replies_with_reason(stdout, stderr, complete=True):
++    if complete is not True:
++        return [], ReplyRejection.CAPTURE_INCOMPLETE
++    if not isinstance(stdout, str) or not isinstance(stderr, str):
++        return [], ReplyRejection.NON_TEXT
++    if stderr:
++        return [], ReplyRejection.STDERR_PRESENT
++
++    def unique(items):
++        result = {}
++        for key, value in items:
++            if key in result:
++                raise _JSONRejection(ReplyRejection.DUPLICATE_KEY)
++            result[key] = value
++        return result
++
++    def constant(_):
++        raise _JSONRejection(ReplyRejection.NONFINITE_CONSTANT)
++
++    try:
++        if len(stdout.encode('utf-8')) > OUTPUT_LIMIT:
++            return [], ReplyRejection.OUTPUT_OVERSIZED
++        value = json.loads(stdout, object_pairs_hook=unique, parse_constant=constant)
++    except UnicodeError:
++        return [], ReplyRejection.INVALID_UTF8
++    except _JSONRejection as rejection:
++        return [], rejection.args[0]
++    except (ValueError, TypeError, RecursionError):
++        return [], ReplyRejection.MALFORMED_JSON
++
++    if type(value) is not dict or len(value) > 2:
++        return [], ReplyRejection.INVALID_TOP_LEVEL
++    roles = []
++    for identity, reply in value.items():
++        if not isinstance(identity, str) or not re.fullmatch(r'(default|dvr)@[A-Za-z0-9_.-]{1,253}', identity):
++            return [], ReplyRejection.INVALID_IDENTITY
++        role = identity.split('@', 1)[0]
++        if role in roles:
++            return [], ReplyRejection.DUPLICATE_ROLE
++        if type(reply) is not dict or reply != {'ok': 'pong'}:
++            return [], ReplyRejection.INVALID_PAYLOAD
++        roles.append(role)
++    return roles, None
++
++
++def structured_replies(stdout, stderr, complete=True):
++    roles, rejection = structured_replies_with_reason(stdout, stderr, complete)
++    return roles, rejection is None
++
++
 +def celery_classification(process, roles, complete, valid):
 +    if process.returncode==0 and complete and valid:
-@@ -222 +237 @@
+@@ -222 +322 @@
 -        if len(nodes)!=2:return 'celery_reply_count'
 +        if len(roles)!=2:return 'celery_reply_count'
-@@ -336 +351 @@
+@@ -284,0 +385 @@
++        capture_rejection = None if complete else ReplyRejection.OUTPUT_OVERSIZED
+@@ -286,2 +387,6 @@
+-        except UnicodeError:out=err='';complete=False
+-        return types.SimpleNamespace(returncode=code,stdout=out,stderr=err,complete=complete,stdout_bytes=sizes[0],stderr_bytes=sizes[1])
++        except UnicodeError:
++            out = err = ''
++            complete = False
++            # A size-limited prefix may end inside a valid UTF-8 sequence.
++            capture_rejection = capture_rejection or ReplyRejection.INVALID_UTF8
++        return types.SimpleNamespace(returncode=code,stdout=out,stderr=err,complete=complete,capture_rejection=capture_rejection,stdout_bytes=sizes[0],stderr_bytes=sizes[1])
+@@ -336 +441 @@
 -            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8'],
 +            p = celery_capture(['celery','-A','dispatcharr','inspect','ping','--timeout=8','--json'],
-@@ -343,8 +358,6 @@
+@@ -343,8 +448,11 @@
 -        diagnostic.metrics(reply_output_valid=valid_reply_output(p.stdout,p.stderr))
 -        nodes = re.findall(r'->\s+([^:\s]+):\s+OK\s+pong',p.stdout)
 -        diagnostic.metrics(returncode=p.returncode, count=len(nodes),
@@ -50,7 +156,12 @@
 -        diagnostic.metrics(celery_failure=celery_classification(p,nodes,complete))
 -        if not complete or (p.returncode==0 and not valid_reply_output(p.stdout,p.stderr)): raise ValueError('Celery_not_ready')
 -        if p.returncode or len(nodes) != 2 or {n.split('@')[0] for n in nodes} != {'default','dvr'}:
-+        roles,valid=structured_replies(p.stdout,p.stderr,complete)
++        roles, rejection = structured_replies_with_reason(p.stdout, p.stderr, complete)
++        valid = rejection is None
++        if rejection is not None:
++            if rejection is ReplyRejection.CAPTURE_INCOMPLETE:
++                rejection = getattr(p, 'capture_rejection', None) or rejection
++            diagnostic.metrics(reply_rejection=rejection.value)
 +        diagnostic.metrics(reply_output_valid=valid,returncode=p.returncode,count=len(roles),
 +                           default_present='default' in roles,dvr_present='dvr' in roles)
 +        diagnostic.metrics(celery_failure=celery_classification(p,roles,complete,valid))
@@ -60,4 +171,4 @@
 +++ candidate/manifest.json
 @@ -11 +11 @@
 -    "backend.py": "5d37a1a53a8c4e05d3b699998cd3ae618cb4b79112c9c651ed9711d9175a5e4b",
-+    "backend.py": "466b06a23af779d0093d2325d6dce3257a354e4d8899658fb849713e2b1a3065",
++    "backend.py": "040c28facf839b7afe5b6a37021dde195eaea04e43e71ce557784843542e17af",

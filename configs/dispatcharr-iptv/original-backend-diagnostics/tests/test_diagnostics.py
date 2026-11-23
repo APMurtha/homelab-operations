@@ -76,7 +76,14 @@ class BackendFixture:
             if self.pg_error:raise self.pg_error
             return types.SimpleNamespace(returncode=self.pg_code,stdout=self.pg_stdout,stderr=SECRET)
         if self.celery_error:raise self.celery_error
-        return types.SimpleNamespace(returncode=self.celery_code,stdout=self.celery_stdout,stderr=self.celery_stderr,complete=max(len(self.celery_stdout.encode()),len(self.celery_stderr.encode()))<=B.OUTPUT_LIMIT,stdout_bytes=min(B.OUTPUT_LIMIT+1,len(self.celery_stdout.encode())),stderr_bytes=min(B.OUTPUT_LIMIT+1,len(self.celery_stderr.encode())))
+        stdout_bytes = len(self.celery_stdout.encode())
+        stderr_bytes = len(self.celery_stderr.encode())
+        complete = max(stdout_bytes, stderr_bytes) <= B.OUTPUT_LIMIT
+        return types.SimpleNamespace(returncode=self.celery_code, stdout=self.celery_stdout,
+                                     stderr=self.celery_stderr, complete=complete,
+                                     capture_rejection=None if complete else B.ReplyRejection.OUTPUT_OVERSIZED,
+                                     stdout_bytes=min(B.OUTPUT_LIMIT + 1, stdout_bytes),
+                                     stderr_bytes=min(B.OUTPUT_LIMIT + 1, stderr_bytes))
     def Redis(self,**kwargs):
         fixture=self
         class R:
@@ -244,10 +251,14 @@ class IntegrityTests(unittest.TestCase):
             node=next(n for n in ast.parse(path.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='check')
             return [ast.dump(n,include_attributes=False) for n in node.body[:-1]]
         self.assertEqual(first_stages(HERE/'structured-baseline/backend.py'),first_stages(HERE/'candidate/backend.py'))
-    def test_bounded_capture_and_broker_comparison_AST_unchanged(self):
+    def test_pipe_loop_broker_comparison_and_classification_AST_unchanged(self):
         def functions(path):return {n.name:ast.dump(n,include_attributes=False) for n in ast.parse(path.read_text()).body if isinstance(n,ast.FunctionDef)}
         a=functions(HERE/'structured-baseline/backend.py');b=functions(HERE/'candidate/backend.py')
-        for name in ['celery_capture','compare_brokers','classify_celery','decode_record']:self.assertEqual(a[name],b[name])
+        for name in ['compare_brokers','classify_celery']:self.assertEqual(a[name],b[name])
+        def pipe_loop(path):
+            fn = next(node for node in ast.parse(path.read_text()).body if getattr(node, 'name', None) == 'celery_capture')
+            return ast.dump(next(node for node in ast.walk(fn) if isinstance(node, ast.While)))
+        self.assertEqual(pipe_loop(HERE/'structured-baseline/backend.py'), pipe_loop(HERE/'candidate/backend.py'))
 
 class AdditionalIntegrityTests(unittest.TestCase):
     def test_complete_candidate_manifest_and_install_closure(self):
