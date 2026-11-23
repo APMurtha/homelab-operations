@@ -123,7 +123,7 @@ processes. Each verified outbound denial, loopback connectivity, namespace,
 filesystem and credential isolation, cgroup and file-size limits, automatic
 removal after success and timeout, and the expected one-file inventory.
 The independent staging gate passed. Staging retains the context and logs in
-`/var/tmp/samwise-build.j4dRSq7L`. Live GitHub acceptance awaits approval.
+`/var/tmp/samwise-build.j4dRSq7L`. Live GitHub acceptance was approved separately after this gate.
 
 ## Run controlled GitHub acceptance
 
@@ -201,6 +201,39 @@ Confirm the initial fixture service PID and active state again. Repeat
 `accept_one once` for the completed polling issue and require exit status 1,
 with no new comment or draft PR. For a retry after failure, create a fresh
 issue and keep the old receipt.
+
+### Live GitHub results, 2026-11-23 UTC
+
+Bag-End ran reviewed implementation `1ce29247b9e5da9897d976b960706b8690b7230e`
+from PR #7 with the full image ID recorded above. The owner account and
+repository matched IDs 57697374 and 1126036330. Both issues pinned the fetched
+main commit `529c3cff904d84d100d037b1925c8fcd99de97b5`.
+
+| Mode | Issue | Draft PR | Available memory (KiB) | Worker start to final label removal | Container start to exit |
+| --- | --- | --- | ---: | ---: | ---: |
+| One-shot | [#8](https://github.com/APMurtha/homelab-operations/issues/8) | [#9](https://github.com/APMurtha/homelab-operations/pull/9) | 12,942,916 | 78 s | 65 s |
+| Poll | [#10](https://github.com/APMurtha/homelab-operations/issues/10) | [#11](https://github.com/APMurtha/homelab-operations/pull/11) | 12,937,276 | 140 s | 66 s |
+
+The polling time includes discovery. Polling started at 01:21:08 UTC, applied
+the running label at 01:22:12, and removed it at 01:23:28. A process listing
+inside the polling container showed Codex, Ollama and llama-server.
+Podman recorded one container start and removal per issue.
+
+Both reports matched the issue, commit, body digest, owner ready event,
+unedited owner approval comment, and verified image. Each issue ended with
+only `samwise:done` and one passed receipt. Each draft targeted main and added
+only its own `samwise-results/issue-N.json`. Both reported 40 files and chose
+documentation as the focus. The pinned Git tree independently contained 40 files.
+
+After stopping the foreground poller, replaying #10 returned status 1 in
+1.939 s. The acceptance database checksum, GitHub comment IDs, draft PR head,
+and Podman event history matched the pre-replay observations. The two
+published receipts remain in a separate owner-only acceptance directory.
+The fixture service retained its PID and zero restart count, and its database
+SHA-256 matched the preflight checksum after both runs and replay.
+
+The operator verified both results directly through GitHub. Independent
+consumer readback is pending [Samwise's reply on PR #7](https://github.com/APMurtha/homelab-operations/pull/7#issuecomment-7089133309).
 
 ## Roll back or promote after acceptance
 
