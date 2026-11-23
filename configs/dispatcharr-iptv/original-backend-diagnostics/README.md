@@ -36,3 +36,12 @@ or Django import was added.
 See `docs/dispatcharr-celery-structured-readiness-fix.md`. Installation and any
 managed restoration start require separate authorization. No image, unit, guard,
 provider, Jellyfin or production configuration is changed by this offline task.
+
+For future failed captures the optional Celery record field `reply_rejection`
+identifies the first failed structured validation rule. Multiple defects can
+produce the same first rejection. A capture byte limit takes precedence over
+UTF-8 errors in a truncated prefix. Valid empty and one-role mappings retain
+their missing-role classifications. Historical receipts remain readable without
+the field. The November 19 stdout was discarded, so its specific rejection
+cannot be recovered. The baseline inventory here describes the historical
+structured candidate and is not a deployment or rollback plan for this change.
