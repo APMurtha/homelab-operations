@@ -97,12 +97,14 @@ def openai(body):
 class Runner:
     def __init__(self, directory, upstream=openai):
         self.directory = directory
+        self.instance = hashlib.sha256(os.fsencode(directory.resolve())).hexdigest()[:16]
+        self.label = 'io.samwise.engineering-v1.instance=' + self.instance
         self.upstream = upstream
         self.model = os.environ.get('SAMWISE_MODEL', 'gpt-5.4')
 
     def cleanup(self, sweep=True):
         try:
-            cmd = ['podman', 'ps', '-aq', '--filter', 'label=' + LABEL]
+            cmd = ['podman', 'ps', '-aq', '--filter', 'label=' + self.label]
             ids = subprocess.check_output(cmd, timeout=15, stderr=subprocess.DEVNULL).split()
             if ids:
                 subprocess.run(['podman', 'rm', '-f', *ids], check=True, timeout=30,
@@ -120,8 +122,8 @@ class Runner:
             raise Unavailable('runner-cleanup') from None
 
     def run(self, n, mode, payload, extra):
-        name = f'samwise-engineering-v1-{n}-{mode}'
-        cmd = ['podman', 'run', '--rm', '--pull=never', '--name', name, '--label', LABEL,
+        name = f'samwise-engineering-v1-{self.instance}-{n}-{mode}'
+        cmd = ['podman', 'run', '--rm', '--pull=never', '--name', name, '--label', LABEL, '--label', self.label,
                '--network=none', '--http-proxy=false', '--read-only', '--cap-drop=all',
                '--security-opt=no-new-privileges', '--pids-limit=96', '--cpus=1', '--memory=768m',
                '--memory-swap=768m', '--timeout=170', '--log-driver=none', '--userns=keep-id',

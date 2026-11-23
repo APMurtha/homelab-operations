@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from runner import LABEL, Runner
+from runner import Runner
 from test_worker import CODE, TEST, CHANGES, Hub
 from worker import Store, advance
 
@@ -59,8 +59,8 @@ class Isolated(unittest.TestCase):
                     store.db.close()
             self.assertEqual(len(calls), 2)
             self.assertEqual(api.pr['number'], 19)
-            self.assertFalse(list(directory.glob('tmp*')))
-            self.assertEqual(subprocess.check_output(['podman', 'ps', '-aq', '--filter', 'label=' + LABEL]), b'')
+            self.assertFalse(list(directory.glob('relay-*')))
+            self.assertEqual(subprocess.check_output(['podman', 'ps', '-aq', '--filter', 'label=' + runner.label]), b'')
 
     def test_host_secrets_and_network_unavailable(self):
         with tempfile.TemporaryDirectory() as tmp:
