@@ -1,0 +1,11 @@
+[Unit]
+Description=Check for Samwise engineering work every minute
+
+[Timer]
+OnActiveSec=5s
+OnUnitInactiveSec=60s
+AccuracySec=5s
+Unit=samwise-engineering-v1.service
+
+[Install]
+WantedBy=timers.target
