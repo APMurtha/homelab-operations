@@ -1,113 +1,167 @@
-# Celery readiness acquisition: staging candidate, not deployable
+# Celery readiness: staging candidate; production remains held
 
-Issue #40 did not enroll Celery. Issue #42 verified only relay, backend, gateway,
-VPN-container and Jellyfin. The newest trustworthy Rivendell worker receipt
-seen on Nov 23 at 23:23 UTC was the two-role pass from 04:11:39 UTC (root-owned
-0600); it was historical, not current. The running Docker health feeds and
-uWSGI Redis heartbeat do not prove Celery default/DVR broker responsiveness.
-Leave the current production Celery observation unavailable.
+Issue #40 did not enroll Celery. Issue #42 covered only relay, backend, gateway,
+VPN-container and Jellyfin. On November 23 the newest retained historical
+Celery pass was at 04:11:39 UTC, well outside the 60-second validity limit.
+Stored Docker health and the application's Redis-backed **uWSGI** heartbeats
+are not evidence of Celery broker responsiveness. Keep live Celery unavailable.
 
-## What was qualified
+## Read-only Rivendell source findings
 
-The acquisition core accepts owner-enrolled **full, distinct nodenames** with
-the exact default/DVR roles, and one Celery 5.6.3 destination-scoped
-`inspect ping --timeout=8 --json`. No task is invoked. The subprocess has a
-12-second deadline, original process-group cleanup before reaping on all exits, and a 16 KiB
-limit per in-memory pipe. It accepts only complete, strict UTF-8 JSON with no
-stderr, exit 0, unique keys at every depth, known exact destination names,
-and exact pong objects. An empty capture, malformed or ambiguous structure,
-broker failure, or transport timeout is unavailable. A completed valid reply
-from exactly one enrolled destination is `readiness-failed` (one role lacks a
-positive witness, not proof that this worker is down).
+The two passive bracket passes took 0.120 s and 0.114 s. They agreed on the
+full backend container ID, PID/start tuple, worker-master PID/start ticks,
+and cgroup and PID, network, mount and UTS namespaces. Both worker masters
+are distinct and in the backend container's cgroup and namespaces; exclude
+the shell wrappers and prefork children from the observation. Deployed
+Celery's worker CLI expands its actual configured default/DVR nodename
+templates against the backend hostname. The exact configured names were
+verified privately; do not publish host-specific worker or runtime IDs.
 
-The trusted passive before/after witnesses must agree on producer boot UUID,
-the full backend ID/PID/start-time tuple and both enrolled worker PID/start
-ticks pairs. The engine row must be healthy in both witnesses. Duplicate PIDs,
-wrong boot, restarts/name reuse, bad clocks and stale health fail closed.
-Expiry is 60 seconds from the **earliest** bracket time or contributing engine
-probe, not the publication time. A valid nonblocking lock allows only one scoped
-acquisition. The prior projection is withdrawn after acquiring that lock and
-before starting a probe, including while a subsequently failed probe is in
-flight. Contention cannot withdraw another admitted writer's result. An
-invalid lock/output setup returns unavailable without a probe or projection
-mutation because exclusivity is not established; a previously published
-file retains its original time and the legacy reader can see it until its
-independently enforced TTL. Publication atomically replaces
-only the existing sanitized Celery observation, using the current wire format
-and projector validation; there is no second raw receipt or new vocabulary
-and no credential, broker URL, worker name or raw output in the projection.
-The existing consumer can read the existing file format. A nonqualifying
-or failed acquisition after locking cannot keep the previous pass authoritative.
+Joining worker open socket inodes to the backend namespace's existing TCP
+table independently found both workers connected to Redis on loopback
+port 6379 inside the VPN-shared namespace. Stored backend creation settings
+specify Redis DB 0 and no separate read/write override. These are passive
+configured identity and kernel endpoint observations, not a proof of the
+live logical DB, control namespace, worker reply authenticity, or
+runtime readiness. No production ping, broker request, task execution,
+payload capture, service/configuration change, or enrollment occurred.
+A genuine before/after bracket spanning a real production capture remains
+to be qualified under a separate grant.
 
-Two actual unprivileged Celery workers (separate PIDs/start ticks) and a
-disposable Redis broker used a private Unix-domain socket on Bag-End with
-TCP disabled, no persisted Redis data, no production credentials/network,
-no task invocation and all processes cleaned up at exit. The backend
-container metadata was **synthetic**; the pass proves the Celery CLI/Redis
-behavior and consumption, not production Docker identity, namespace, broker
-configuration or AppArmor. Local fixture wall time was about 1.08 s for
-both-ready, 3.10 s for broker loss becoming unavailable. These are
-fixture timings, not production CPU/load projections. The standalone
-integration test is opt-in; normal tests never start it.
+## Acquisition and exclusive publication
 
-## Production opt-in gate (separate authorization, not included here)
+- The staging core uses one Celery 5.6.3 destination-scoped
+  `inspect ping --timeout=8 --json` with the two enrolled **full exact
+  names**, no task, 12-second subprocess deadline, 16 KiB max per pipe in
+  memory and no raw-output retention. It waits for leader exit without
+  reaping, signals the original process group, then reaps; a child escaping
+  that group requires the independent launcher/cgroup boundary.
+- Exit 0, strict complete UTF-8 JSON, empty stderr, no duplicate keys at
+  any depth, only enrolled exact names and exact pong values are
+  required. A nonempty validated set of one role is `readiness-failed`
+  (no positive witness for the other role, not a confirmed outage). An
+  empty or malformed capture, broker/transport error, nonzero exit, clock
+  discontinuity or timeout is unavailable.
+- Two trusted bounded passive adapters must report the same producer
+  boot, full backend container ID/PID/start time, both enrolled PID/start
+  tick tuples and a fresh healthy backend. The fixture output timestamp
+  remains the earliest of acquisition start and the input engine probe
+  timestamps; publication never refreshes it. The unchanged wire format
+  and vocabulary expire at that original time plus 60 seconds.
+- A dedicated fixed `celery-v1/` subdirectory under the existing evidence
+  directory holds the exclusive Celery path. The existing multi-observation
+  projector no longer writes or unlinks Celery; the collector ignores the
+  old top-level Celery file. A provisioned same-group 0640 anchor is
+  used only for shared/exclusive nonblocking synchronization. A writer
+  withdraws any previous commit before capturing and creates a new lease
+  inode, never relocking an old one. An atomic receipt and fail-closed
+  commit gate bind stable inode/owner/group/mode/size/time signatures of the
+  drop, anchor, lease and receipt. Commit creation and its final contents
+  happen while the writer holds the exclusive anchor, so a partial commit
+  or crash can never serve a positive. The reader holds the shared anchor
+  throughout the bounded file reads and verifies the exact signatures and
+  liveness before and after reading.
+- Linux open-file-description write locking requires an actually writable
+  lease descriptor. The restricted reader only queries conflicts through a
+  read-only descriptor and cannot assert liveness. No publisher, dead
+  publisher, missing or replaced anchor, invalid owner or mode, malformed
+  or incomplete commit, receipt replacement, unsafe directory, wrong
+  group, or expired observation cannot return a current positive. The
+  result is point-in-time during the active lease only; expiry still wins.
+  Read-time revalidation is not an assurance about a future operation or
+  a restart after the final worker bracket. An unprivileged reader may
+  contend for its read lock; this can withhold but cannot forge evidence.
+  A malicious root/custodian is outside this trust boundary.
+- Acquisition is not launched by untrusted issue content. The caller,
+  executable, app, full names, broker binding, and passive adapters must
+  be fixed in a separately reviewed launcher/enrollment. This branch adds
+  no production launcher, root privileged callable dispatcher, Docker
+  socket allowance, lease-holder service, timer, credential or policy
+  installation. Production drop must be boot-local under /run, root-owned,
+  with the enrolled read-only observer group; no inherited old boot state.
 
-- Review and authenticate full enrollment and provenance for both names,
-  worker process identities (PID/start ticks with container PID namespace /
-  cgroup membership) and exact broker endpoint/namespace. Prove passive
-  before/after observations actually span the single capture and prevent a
-  PID/name from another process or container satisfying the witness.
-  Pidbox pong semantics show responsiveness **at acquisition**, not successful
-  task execution or ongoing health. A restart after the final bracket cannot
-  be observed until a new sample or expiry; do not make stronger claims.
-  A broker peer that can impersonate an enrolled name or an upstream library
-  that discards duplicate replies before serialization cannot be detected by
-  this parser alone. Require a closed trusted broker/control namespace and
-  verify uniqueness operationally; unresolved identity ambiguity blocks enrollment.
-- Review the callable adapter boundary. The committed core has **no production
-  entry point**, application/engine credentials, Docker exec/sock access,
-  installed unit, timer, network rule, host-policy change or transport selector.
-  The trusted before/after adapters must each have independently enforced
-  short deadlines (budget 2 seconds total), exact name/host scope, and
-  no general shell, environment dumps or raw output. Children that escape the
-  original process group cannot be stopped by this core. Require a confined
-  launcher with an independently enforced deadline and cgroup-wide teardown.
-  The capture adapter
-  should use only the approved executable/app, fixed broker and two exact
-  destinations. Do not let an issue value choose a command, destination,
-  app, endpoint, identity or output path. Run in a reviewed constrained
-  producer or ask for separate approval if that constraint is not achievable.
-  The restricted collector must remain read-only and unable to contact Docker,
-  the broker, network or credentials.
-- Integrate one exclusive owner of the Celery projection in the existing
-  approved reader-visible directory and confinement model. The staged core
-  requires a private 0700 output directory and runs with test ownership;
-  do not point it at the shared production directory or run it next to the
-  multi-observation projector. Review an exclusive publication handoff and
-  reader/writer ownership/permissions before any installation. Prove trusted
-  atomic publisher/lock eligibility and a reader-facing fail-closed gate
-  on detected publisher setup faults; do not deploy if invalid setup can
-  leave a previous pass usable as current until TTL. Verify other
-  observations, four-container publisher, relay, V2/V3 and media services
-  byte-for-byte or with known continuing health before and after.
-- Start with an independently approved one-shot, not a production timer.
-  If bounded execution, original probe timestamps, hardware cost, broker
-  scope and all preservation gates pass, propose 15 seconds start-to-start,
-  at most 12 seconds for capture + 2 for witnesses, no retries or overlap,
-  60-second validity capped by the oldest contributing engine sample. With
-  30-second stored Docker checks, 14 seconds max elapsed leaves at least
-  16 seconds after a qualifying publish under that ideal max-age assumption;
-  verify actual ages/schedule jitter. Missed windows must be unavailable/stale,
-  not extended. Withdrawal intentionally allows a temporary unavailable
-  window while the next check runs; acceptance must measure this impact.
-- Abort on any scope/identity/config drift, unknown host, duplicate worker
-  names, clock discontinuity, unhealthy/stale backend, over-budget broker
-  activity, lost confinement or any media effects. Stop only the new
-  authorized job, withdraw only its Celery projection, restore the verified
-  pre-change ownership and compare the existing evidence/collector/timers.
-  No worker restart, Docker/guard/VPN changes or rollback of unrelated state.
+## Qualification and remaining enforcement gate
 
-Run offline: `cd supervisor && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -v`.
-Run integration in the same directory with `SAMWISE_CELERY_STAGE=1`,
-`SAMWISE_STAGE_REDIS` and `SAMWISE_STAGE_LIBRARIES` pointing to the independently
-verified existing staging dependencies. It creates only disposable fixtures.
+Opt-in Bag-End tests used two real unprivileged Celery workers and disposable
+Redis with TCP disabled, no persistence and a private Unix-domain socket;
+container metadata was synthetic. In the staged leased path, obtaining
+both pongs and publishing took approximately 1.04 s and losing the broker
+became unavailable in approximately 3.05 s. The reader returned both-ready
+only while the live lease existed. The separate transient user-cgroup test
+used a fixed fixture with independently bounded witness subprocesses,
+NoNewPrivileges, zero capabilities, seccomp, bubblewrap-private
+filesystem/PID/network views, and observed an actual setsid descendant for
+each path. Both clean and forced runtime-limit runs left empty cgroups;
+startup and runtime tests took approximately 0.8 and 2.2 seconds. The
+cgroup test did not access a real runtime backend or use a broker.
+A separate real loopback SSH forced-command fixture, using disposable keys,
+actually read `both-ready` only while the candidate's OFD lease was live and
+returned unavailable following its closure. The staged allowlist mounted
+only the fixture code/evidence read-only; native cBPF mirrored the installed
+socket-related deny list. AF_UNIX/INET/INET6 creation was actually refused;
+host credential and Redis/Docker socket paths were hidden, and the reader
+could not reopen or lock the lease as writer. The fixture deliberately
+substituted its unprivileged owner for the production root/observer-group
+binding; it is not a test of the installed Rivendell AppArmor profile.
+Offline regressions cover lock/receipt corruption, missing/dead publisher,
+live contention, kill before withdrawal and after commit, interrupted commit,
+restore-mode non-revival, lease forgery, TTL, and fresh recovery. The existing
+relay/four-container readers and unrelated media were not changed on production.
+
+Rivendell's existing AppArmor policy names the old top-level Celery projection
+and does not allow the new directory/module. Its native seccomp deny list blocks
+socket and related syscalls, and does not deny fcntl. The exact file-only
+review delta is `celery-observer.apparmor.patch`: one read-only Python module,
+one read-only fixed directory, two specific read/lock paths and two specific
+read-only files; remove the superseded top-level access. No network, write,
+credential or Docker access is added. The existing profile and candidate
+were reviewed and the candidate compiled with `apparmor_parser -Q -T -K`
+(no kernel load or cache writes); this is not a production policy test.
+Pin a host-specific active-profile test to verify lock syscall mediation,
+drop traversal and denied access on the exact dedicated account before
+ever enabling a real producer. Do not infer deployment authorization
+from an unprivileged test or installed capability.
+
+Run default offline tests:
+`cd supervisor && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -v`.
+Run the independent broker fixture in that directory with
+`SAMWISE_CELERY_STAGE=1`, `SAMWISE_STAGE_REDIS`, and
+`SAMWISE_STAGE_LIBRARIES` pointing to independently verified existing
+staging dependencies. `SAMWISE_CELERY_CGROUP_STAGE=1` enables the disposable
+Bag-End user systemd/bubblewrap tests; with `SAMWISE_TEST_SSH=1` it also
+runs the scoped real SSH reader fixture. No command installs dependencies,
+changes a persistent system setting, or touches Rivendell.
+
+## Proposed separately authorized one-shot, not part of this draft
+
+1. First review and stage the exact production fixed launcher and file-only
+   profile on an isolated unprivileged fixture. Configure only independently
+   verified full roles, broker/control namespace and container binding;
+   recheck PIDs/start ticks plus same cgroups/namespaces against the confirmed
+   backend incarnation. Verify the actual production AppArmor/seccomp
+   confinement and exact account behavior using a separately approved
+   isolated validation. No access expansion to the observer. Abort if any
+   source, identity, role, boot, UID/group/mode, path or clock drifts.
+2. After an explicit one-shot owner grant only, take passive snapshots
+   before/after exactly one fixed ping (8 s reply timeout, 12 s maximum
+   execution). Reserve two seconds total for independent witness enforcement,
+   plus up to four seconds for one read of the sanitized result while that
+   exact lease remains live. Cap the entire launcher cgroup at 18 seconds,
+   deny any extra broker destination and use cgroup-wide teardown, including
+   escaped groups, on success and timeout. No retries, task, playback,
+   restarts, scheduling, or production rollout. The source timestamp is
+   the actual oldest contributing UTC witness, not time of reporting.
+3. Compare one sanitized result and original sample time with the private
+   authorized bracket. Record time, resource cost and cleanup. Report
+   unavailable on an ambiguous or missing result, not healthy. Keep the
+   existing 60-second TTL only as an upper bound; the live lease can end
+   much earlier. A future continuous schedule requires a separate design
+   and permission; one-shot passing does not qualify a daemon/timer.
+4. Abort/rollback by stopping only the candidate's cgroup, closing its lease
+   and verifying its cgroup empty. Withdraw only that run's shadow files.
+   If later separately approved file-only collector/profile integration
+   must be rolled back, restore only the verified old collector/module
+   set, AppArmor policy and Celery projected-path ownership, under the
+   known approval. Compare hashes and validate old relay/four-container
+   projections and timers. No worker or media restart, and no rollback of
+   unrelated state. Never revive the old Celery evidence.

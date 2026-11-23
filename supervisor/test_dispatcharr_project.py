@@ -69,10 +69,10 @@ class Pipeline(unittest.TestCase):
 
     def test_all_sources_and_untouched_relay(self):
         self.run_project()
-        expected = dict.fromkeys(CONTAINERS,'running') | dict(celery='both-ready',guard='verified',
+        expected = dict.fromkeys(CONTAINERS,'running') | dict(celery='unavailable',guard='verified',
             vpn='verified',relay='running') | {'jellyfin-channel':'present','jellyfin-guide':'current'}
         self.assertEqual(self.read(*expected),expected)
-        for n in PROJECTIONS:
+        for n in PROJECTIONS.keys()-{'celery'}:
             p = self.output/n
             self.assertEqual(p.stat().st_mode & 0o777,0o640)
             self.assertEqual(p.stat().st_mtime_ns,self.s)
@@ -88,30 +88,25 @@ class Pipeline(unittest.TestCase):
             self.source('gateway')
             self.assertEqual(self.value('gateway'),expected)
 
-    def test_time_provenance_and_restart(self):
-        for override in (dict(source='other'),dict(boot_id='other'),dict(target='elsewhere'),
-                         dict(sampled_ns=self.now+1)):
-            self.source('celery',**override)
-            self.assertEqual(self.value('celery'),'unavailable')
-        self.source('celery',sampled_ns=self.now-85*NS)
-        self.assertEqual(self.value('celery'),'stale')
-        self.rows['backend']['StartedNs']=self.now-2*NS
-        self.source('backend')
-        self.assertEqual(self.value('celery'),'unavailable')
-        self.source('celery')
-        self.rows['celery']['container_id']=GEN
-        self.source('celery')
-        self.assertEqual(self.value('celery'),'unavailable')
+    def test_legacy_multi_projector_cannot_publish_or_remove_exclusive_celery_output(self):
+        self.run_project()
+        dest = self.output/'celery'
+        self.assertFalse(dest.exists())
+        dest.write_text('synthetic receipt owned elsewhere')
+        self.run_project()
+        self.assertEqual(dest.read_text(), 'synthetic receipt owned elsewhere')
+        self.assertEqual(self.read('celery'), {'celery':'unavailable'})
 
-    def test_partial_or_malformed_same_broadcast(self):
-        for changes, expected in [
-                (dict(count=1),'unavailable'),(dict(dvr_present=False),'unavailable'),
-                (dict(event='fail'),'readiness-failed'),(dict(reply_output_valid=False),'unavailable'),
-                (dict(reply_output_valid=True,returncode=69),'unavailable'),
-                (dict(returncode=False),'unavailable')]:
-            self.rows['celery'].update(changes)
-            self.source('celery')
-            self.assertEqual(self.value('celery'),expected)
+    def test_legacy_value_helper_still_rejects_partial_malformed_or_mismatched_data(self):
+        from dispatcharr_project import celery
+        row = self.rows['celery']
+        for changes in (dict(count=1), dict(reply_output_valid=False), dict(returncode=69),
+                        dict(container_id=GEN), dict(returncode=False)):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                celery(self.s, row | changes, (self.s,self.rows['backend']))
+        partial = dict(count=1,dvr_present=False,event='fail')
+        self.assertEqual(celery(self.s,row | partial,(self.s,self.rows['backend'])),
+                         (self.s,'readiness-failed'))
 
     def test_guard_requires_live_enrolled_rules_and_namespace(self):
         original = self.rows['protection'].copy()

@@ -1,5 +1,5 @@
 """Staging-only Celery readiness acquisition core; no production launcher."""
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 import fcntl
 import json
@@ -7,12 +7,14 @@ import os
 from pathlib import Path
 import re
 import selectors
+import secrets
 import signal
 import stat
 import subprocess
 import time
 import uuid
 
+from celery_handoff import ANCHOR, COMMIT, LEASE, current, eligible, lease_write, signature, vacuum
 from dispatcharr_project import celery, container, directory, publish
 from ops_protocol import NS, PROJECTIONS, check
 
@@ -129,68 +131,120 @@ def identity(witness, names, observed_ns, boot):
     return tuple(witness.backend[k] for k in ('Id', 'Pid', 'StartedNs')), workers, probe_ns
 
 
-def acquire(output, owner, boot, names, inspect, ping, *,
-            now=time.time_ns, monotonic=time.monotonic_ns):
-    """Staging entry point. Inspect callbacks are trusted, bounded, passive adapters.
-
-    Publish only the existing sanitized projection. Keep its source contract,
-    using the oldest actual observation time from the bracket and backend health.
-    Never run beside another writer of the celery projection. Setup failures
-    return unavailable without mutating state we cannot prove we own.
-    """
+def atomic_control(fd, name, body=b''):
+    temp = '.celery-' + secrets.token_hex(16)
+    handle = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                     0o600, dir_fd=fd)
     try:
-        return acquire_locked(output, owner, boot, names, inspect, ping, now, monotonic)
-    except (OSError, ValueError):
-        return 'unavailable'
+        with os.fdopen(handle, 'wb') as stream:
+            stream.write(body)
+            stream.flush()
+            os.fchmod(stream.fileno(), 0o640)
+        os.replace(temp, name, src_dir_fd=fd, dst_dir_fd=fd)
+    finally:
+        vacuum(fd, temp)
 
 
-def eligible_lock(st, owner):
-    return (stat.S_ISREG(st.st_mode) and st.st_uid == owner and
-            stat.S_IMODE(st.st_mode) == 0o600 and st.st_nlink == 1)
+@contextmanager
+def leased_acquisition(output, owner, boot, names, inspect, ping, *,
+                       now=time.time_ns, monotonic=time.monotonic_ns):
+    """Offer a committed result only while this particular publisher lease lives.
 
+    No production provisioning/entry point. Trusted adapters must be bounded
+    by the reviewed launcher; the reader never invokes them.
+    """
+    from celery_handoff import open_control
+    from contextlib import ExitStack
 
-def acquire_locked(output, owner, boot, names, inspect, ping, now, monotonic):
-    with directory(output, owner, private=True) as fd:
-        lock = os.open('.celery-acquisition.lock', os.O_RDWR | os.O_CREAT |
-                       os.O_NOFOLLOW | os.O_NONBLOCK, 0o600, dir_fd=fd)
+    with ExitStack() as resources:
+        status = 'unavailable'
         try:
-            check(eligible_lock(os.fstat(lock), owner))
+            fd = resources.enter_context(directory(output, owner))
+            info = os.fstat(fd)
+            check(stat.S_IMODE(info.st_mode) in (0o700, 0o750, 0o2750))
+            group = info.st_gid
+            anchor = os.open(ANCHOR, os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK,
+                             dir_fd=fd)
+            resources.callback(os.close, anchor)
+            anchor_sig = eligible(os.fstat(anchor), owner, group)
+            check(anchor_sig == current(fd, ANCHOR, owner, group))
             try:
-                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.flock(anchor, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
-                return 'busy'
-            opened = os.fstat(lock)
-            named = os.stat('.celery-acquisition.lock', dir_fd=fd, follow_symlinks=False)
-            check(eligible_lock(opened, owner) and eligible_lock(named, owner) and
-                  os.path.samestat(opened, named))
-            remove_projection(fd)
-            try:
-                names = destinations(names)
-                check(str(uuid.UUID(boot)) == boot)
-                t0, m0 = now(), monotonic()
-                before = inspect()
-                t1 = now()
-                bid, workerids, health0 = identity(before, names, t1, boot)
-                default, dvr = pongs(ping(names), names)
-                after = inspect()
-                t2, m2 = now(), monotonic()
-                aid, workers_after, health1 = identity(after, names, t2, boot)
-                check(bid == aid and workerids == workers_after and bid[2] <= t0 <= t1 <= t2)
-                elapsed = m2 - m0
-                check(0 <= elapsed <= (DEADLINE_SECONDS + 2) * NS and
-                      abs(t2 - t0 - elapsed) <= MAX_CLOCK_SKEW_NS)
-                sample = min(t0, health0, health1)
-                check(0 < sample <= t2 < sample + TTL_NS)
-                row = dict(container_id=bid[0], event='pass' if default and dvr else 'fail',
-                           returncode=0, count=int(default)+int(dvr), output_complete=True,
-                           reply_output_valid=True, default_present=default, dvr_present=dvr)
-                # Reuse the installed projector's pure Celery validation before publication.
-                _, value = celery(t0, row, (t2, after.backend))
-                publish(fd, 'celery', (sample, value, None))
-                return value
-            except (OSError, ValueError, KeyError, TypeError, OverflowError, RecursionError,
-                    subprocess.SubprocessError):
-                remove_projection(fd)
-                return 'unavailable'
-        finally:
-            os.close(lock)
+                status = 'busy'
+            else:
+                check(anchor_sig == current(fd, ANCHOR, owner, group))
+                # Preserve an already committed publisher if its lease is live.
+                # Only the anchored writer may create a new generation.
+                from celery_handoff import writer_alive
+                try:
+                    with open_control(fd, LEASE, owner, group) as previous:
+                        busy = writer_alive(previous)
+                except (OSError, ValueError):
+                    busy = False
+                if busy:
+                    status = 'busy'
+                else:
+                    # Invalidate first, then create a fresh lease inode. Never
+                    # reacquire the old inode, so a dead writer cannot be revived.
+                    vacuum(fd, COMMIT)
+                    remove_projection(fd)
+                    atomic_control(fd, LEASE)
+                    lease = os.open(LEASE, os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK,
+                                    dir_fd=fd)
+                    resources.callback(os.close, lease)
+                    lease_sig = eligible(os.fstat(lease), owner, group)
+                    check(lease_sig == current(fd, LEASE, owner, group))
+                    lease_write(lease)
+                    status = acquire_value(fd, boot, names, inspect, ping, now, monotonic)
+                    if status != 'unavailable':
+                        check(anchor_sig == current(fd, ANCHOR, owner, group) and
+                              lease_sig == current(fd, LEASE, owner, group))
+                        receipt_sig = current(fd, 'celery', owner, group)
+                        # Reserve the final name under EX. Writing the gate in
+                        # this inode does not update the evidence directory's
+                        # ctime; it can be bound and checked by every reader.
+                        atomic_control(fd, COMMIT)
+                        folder = signature(os.fstat(fd))
+                        control = os.open(COMMIT, os.O_WRONLY | os.O_NOFOLLOW |
+                                          os.O_NONBLOCK, dir_fd=fd)
+                        try:
+                            check(eligible(os.fstat(control), owner, group) ==
+                                  current(fd, COMMIT, owner, group))
+                            data = json.dumps([folder, anchor_sig, lease_sig, receipt_sig]).encode()
+                            check(os.write(control, data) == len(data))
+                        finally:
+                            os.close(control)
+                # The reader can now take a shared lock, but it must also see
+                # this exact lease still locked by this publisher.
+                fcntl.flock(anchor, fcntl.LOCK_UN)
+        except (OSError, ValueError, KeyError, TypeError, OverflowError, RecursionError,
+                subprocess.SubprocessError):
+            status = 'unavailable'
+            resources.close()
+        yield status
+
+
+def acquire_value(fd, boot, names, inspect, ping, now, monotonic):
+    names = destinations(names)
+    check(str(uuid.UUID(boot)) == boot)
+    t0, m0 = now(), monotonic()
+    before = inspect()
+    t1 = now()
+    bid, workerids, health0 = identity(before, names, t1, boot)
+    default, dvr = pongs(ping(names), names)
+    after = inspect()
+    t2, m2 = now(), monotonic()
+    aid, workers_after, health1 = identity(after, names, t2, boot)
+    check(bid == aid and workerids == workers_after and bid[2] <= t0 <= t1 <= t2)
+    elapsed = m2 - m0
+    check(0 <= elapsed <= (DEADLINE_SECONDS + 2) * NS and
+          abs(t2 - t0 - elapsed) <= MAX_CLOCK_SKEW_NS)
+    sample = min(t0, health0, health1)
+    check(0 < sample <= t2 < sample + TTL_NS)
+    row = dict(container_id=bid[0], event='pass' if default and dvr else 'fail',
+               returncode=0, count=int(default)+int(dvr), output_complete=True,
+               reply_output_valid=True, default_present=default, dvr_present=dvr)
+    _, value = celery(t0, row, (t2, after.backend))
+    publish(fd, 'celery', (sample, value, None))
+    return value

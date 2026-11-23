@@ -8,7 +8,8 @@ import tempfile
 import time
 import unittest
 
-from celery_readiness import Witness, acquire, argv, capture
+from celery_handoff import ANCHOR, DROP
+from celery_readiness import Witness, leased_acquisition, argv, capture
 from dispatcharr_project import NS
 from ops_collector import collect
 
@@ -46,8 +47,12 @@ class LiveReadiness(unittest.TestCase):
         boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
         with ExitStack() as resources:
             root = Path(resources.enter_context(tempfile.TemporaryDirectory(prefix='scstage-')))
-            out = root / 'observations'
+            reader = root / 'observations'
+            out = reader / DROP
+            reader.mkdir(mode=0o700)
             out.mkdir(mode=0o700)
+            (out/ANCHOR).touch()
+            (out/ANCHOR).chmod(0o640)
             sock = root / 'fixture.sock'
             (root/'celery_fixture.py').write_text(APP)
             env = dict(PATH='/usr/bin:/bin', HOME=str(root), PYTHONDONTWRITEBYTECODE='1',
@@ -104,15 +109,18 @@ class LiveReadiness(unittest.TestCase):
 
             begin = time.monotonic()
             args = (out, os.getuid(), boot, names, inspect, ping)
-            self.assertEqual(acquire(*args), 'both-ready')
-            good = time.monotonic()-begin
             request = '{"observations":["celery"]}'
-            self.assertEqual(collect(request,out,os.getuid()), {'celery':'both-ready'})
+            with leased_acquisition(*args) as status:
+                self.assertEqual(status, 'both-ready')
+                good = time.monotonic()-begin
+                self.assertEqual(collect(request,reader,os.getuid()), {'celery':'both-ready'})
+            self.assertEqual(collect(request,reader,os.getuid()), {'celery':'unavailable'})
             stop(broker)
             begin = time.monotonic()
-            self.assertEqual(acquire(*args), 'unavailable')
+            with leased_acquisition(*args) as status:
+                self.assertEqual(status, 'unavailable')
             fail = time.monotonic()-begin
-            self.assertEqual(collect(request,out,os.getuid()), {'celery':'unavailable'})
+            self.assertEqual(collect(request,reader,os.getuid()), {'celery':'unavailable'})
             self.assertFalse((out/'celery').exists())
             print(f'celery_stage_ok_wall_seconds={good:.3f} broker_offline_wall_seconds={fail:.3f}')
 
