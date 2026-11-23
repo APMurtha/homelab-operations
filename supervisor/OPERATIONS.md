@@ -16,19 +16,7 @@ Provision a root-owned, non-group/world-writable /run/samwise-observations direc
 
 ## Observation inputs and interpretation
 
-Each filename is the observation ID. Inputs larger than 64 KiB, special files and symlinks are refused. Files older than 300 seconds or dated in the future yield `stale`. Refresh projections atomically from fresh source evidence; never touch an old receipt to make it appear current.
-
-| IDs | Local input | Published result |
-| --- | --- | --- |
-| backend, gateway, relay, vpn-container, jellyfin | Fixed container's health/status projection | running, stopped or unhealthy |
-| guard, vpn | Local verifier's protection or tunnel assertion | verified, withdrawn or failed |
-| celery | Projection of the latest structured readiness record: boolean output_complete, reply_output_valid, default_present, dvr_present | both-ready only if all four are true; otherwise readiness-failed |
-| logs | Bounded sample of Dispatcharr severity labels, one per line | warning-or-error or no-warning-in-sample |
-| playlist | Local M3U metadata, including EXTINF lines; omit URL lines when exporting | present or absent for dw-english-permanent |
-| jellyfin-channel | Complete inventory projection with TotalRecordCount and Items containing only Number and Name | DW English number 9001 present or absent |
-| jellyfin-guide | TotalRecordCount from a current-time program query scoped to that same channel | current or empty |
-
-Absence of a fresh valid source is a reportable observation, never a positive readiness assertion. Logs describe only the sampled interval. Celery describes a past validated probe; no live ping is sent. Guide and inventory describe a previously captured query. No viewer/session/recording data belongs in these projections.
+Each filename is the observation ID. Relay, playlist and severity logs retain their existing 300-second freshness contract. The nine Dispatcharr projections carry a source-specific validity interval. Missing, invalid and expired evidence cannot establish health. See the [source contracts, inventory and controlled rollout](DISPATCHARR_EVIDENCE.md).
 
 ## Approval and separate live gate
 
