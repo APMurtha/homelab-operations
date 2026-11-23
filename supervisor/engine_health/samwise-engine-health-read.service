@@ -29,6 +29,7 @@ LockPersonality=yes
 MemoryDenyWriteExecute=yes
 InaccessiblePaths=/run/docker.sock
 SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
 SystemCallFilter=~@mount @privileged @debug socket socketpair connect bind listen accept accept4 sendmsg recvmsg sendmmsg recvmmsg io_uring_setup io_uring_enter io_uring_register
 LimitCORE=0
 TimeoutStartSec=5

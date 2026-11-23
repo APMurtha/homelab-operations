@@ -27,6 +27,7 @@ MemoryDenyWriteExecute=yes
 InaccessiblePaths=/run/docker.sock
 ReadWritePaths=/run/samwise-observations
 SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
 SystemCallFilter=~@network-io @mount @debug io_uring_setup io_uring_enter io_uring_register
 UMask=0027
 LimitCORE=0

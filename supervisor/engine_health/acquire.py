@@ -96,10 +96,20 @@ def capture(stream, began, clock=time.time_ns):
                 rows[name] = None
         rounds.append(rows)
     check(stream.read(1) == b'')
+    # A single engine cannot assign one ID (or live host PID) to two names.
+    ambiguous = set()
+    for rows in rounds:
+        for key in ('Id', 'Pid'):
+            seen = {}
+            for name, entry in rows.items():
+                if entry and entry[1][key]:
+                    previous = seen.setdefault(entry[1][key], name)
+                    if previous != name:
+                        ambiguous.update((previous, name))
     records = {}
     for name in CONTAINERS:
         first, second = (r[name] for r in rounds)
-        if not first or not second:
+        if name in ambiguous or not first or not second:
             continue
         a, b = first[1], second[1]
         keys = ('Id','Name','StartedNs','Running','Pid','Status','Health','HealthExitCode')
