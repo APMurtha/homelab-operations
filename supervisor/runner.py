@@ -191,6 +191,8 @@ class Runner:
             raise Unavailable('runner')
         if res.returncode == 0 and res.stdout == b'suite-passed':
             return 'passed'
+        if res.returncode == 1 and res.stdout == b'discovery-error':
+            return 'offline-test-failure discovery-error'
         if res.returncode == 1 and len(res.stdout) < 160:
             detail = res.stdout.decode('ascii', errors='replace')
             match = re.fullmatch(r'(engineering/[a-z0-9_/]+\.py)@([1-9][0-9]{0,5})', detail)

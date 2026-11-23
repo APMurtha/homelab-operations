@@ -67,8 +67,12 @@ def test(files):
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(data)
     os.chdir(root / 'engineering')
-    sys.path.insert(0, os.getcwd())
-    suite = unittest.defaultTestLoader.discover('.')
+    # Allow both flat module imports and imports qualified by the repository path.
+    sys.path[:0] = [os.getcwd(), str(root)]
+    loader = unittest.TestLoader()
+    suite = loader.discover('.')
+    if loader.errors:
+        return 1, b'discovery-error'
     if not suite.countTestCases():
         return 1, b''
     locations = []

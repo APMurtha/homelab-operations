@@ -62,6 +62,33 @@ class Isolated(unittest.TestCase):
             self.assertFalse(list(directory.glob('relay-*')))
             self.assertEqual(subprocess.check_output(['podman', 'ps', '-aq', '--filter', 'label=' + runner.label]), b'')
 
+    def test_flat_and_repository_imports(self):
+        files = {
+            'engineering/helper.py': 'def value(): return 42',
+            'engineering/test_helper.py': (
+                'import unittest\nfrom helper import value\nfrom engineering import helper\n'
+                'class Imports(unittest.TestCase):\n'
+                ' def test_both(self): self.assertEqual((value(), helper.value()), (42, 42))\n'
+            ),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(Runner(Path(tmp)).test(9, files), 'passed')
+
+    def test_discovery_failure_feedback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = Runner(Path(tmp))
+            for source in ('from engineering import missing_module',
+                           'raise RuntimeError("private diagnostic text")',
+                           'def invalid syntax'):
+                with self.subTest(source=source):
+                    self.assertEqual(runner.test(9, {TEST: source}), 'offline-test-failure discovery-error')
+
+    def test_assertion_failure_keeps_approved_location(self):
+        source = ('import unittest\nclass Regression(unittest.TestCase):\n'
+                  ' def test_value(self): self.fail("private assertion text")\n')
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(Runner(Path(tmp)).test(9, {TEST: source}), f'offline-test-failure {TEST}@3')
+
     def test_host_secrets_and_network_unavailable(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp)
