@@ -137,7 +137,7 @@ def report(n, t):
             f'Collected at Unix time {t["observed"]}. Approval body SHA-256: {t["proof"][0]}.')
 
 
-def advance(n, api, store, observe=collect):
+def advance(n, api, store, observe=collect, *, claim=None, issue=None):
     t = store.get(n)
     if t and t['phase'] in ('published', 'escalated', 'cancelled'):
         return
@@ -156,10 +156,16 @@ def advance(n, api, store, observe=collect):
     try:
         d, proof = authorized()
         if t is None:
-            t = dict(spec=d, proof=proof, attempt=0, outages=0)
-            save('collect', 'claimed')
+            initial = dict(spec=d, proof=proof, attempt=0, outages=0, phase='collect', last='claimed')
+            if claim is not None and not claim(n, initial):
+                return
+            t = initial
+            if claim is None:
+                save('collect', 'claimed')
         if t['phase'] == 'collect':
             require(t['attempt'] < d['attempts'], 'attempt-budget')
+            if claim is not None:
+                authorized()
             t['attempt'] += 1
             save('collect', 'read-started')
             raw = observe(d)
@@ -172,13 +178,16 @@ def advance(n, api, store, observe=collect):
             require(t['observed'] < d['expires'], 'expiry')
             save('report', 'validated-observations')
 
-        body = report(n, t)
+        destination = n if issue is None else issue
+        body = report(destination, t)
+        if issue is not None:
+            body += f' Submission comment {n}.'
         authorized()
         found = api.reports(n, body)
         if not found and t['phase'] == 'report':
             authorized()
             save('posting', 'report-intent')
-            api.get(f'issues/{n}/comments', 'POST', {'body': body})
+            api.get(f'issues/{destination}/comments', 'POST', {'body': body})
             found = api.reports(n, body)
         if not found:
             raise Unavailable('report-uncertain')

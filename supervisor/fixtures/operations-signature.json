@@ -1,0 +1,37 @@
+{
+  "policy": {
+    "issue": 8,
+    "issue_id": 6567000001,
+    "label_id": 121,
+    "event": 37050000000,
+    "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINdamAGCsQq31Uv+08lkBzoO4XLz2qYjJa8CGmj3B1Ea"
+  },
+  "grant": {
+    "protocol": "samwise-operations-single-v1",
+    "repository": "APMurtha/homelab-operations",
+    "repository_id": 1126036330,
+    "owner_id": 57697374,
+    "issue": 8,
+    "issue_id": 6567000001,
+    "label_id": 121,
+    "label_event": 37050000000,
+    "issued": 1800000000,
+    "nonce": "1212121212121212121212121212121212121212121212121212121212121212",
+    "digest": "13099653f2348a458f2814177455c15a0a099296e9da39396bde541968a6c8b3",
+    "task": {
+      "version": "operations-v1",
+      "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "host_key": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "target": "rivendell-dispatcharr",
+      "observations": [
+        "relay",
+        "backend"
+      ],
+      "seconds": 3,
+      "bytes": 256,
+      "attempts": 1,
+      "expires": 1800000300
+    }
+  },
+  "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAg11qYAYKxCrfVS/7TyWQHOg7hcv\nPapiMlrwIaaPcHURoAAAAcc2Ftd2lzZS1vcGVyYXRpb25zLXNpbmdsZS12MQAAAAAAAAAG\nc2hhNTEyAAAAUwAAAAtzc2gtZWQyNTUxOQAAAEAwHIER7skHn1mYlq32/DayS/vDAaVyaQ\npBnBOC15AWeFg3xL37jGoTbwVOjNE60J73nb4+8fxsJszzf0EIWIcP\n-----END SSH SIGNATURE-----\n"
+}
