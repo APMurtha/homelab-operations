@@ -12,6 +12,7 @@ if __name__ == '__main__':
     # The sshd ForceCommand uses Python isolated mode and this administrator-owned directory.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from celery_handoff import guarded_observe, signature
 from ops_protocol import PROJECTIONS, STATES, TAG, check, decode, observations, projected_value
 
 EVIDENCE = Path('/run/samwise-observations')
@@ -86,10 +87,19 @@ def collect(raw, directory=EVIDENCE, owner=0):
         return result
     try:
         info = os.fstat(fd)
-        check(info.st_uid == owner and not info.st_mode & 0o022)
+        if info.st_uid != owner or info.st_mode & 0o022:
+            return result
         for n in names:
             try:
-                result[n] = observe(fd, n, owner)
+                if n == 'celery':
+                    actor = signature(os.fstat(fd))[:5]
+                    check(actor == signature(os.stat(directory, follow_symlinks=False))[:5])
+                    value = guarded_observe(fd, owner, lambda child: observe(child, n, owner))
+                    check(actor == signature(os.fstat(fd))[:5] ==
+                          signature(os.stat(directory, follow_symlinks=False))[:5])
+                    result[n] = value
+                else:
+                    result[n] = observe(fd, n, owner)
             except (OSError, ValueError, TypeError, KeyError):
                 pass
     finally:

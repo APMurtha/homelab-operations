@@ -1,0 +1,16 @@
+--- installed/samwise-observe-v1
++++ candidate/samwise-observe-v1
+@@ -11,8 +11,11 @@
+   /dev/null r,
+   /dev/urandom r,
+   /opt/samwise-observe/ r,
+-  /opt/samwise-observe/{ops_protocol,ops_collector,launch}.py r,
++  /opt/samwise-observe/{ops_protocol,ops_collector,launch,celery_handoff}.py r,
+   /run/samwise-observations/ r,
+-  /run/samwise-observations/{backend,gateway,relay,vpn-container,jellyfin,guard,vpn,celery,logs,playlist,jellyfin-channel,jellyfin-guide} r,
++  /run/samwise-observations/{backend,gateway,relay,vpn-container,jellyfin,guard,vpn,logs,playlist,jellyfin-channel,jellyfin-guide} r,
++  /run/samwise-observations/celery-v1/ r,
++  /run/samwise-observations/celery-v1/{.celery-acquisition.lock,.celery-publisher.lease} rk,
++  /run/samwise-observations/celery-v1/{.celery-publication.json,celery} r,
+   deny network,
+ }

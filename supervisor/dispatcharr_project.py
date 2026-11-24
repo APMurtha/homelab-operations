@@ -246,11 +246,11 @@ def project(source_dir, output_dir, policy_dir, owner, boot, now):
             policy, _ = read_json(fd, 'enrollment.json', owner)
     with directory(output_dir, owner) as fd:
         for name in PROJECTIONS:
+            if name == 'celery':
+                continue  # Exclusive leased publisher; never write or unlink it here.
             try:
                 if name in CONTAINERS:
                     result = (*container(name, *samples[name]), None)
-                elif name == 'celery':
-                    result = (*celery(*samples[name], samples['backend']), None)
                 elif name in ('guard', 'vpn'):
                     result = (*protection(name, *samples['protection'], samples['vpn-container'], policy), None)
                 else:
