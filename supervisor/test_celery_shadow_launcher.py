@@ -58,6 +58,69 @@ class ShadowLauncher(unittest.TestCase):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
                 self.parse(**changes)
 
+    def test_attestor_and_broker_never_share_target_net_privileges_or_lease(self):
+        p = self.parse()
+        attestor = shadow.unit_command(p,'e'*64,123,attestor=True)
+        self.assertIn('-pPrivateNetwork=yes', attestor)
+        self.assertIn('-pCapabilityBoundingSet=CAP_SYS_PTRACE', attestor)
+        self.assertIn('-pRestrictAddressFamilies=AF_UNIX', attestor)
+        self.assertIn('-pIPAddressDeny=any', attestor)
+        self.assertFalse(any('NetworkNamespacePath=' in arg or 'IPAddressAllow=' in arg
+                             for arg in attestor))
+        broker = shadow.broker_command(p, tuple(PAIR), 'f'*64, 2*NS, NS)
+        self.assertIn('-pCapabilityBoundingSet=', broker)
+        self.assertIn('-pRestrictAddressFamilies=AF_INET', broker)
+        self.assertIn('-pNetworkNamespacePath=/proc/202/ns/net', broker)
+        self.assertIn('-pIPAddressAllow=127.0.0.1/32', broker)
+        self.assertIn('-pRuntimeMaxSec=1000000us', broker)
+        self.assertFalse(any('ReadWritePaths=' in arg or 'CAP_SYS_PTRACE' in arg for arg in broker))
+        blocked = next(arg for arg in broker if 'InaccessiblePaths=' in arg)
+        self.assertIn(str(shadow.DROP), blocked)
+        self.assertIn(str(shadow.STATE), blocked)
+        self.assertIn('/run/systemd', blocked)
+        self.assertEqual(broker[-2:], ['--challenge='+'f'*64,'--deadline-ns='+str(2*NS)])
+        for invalid in ((tuple(reversed(PAIR)), 'f'*64, 2*NS),
+                        (tuple(PAIR), 'not-a-nonce', 2*NS),
+                        (tuple(PAIR), 'f'*64, NS),
+                        (tuple(PAIR), 'f'*64, 14*NS)):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                shadow.broker_command(p, *invalid, now_ns=NS)
+
+    def test_stage_permit_cannot_cross_hosts_and_requires_pinned_signed_origin(self):
+        witness = b'{}'
+        unsigned = json.dumps({'version':'celery-site-pidbox-v1'}).encode()
+        signed = json.dumps({'version':shadow.SIGNED_ORIGIN}).encode()
+        stage = self.p | {'host':shadow.STAGE_HOST, 'version':shadow.STAGE_PERMIT,
+                          'target':shadow.STAGE_TARGET,
+                          'witness_enrollment_sha256':hashlib.sha256(witness).hexdigest(),
+                          'pidbox_enrollment_sha256':hashlib.sha256(signed).hexdigest()}
+        raw = json.dumps(stage).encode()
+        self.assertEqual(shadow.permit(raw, BOOT, self.now, node=shadow.STAGE_HOST), stage)
+        for attempt, node in ((raw, shadow.HOST), (json.dumps(self.p).encode(), shadow.STAGE_HOST),
+                              (raw, 'other'),
+                              (json.dumps(stage | {'version':shadow.PRODUCTION_PERMIT}).encode(),
+                               shadow.STAGE_HOST)):
+            with self.subTest(node=node), self.assertRaises(ValueError):
+                shadow.permit(attempt, BOOT, self.now, node=node)
+        stage_unit = shadow.unit_command(stage, 'e'*64, 123, attestor=True)
+        self.assertEqual([v for v in stage_unit if 'BindReadOnlyPaths=' in v],
+                         [f'-pBindReadOnlyPaths={shadow.STAGE_PASSWD}:/etc/passwd '
+                          f'{shadow.STAGE_GROUP}:/etc/group'])
+        self.assertFalse(any('BindReadOnlyPaths=' in v for v in
+                             shadow.unit_command(self.p, 'e'*64, 123, attestor=True)))
+        with self.assertRaises(ValueError):
+            shadow.unit_command(stage, 'e'*64, 123)
+        for blob in (unsigned, signed):
+            # Independently pin each exact input so the unsigned case verifies
+            # enforcement of the profile, not merely hash comparison.
+            p = stage | {'pidbox_enrollment_sha256':hashlib.sha256(blob).hexdigest()}
+            with patch.object(shadow, 'trusted_bytes', side_effect=[witness, blob]):
+                if blob == signed:
+                    self.assertEqual(shadow.checked_enrollment(p, 0)['version'], shadow.SIGNED_ORIGIN)
+                else:
+                    with self.assertRaises(ValueError):
+                        shadow.checked_enrollment(p, 0)
+
     def test_permit_exclusive_no_retry_even_when_not_used(self):
         with tempfile.TemporaryDirectory() as temp:
             p = Path(temp)
@@ -83,6 +146,7 @@ class ShadowLauncher(unittest.TestCase):
                  patch.object(shadow.time,'time_ns',return_value=now), \
                  patch.object(shadow.time,'monotonic_ns',return_value=123), \
                  patch.object(shadow,'preflight_observer'), \
+                 patch.object(shadow,'checked_enrollment',return_value={}), \
                  patch.object(shadow.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as execute:
                 if mode == 'expired':
                     with self.assertRaises(ValueError):
@@ -131,6 +195,7 @@ class ShadowLauncher(unittest.TestCase):
              patch.object(shadow.time,'time_ns',return_value=self.now), \
              patch.object(shadow.time,'monotonic_ns',side_effect=[NS,NS+NS//4]), \
              patch.object(shadow,'preflight_observer'), \
+                 patch.object(shadow,'checked_enrollment',return_value={}), \
              patch.object(shadow.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as run:
             self.assertEqual(shadow.entry('--launch'),'shadow-finished')
             self.assertEqual(run.call_args.kwargs['timeout'],17.75)

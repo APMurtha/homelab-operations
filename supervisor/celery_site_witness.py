@@ -97,10 +97,13 @@ def bounded(path, limit):
 
 
 def enrollment(obj, boot):
+    require(type(obj) is dict and obj.get('version') in
+            ('celery-site-witness-v1', 'celery-site-witness-signed-v2'))
+    signed = obj['version'] == 'celery-site-witness-signed-v2'
     p = keys(obj, 'version boot backend_id backend_pid backend_ticks backend_start_ns '
-             'net_inode pid_inode uts_inode mnt_inode worker_uid worker_executable hostname '
-             'scope')
-    require(p['version'] == 'celery-site-witness-v1' and p['boot'] == boot)
+             'net_inode pid_inode uts_inode mnt_inode worker_executable hostname scope '
+             + ('worker_uids' if signed else 'worker_uid'))
+    require(p['boot'] == boot)
     require(str(uuid.UUID(boot)) == boot)
     require(type(p['backend_id']) is str and HEX.fullmatch(p['backend_id']))
     require(type(p['hostname']) is str and NAME.fullmatch(p['hostname']))
@@ -108,8 +111,12 @@ def enrollment(obj, boot):
             and '..' not in Path(p['worker_executable']).parts)
     for k in ('backend_ticks', 'backend_start_ns', 'net_inode', 'pid_inode', 'mnt_inode', 'uts_inode'):
         integer(p[k])
-    for k in ('backend_pid', 'worker_uid'):
-        integer(p[k], 2**31-1)
+    integer(p['backend_pid'], 2**31-1)
+    if signed:
+        uids = keys(p['worker_uids'], 'default dvr')
+        require(len({integer(u, 2**31-1) for u in uids.values()}) == 2)
+    else:
+        integer(p['worker_uid'], 2**31-1)
     require(p['scope'] == SCOPE and type(p['scope']['database']) is int and
             type(p['scope']['fanout_patterns']) is bool)
     return p
@@ -128,7 +135,7 @@ def health(row, p, now):
     return b
 
 
-def process(proc, pid, p, cgroup, check_uid=False):
+def process(proc, pid, p, cgroup, role=None):
     directory = proc/str(integer(pid, 2**31-1))
     fields = bounded(directory/'stat', 4096).decode('ascii').rsplit(')', 1)[1].split()
     require(fields[0] not in ('Z','X','x'))
@@ -136,10 +143,11 @@ def process(proc, pid, p, cgroup, check_uid=False):
     for name in ('net', 'pid', 'mnt', 'uts'):
         # These are kernel nsfs magic links, never paths supplied by enrollment.
         require(os.stat(directory/'ns'/name).st_ino == p[name+'_inode'])
-    if check_uid:
+    if role is not None:
+        required_uid = p['worker_uids'][role] if 'worker_uids' in p else p['worker_uid']
         status = bounded(directory/'status', 16384)
         found = re.findall(rb'^Uid:\s+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)$',status,re.M)
-        require(len(found)==1 and all(int(v)==p['worker_uid'] for v in found[0]))
+        require(len(found)==1 and all(int(v)==required_uid for v in found[0]))
     return integer(int(fields[1]), 2**31-1), integer(int(fields[19]))
 
 
@@ -205,7 +213,7 @@ def gather(proc, cgroot, p):
             role=role_from_argv(exe, raw[:-1].split(b'\0'),p)
             if role is None:
                 continue
-            ppid,ticks=process(proc,pid,p,'/'+cg,check_uid=True)
+            ppid,ticks=process(proc,pid,p,'/'+cg,role=role)
         except FileNotFoundError:
             continue  # transient child cannot satisfy required two masters
         candidates[pid]=(role,ppid,ticks)
@@ -216,7 +224,7 @@ def gather(proc, cgroot, p):
             continue  # prefork child carries parent's same command line
         require(role+'@'+p['hostname'] not in result and ppid in members)
         require(os.readlink(proc/str(ppid)/'exe') in ('/usr/bin/dash','/bin/dash'))
-        process(proc,ppid,p,'/'+cg,check_uid=True)
+        process(proc,ppid,p,'/'+cg,role=role)
         require(sockets(proc/str(pid)))
         result[role+'@'+p['hostname']]=[pid,ticks]
     require(set(result)=={role+'@'+p['hostname'] for role in WORKERS})
@@ -224,7 +232,7 @@ def gather(proc, cgroot, p):
     for full,(pid,ticks) in result.items():
         path = proc/str(pid)
         role, ppid, _ = candidates[pid]
-        require(process(proc,pid,p,'/'+cg,check_uid=True)==(ppid,ticks))
+        require(process(proc,pid,p,'/'+cg,role=role)==(ppid,ticks))
         raw=bounded(path/'cmdline',8192)
         require(raw.endswith(b'\0') and role_from_argv(os.readlink(path/'exe'),
                     raw[:-1].split(b'\0'),p)==role and full==role+'@'+p['hostname'])

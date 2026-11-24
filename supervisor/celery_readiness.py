@@ -148,7 +148,7 @@ def atomic_control(fd, name, body=b''):
 
 @contextmanager
 def leased_acquisition(output, owner, boot, names, inspect, ping, *,
-                       now=time.time_ns, monotonic=time.monotonic_ns):
+                       now=time.time_ns, monotonic=time.monotonic_ns, deadline_ns=None):
     """Offer a committed result only while this particular publisher lease lives.
 
     No production provisioning/entry point. Trusted adapters must be bounded
@@ -197,11 +197,12 @@ def leased_acquisition(output, owner, boot, names, inspect, ping, *,
                     lease_sig = eligible(os.fstat(lease), owner, group)
                     check(lease_sig == current(fd, LEASE, owner, group))
                     lease_write(lease)
-                    status = acquire_value(fd, boot, names, inspect, ping, now, monotonic)
+                    status = acquire_value(fd, boot, names, inspect, ping, now, monotonic, deadline_ns)
                     if status != 'unavailable':
                         check(anchor_sig == current(fd, ANCHOR, owner, group) and
                               lease_sig == current(fd, LEASE, owner, group))
                         receipt_sig = current(fd, 'celery', owner, group)
+                        check(deadline_ns is None or monotonic() < deadline_ns)
                         # Reserve the final name under EX. Writing the gate in
                         # this inode does not update the evidence directory's
                         # ctime; it can be bound and checked by every reader.
@@ -214,6 +215,10 @@ def leased_acquisition(output, owner, boot, names, inspect, ping, *,
                                   current(fd, COMMIT, owner, group))
                             data = json.dumps([folder, anchor_sig, lease_sig, receipt_sig]).encode()
                             check(os.write(control, data) == len(data))
+                            if deadline_ns is not None and monotonic() >= deadline_ns:
+                                vacuum(fd, COMMIT)
+                                remove_projection(fd)
+                                check(False)
                         finally:
                             os.close(control)
                 # The reader can now take a shared lock, but it must also see
@@ -226,16 +231,20 @@ def leased_acquisition(output, owner, boot, names, inspect, ping, *,
         yield status
 
 
-def acquire_value(fd, boot, names, inspect, ping, now, monotonic):
+def acquire_value(fd, boot, names, inspect, ping, now, monotonic, deadline_ns=None):
     names = destinations(names)
     check(str(uuid.UUID(boot)) == boot)
     t0, m0 = now(), monotonic()
+    check(deadline_ns is None or m0 < deadline_ns)
     before = inspect()
     t1 = now()
     bid, workerids, health0 = identity(before, names, t1, boot)
+    check(deadline_ns is None or monotonic() < deadline_ns)
     default, dvr = pongs(ping(names), names)
+    check(deadline_ns is None or monotonic() < deadline_ns)
     after = inspect()
     t2, m2 = now(), monotonic()
+    check(deadline_ns is None or m2 < deadline_ns)
     aid, workers_after, health1 = identity(after, names, t2, boot)
     check(bid == aid and workerids == workers_after and bid[2] <= t0 <= t1 <= t2)
     elapsed = m2 - m0

@@ -305,6 +305,75 @@ verify cgroup empty, no socket/file residue and byte-for-byte original
 policy inventory. A discrepancy or existing-name conflict stops the test.
 Absence of an approved replica means report this gate as blocked, not passed.
 
+## Samwise-staging signed-origin prototype (not production-qualified)
+
+VM180 (`staging`) is the designated KVM guest. Its kernel reported
+7.0.0-43-generic, AppArmor, Landlock, BPF and cgroup v2; no NFS/CIFS/9p/virtiofs
+mounts were present. The VM has a management default route. Fixtures must
+have a separate network namespace with **no routes out**, no host/production
+mounts or credentials, and no physical link/bridge attachment. A synthetic
+second interface may model VPN namespace sharing without introducing a route.
+
+The same launcher now verifies a disjoint staging-only hostname, target and
+permit version along with a pinned signed-origin enrollment. Rivendell
+cannot consume the staging tuple. The stage launcher mounts root-owned
+synthetic user/group files read-only into the transient attestor mount
+namespace: GID 985 is already used by tss on VM180. Do not change or reuse
+that system account to get the test through.
+
+A failed VM180 stock-kernel control showed that the original no-capability
+unit could not resolve PID namespace and executable links for a different
+UID. The new candidate splits the interval into independent units:
+* A fixed lease publisher brackets the ping with kernel-backed host/guest
+  PID, start ticks, cgroup membership, broker socket and per-role UID
+  validation. It receives no AF_INET/AF_INET6 sockets and has its own
+  private network. Local AF_UNIX IPC to systemd starts the fixed helper.
+  `CAP_SYS_PTRACE` is required in this unit for cross-UID procfs metadata;
+  the debug syscall filter denies direct tracing. This remains privileged
+  host-side code and its trust boundary needs independent review.
+* The one-shot broker unit has **zero** capabilities (not even ptrace),
+  no lease/evidence/state or management socket paths, and only joins the
+  enrolled broker network namespace. The unit permits only loopback IPv4;
+  the immutable broker guard independently restricts allowed TCP port,
+  file reads, subprocess creation and socket types. Any failed entry guard,
+  deadline or proof is unavailable. The inner process cannot publish.
+* The exact two role names respond to the single capture with separate
+  signatures bound to one fresh nonce, fixed scope and the attested
+  incarnation; unsigned or wrong-role responses do not qualify. The
+  production worker-side signing and per-role identity deployment is not
+  installed or authorized. It requires review of key lifecycle, worker
+  isolation and compatibility with the existing service, then separate
+  production approval. Never apply it as part of prototype staging.
+
+Independent component evidence on VM180:
+* The pinned candidate AppArmor SHA above compiled on the VM with
+  `apparmor_parser -Q -T -K`; `samwise-observe-v1` was absent afterward.
+  This is **not** kernel enforcement or an AppArmor profile load.
+* The credentials-free rootless private-loopback Redis/Celery signed
+  fixture completed its positive capture in **8.199 s**. It rejected a
+  duplicate identity and a wrong key after restart; both attempts to read
+  the other synthetic role's process memory were denied. Fixture limits
+  were 512 MiB and 64 processes, with its root filesystem read-only
+  and a 32-MiB scratch volume. These are limits, not measured consumption.
+* The disposable transient service split retained only
+  `CAP_SYS_PTRACE` (effective mask 0x80000), reported `Seccomp: 2`, read
+  the synthetic cross-UID namespace metadata, and failed to create an IP
+  socket. A nested unit via the local manager reported zero effective
+  capabilities. This exercised the privilege split, not both complete
+  generated units or a single end-to-end leased receipt.
+
+For a complete next run, exercise both exact generated units and the
+reader in one correlated scenario. For the same permit and boot compare
+the host procfs view to both real guest NSpid values and starts before and
+after; verify signed live replies from both workers, observe one live
+lease and fail-closed behavior on expiry and contradictory identity, and
+record reader AppArmor mode, Seccomp filter, effective guard denials,
+both cgroup terminations, and peak CPU/memory. Use the exact profile only
+after concrete action-time confirmation. Remove stage-only mounts, files,
+profile and processes without changing the underlying identity database
+or restoring old positive evidence. Until this passes, this remains a
+prototype and is a no-go for Rivendell.
+
 ## Future one-shot acceptance budget, not executable with this revision
 
 This is a future validation outline, **not a production execution proposal

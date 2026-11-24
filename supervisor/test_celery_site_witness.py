@@ -93,6 +93,22 @@ class SiteWitness(unittest.TestCase):
         self.assertEqual(frame['backend'],self.row['backend'])
         self.assertNotIn('socket',json.dumps(frame))
 
+    def test_signed_witness_requires_distinct_exact_worker_uids(self):
+        default_uid = self.enrollment.pop('worker_uid')
+        dvr_uid = default_uid+1
+        self.enrollment.update(version='celery-site-witness-signed-v2',
+                               worker_uids={'default':default_uid,'dvr':dvr_uid})
+        # DVR launch shell and actual worker must both match the enrolled UID.
+        for pid in (13, 15):
+            status = self.proc/str(pid)/'status'
+            status.write_text('Uid:\t'+'\t'.join([str(dvr_uid)]*4)+'\n')
+        self.write(self.enroll,self.enrollment)
+        self.assertEqual(set(self.start()['workers']), {'default@fixture','dvr@fixture'})
+        self.enrollment['worker_uids']['dvr']=default_uid
+        self.write(self.enroll,self.enrollment)
+        with self.assertRaises(ValueError):
+            self.start()
+
     def test_rejects_second_master_and_wrong_worker_uid(self):
         self.make_process(17,12,'default')
         with self.procs.open('a') as out: out.write('17\n')

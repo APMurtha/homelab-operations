@@ -12,10 +12,14 @@ import re
 import socket
 import stat
 import sys
+import time
+from types import ModuleType
 
 INSTALL = Path('/opt/samwise-celery-shadow')
 ENROLLMENT = INSTALL / 'pidbox-enrollment.json'
 RUNTIME = INSTALL / 'pidbox-runtime.zip'
+SANDBOX = INSTALL / 'celery_broker_guard.py'
+SIGNED = 'celery-site-signed-origin-v2'
 PROC = Path('/proc')
 HOST = '127.0.0.1'
 PORT = 6379
@@ -67,10 +71,29 @@ def no_dupes(pairs):
 def enrollment(data):
     need(type(data) is bytes and 0 < len(data) <= 8192)
     p = json.loads(data.decode('utf-8','strict'),object_pairs_hook=no_dupes)
-    need(type(p) is dict and set(p) == set(('version','boot','net_inode','pid_inode',
-         'scope_sha256','topology','broker','workers','broker_sha256','runtime_sha256')))
-    need(p['version']=='celery-site-pidbox-v1' and p['topology']==PROOF and
+    need(type(p) is dict)
+    signed=p.get('version')==SIGNED
+    base=set(('version','boot','net_inode','pid_inode','scope_sha256','topology',
+              'broker','workers','broker_sha256','runtime_sha256'))
+    ext={'host_pid_inode','guest_init','guest_cgroup','public_keys','worker_uids',
+         'launcher_origin_sha256','launcher_topology_sha256','broker_guard_sha256'}
+    need(set(p)==base|(ext if signed else set()))
+    need((signed and p['topology']=='signed-worker-host-provenance-v2' or
+          p['version']=='celery-site-pidbox-v1' and p['topology']==PROOF) and
          p['scope_sha256']==digest(canonical(SCOPE)))
+    if signed:
+        need(type(p['host_pid_inode']) is int and p['host_pid_inode']>0 and
+             p['host_pid_inode']!=p['pid_inode'])
+        pid_pair(p['guest_init'])
+        need(type(p['guest_cgroup']) is str and
+             re.fullmatch(r'/system\.slice/docker-[a-f0-9]{64}\.scope',p['guest_cgroup']))
+        need(all(type(p[k]) is str and SHA.fullmatch(p[k])
+                 for k in ('launcher_origin_sha256','launcher_topology_sha256','broker_guard_sha256')))
+        ids=p['worker_uids']
+        keys=p['public_keys']
+        need(type(keys) is dict and type(ids) is dict and set(keys)==set(ids)==set(p['workers']))
+        need(all(type(i) is int and 0<i<=2**31-1 for i in ids.values()) and len(set(ids.values()))==2)
+        need(all(type(k) is str and SHA.fullmatch(k) for k in keys.values()) and len(set(keys.values()))==2)
     need(type(p['boot']) is str and re.fullmatch('[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}',p['boot']))
     need(type(p['net_inode']) is int and p['net_inode'] > 0 and
          type(p['pid_inode']) is int and p['pid_inode'] > 0 and
@@ -220,7 +243,8 @@ def replies(raw,names, validate):
     return result
 
 
-def capture(Celery,names,validate):
+def capture(Celery,names,validate, *, nonce=None):
+    need(nonce is None or type(nonce) is str and SHA.fullmatch(nonce))
     app = Celery('samwise_fixed_pidbox', broker=URL)
     app.conf.update(broker_url=URL,broker_read_url=URL,broker_write_url=URL,
         broker_connection_retry=False,broker_connection_retry_on_startup=False,
@@ -248,10 +272,13 @@ def capture(Celery,names,validate):
                  SCOPE['fanout_prefix']+SCOPE['exchange'])
             # Do not flatten upstream replies or stop at the expected count:
             # collect one extra frame so duplicate/foreign replies can refuse.
-            raw = app.control.broadcast('ping',arguments={},destination=names,
+            raw = app.control.broadcast('ping',arguments={} if nonce is None else
+                {'samwise_readiness_nonce':nonce},destination=names,
                 connection=connection,channel=channel,reply=True,timeout=8,limit=3)
     finally:
         app.close()
+    if nonce is not None:
+        return validate(raw)
     return replies(raw,names,validate)
 
 
@@ -259,10 +286,36 @@ def main(args):
     need(sys.flags.isolated and sys.flags.no_site and os.geteuid()==0 and Path(__file__)==INSTALL/'pidbox-ping')
     p = enrollment(trusted_bytes(ENROLLMENT,8192))
     names = enrolled_names(sorted(p['workers']))
-    need(args==['--destination='+','.join(names),'--timeout=8','--json'])
+    fixed=['--destination='+','.join(names),'--timeout=8','--json']
+    signed=p['version']==SIGNED
+    challenge=None
+    if signed:
+        need(len(args)==5 and args[:3]==fixed and args[3].startswith('--challenge=')
+             and args[4].startswith('--deadline-ns='))
+        challenge=args[3].removeprefix('--challenge=')
+        cutoff_text=args[4].removeprefix('--deadline-ns=')
+        need(SHA.fullmatch(challenge) and re.fullmatch('[1-9][0-9]{0,18}',cutoff_text))
+        cutoff=int(cutoff_text)
+        need(0 < cutoff-time.monotonic_ns() <= 12*10**9)
+    else:
+        need(args==fixed)
     need(digest(trusted_bytes(RUNTIME,MAX_RUNTIME,mode=0o644))==p['runtime_sha256'])
-    topology(PROC,p)
-    verify = lambda: topology(PROC,p,allow_self=True)
+    # New adapter never reads host /proc. The trusted publisher witnesses on
+    # both sides. Fail before importing broker code if native confinement
+    # (the required no-host-proc/no-extra-port path) can't be established.
+    if signed:
+        source=trusted_bytes(SANDBOX,128*1024,mode=0o644)
+        need(digest(source)==p['broker_guard_sha256'])
+        guard=ModuleType('celery_broker_guard')
+        guard.__file__=str(SANDBOX)
+        exec(compile(source,str(SANDBOX),'exec',dont_inherit=True),guard.__dict__)
+        need(guard.apply(RUNTIME) is True)
+        def verify(raw):
+            need(type(raw) is list and 0<len(raw)<=2)
+            return raw
+    else:
+        topology(PROC,p)
+        verify = lambda: topology(PROC,p,allow_self=True)
     sys.addaudithook(network_event)
     sys.path.insert(0,str(RUNTIME))
     # The reviewed archive must match the individually pinned site source.
@@ -271,7 +324,12 @@ def main(args):
     import redis
     need((celery.__version__,kombu.__version__,redis.__version__)==('5.6.3','5.6.2','6.4.0') and
          all(str(module.__file__).startswith(str(RUNTIME)+'/') for module in (celery,kombu,redis)))
-    print(json.dumps(capture(celery.Celery,names,verify),separators=(',',':')))
+    if signed:
+        need(cutoff-time.monotonic_ns() >= 8*10**9)
+    result=capture(celery.Celery,names,verify,nonce=challenge)
+    if signed:
+        need(time.monotonic_ns() < cutoff)
+    print(json.dumps(result,separators=(',',':')))
 
 
 if __name__=='__main__':
