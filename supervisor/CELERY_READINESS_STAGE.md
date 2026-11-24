@@ -173,9 +173,14 @@ ProtectSystem makes paths read-only, not unreadable, and allowing local Unix
 addresses or loopback does not prove a single port. Exact adapter confinement
 needs a file read allowlist that excludes credentials and Docker, and verified
 endpoint enforcement. These remain deployment blockers.
-Adapter binaries, their permit and an active integration are **not** enrolled
-or distributed by this draft. No shadow attempt may occur with missing or
-unqualified adapters.
+The staged site adapters are `celery_site_witness.py` and
+`celery_site_pidbox.py`; any future isolated installation must copy the
+approved source bytes at the fixed paths `witness` and `pidbox-ping`. Their
+executables, enrollment files and broker/dependency identity must match
+the reviewed values, and worker PID/start identity must match independently
+in both sides of the bracket. No production adapter, permit or publisher
+has been enrolled or installed. Never accept a claimed configuration hash
+as evidence of a running, qualified topology.
 
 Passive follow-up corroborated that the two actual worker masters do not
 inherit the Docker-creation CELERY_BROKER_URL as a direct override. Their
@@ -211,6 +216,84 @@ sockets, broker/Docker data, credentials and all unrelated reads remain
 denied. No production login, network request, key or permissions expansion
 is needed. Keep the installed Rivendell baseline independent, unchanged,
 and preserve the working relay and four-container paths.
+
+## Site adapter qualification and exact boundary
+
+- The passive witness accepts no argv or service requests. It reads only
+  trusted root-owned fixed inputs and bounded local kernel witnesses: boot,
+  backend ID/PID/start and cgroup, worker master UID/argv/role/start,
+  PID/mount/UTS/network membership, recent stored engine health and each
+  worker's already-established loopback socket. It rejects ambiguous
+  process trees, wrong queue/role, PID reuse, replacement, permission drift,
+  health staleness and socket ownership errors; only the closed witness
+  shape reaches the launcher. A synthetic trusted health file fixture is not
+  a deployed producer. Empty capability boundaries may deny cross-UID
+  proc FD access on Rivendell; no capabilities were added or requested.
+- The captured broker adapter is fixed to TCP 127.0.0.1:6379 and Redis
+  database 0, `celery.pidbox` fanout (`/0.` prefix with fanout patterns),
+  `reply.celery.pidbox` reply exchange, empty global prefix, JSON only.
+  The observed effective Kombu values are checked rather than inferring
+  pub/sub isolation from the selected Redis DB. The helper pins the Redis
+  executable bytes and PID/start plus boot/PID/net namespaces, verifies
+  its exact listener and both worker-owned kernel connections, and refuses
+  a foreign connection or non-loopback interface. It runs with isolated
+  Python/no ambient site discovery and a SHA-pinned local dependency
+  archive, an exact permitted endpoint audit policy, no arbitrary commands,
+  no credential input and no raw receipt persistence. Application-layer
+  hook is not independent kernel egress mediation: qualifying real-site
+  one-port/file confinement remains mandatory before any approved use.
+- One explicit two-name `ping` destination list, no task invocation/network
+  fallback. The fixed path retains raw reply frames only in bounded process
+  memory and collects a third frame rather than flattening by worker name
+  at the first two. Duplicate, foreign or malformed replies fail closed;
+  one positively validated enrolled reply is still not both-ready. A
+  before/after socket snapshot cannot detect every possible transient
+  foreign process between snapshots; use independently controlled
+  exclusive topology and reject any ambiguous origin. No live shared
+  Rivendell VPN namespace is considered equivalent to this isolated fixture.
+- Real positive check used pinned existing Celery/Kombu/redis-py sources,
+  disposable Redis and two workers on actual TCP 127.0.0.1:6379 in private
+  PID/network namespaces, not the production site. It also exercised the
+  exact broker executable through the launcher SHA pins, live leased
+  publication and read path using a synthetic backend-health witness. The adapter rejected
+  a foreign subscriber and a duplicate-role worker, and the decoy-port test
+  measured no connection to a real TCP listener at 6380. The kernel-witness
+  helper separately passed synthetic proc/cgroup/file fixtures; the actual
+  production UID and cgroup witness path was not emulated or attested.
+  Run the additional real fixture by setting `SAMWISE_CELERY_SITE_STAGE=1`
+  with the same existing redis/library variables.
+
+### Exact-profile enforcement remains on hold
+
+No independently verified disposable VM with a separate kernel and existing
+authorization was available. Rootless user namespaces/containers are useful
+for socket and reader regressions but share their host kernel and are not a
+candidate for AppArmor policy mutation here. Do not use a host based only
+on a familiar staging nickname or assume its security policies are private.
+
+Review pins: baseline full policy SHA-256
+`55211466bb0a28e3f28b5fb7184e74428f528d194bf0a8fba85c10341d34cf17`;
+offline-compiled candidate full policy
+`367ed81e10859210a542f1b2497a56d854d086f7fe86d037e373bb8c385f0857`;
+repository diff
+`17c604186d4034039df46cae5a0c157f8fd171029637516b33251477bfd3920e`.
+They are distinct artifacts. No load/unload step ran.
+
+Once a named disposable replica is independently verified (pinned host key,
+separate kernel/boot, no shared policy paths or production mounts/services,
+no production network or credentials), request confirmation for that exact
+temporary addition/removal, not a replacement on any persistent host.
+Privately snapshot its existing policy inventory, ensure the candidate
+profile name is absent, and verify the two full hashes and exact file-only
+diff. In that approved VM only: compile with no load/cache, temporarily load
+only those exact bytes in enforce mode, validate the real forced reader
+as UID 999/GID 985 with synthetic root:985 files and the native deny list.
+Check read/OFD mediation on the four fixed paths, lease live/dead/missing,
+and denial of writes, socket/TCP, Docker/Redis, credentials and unrelated
+traversal. Tear down only the test SSH/process cgroup and candidate profile;
+verify cgroup empty, no socket/file residue and byte-for-byte original
+policy inventory. A discrepancy or existing-name conflict stops the test.
+Absence of an approved replica means report this gate as blocked, not passed.
 
 ## Proposed separately authorized one-shot, not part of this draft
 

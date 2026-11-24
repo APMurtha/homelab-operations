@@ -28,7 +28,8 @@ class ShadowLauncher(unittest.TestCase):
                       backend_id='a'*64, backend_pid=202,
                       backend_start_ns=self.now-2*NS, net_inode=300,
                       names=PAIR, broker_endpoint=shadow.ENDPOINT,
-                      broker_scope_sha256='b'*64, witness_sha256='c'*64, ping_sha256='d'*64)
+                      broker_scope_sha256=shadow.BROKER_SCOPE, witness_sha256='c'*64, ping_sha256='d'*64,
+                      witness_enrollment_sha256='a'*64,pidbox_enrollment_sha256='b'*64)
 
     def parse(self, **changes):
         return shadow.permit(json.dumps(self.p | changes).encode(), BOOT, self.now)
@@ -177,8 +178,17 @@ class ShadowLauncher(unittest.TestCase):
             witness_sha = as_program(left,frame, 'assert len(sys.argv) == 1')
             ping_sha = as_program(right,{n:{'ok':'pong'} for n in PAIR},
                 'assert sys.argv[1:] == '+repr(['--destination='+','.join(PAIR),'--timeout=8','--json']))
-            p = self.parse(witness_sha256=witness_sha,ping_sha256=ping_sha)
-            with patch.multiple(shadow,WITNESS=left,PING=right,DROP=output):
+            site_witness,site_broker = folder/'witness-enrollment.json',folder/'pidbox-enrollment.json'
+            site_witness.write_bytes(b'{}')
+            site_broker.write_text(json.dumps(dict(boot=BOOT,net_inode=300,
+                scope_sha256=shadow.BROKER_SCOPE,workers=frame['workers'])))
+            for item in (site_witness,site_broker):
+                item.chmod(0o600)
+            p = self.parse(witness_sha256=witness_sha,ping_sha256=ping_sha,
+                           witness_enrollment_sha256=hashlib.sha256(site_witness.read_bytes()).hexdigest(),
+                           pidbox_enrollment_sha256=hashlib.sha256(site_broker.read_bytes()).hexdigest())
+            with patch.multiple(shadow,WITNESS=left,PING=right,DROP=output,
+                                WITNESS_ENROLL=site_witness,PIDBOX_ENROLL=site_broker):
                 def read(value, deadline):
                     self.assertGreater(deadline,time.monotonic())
                     self.assertEqual(collect(json.dumps(expected),folder,os.getuid()),{'celery':value})
@@ -200,11 +210,15 @@ class ShadowLauncher(unittest.TestCase):
             (output/ANCHOR).touch()
             (output/ANCHOR).chmod(0o640)
             p = self.parse()
+            existing=json.dumps(dict(boot=BOOT,net_inode=300,scope_sha256=shadow.BROKER_SCOPE,
+                workers={name:[i+1,i+2] for i,name in enumerate(PAIR)})).encode()
             with patch.object(shadow,'DROP',output), \
-                 patch.object(shadow,'trusted_bytes',return_value=b''), \
+                 patch.object(shadow,'trusted_bytes', side_effect=lambda path,*_:
+                    existing if path==shadow.PIDBOX_ENROLL else b''), \
                  patch.object(shadow,'capture',side_effect=TimeoutError('fixture')) as runner:
                 empty = hashlib.sha256(b'').hexdigest()
-                p |= dict(witness_sha256=empty,ping_sha256=empty)
+                p |= dict(witness_sha256=empty,ping_sha256=empty,witness_enrollment_sha256=empty,
+                          pidbox_enrollment_sha256=hashlib.sha256(existing).hexdigest())
                 self.assertEqual(shadow.pinned_worker(p,os.getuid(),None),'unavailable')
                 runner.assert_called_once_with([str(shadow.WITNESS)],'/',shadow.CAPTURE_ENV,1)
                 self.assertFalse((output/'celery').exists())
@@ -242,8 +256,9 @@ class FlatProductionEntrypoint(unittest.TestCase):
                       target=shadow.TARGET, boot=actual_boot, nonce='f'*64,
                       not_before_ns=now-NS, expires_ns=now+60*NS, backend_id='a'*64,
                       backend_pid=202, backend_start_ns=now-2*NS, net_inode=300,
-                      names=PAIR, broker_endpoint=shadow.ENDPOINT, broker_scope_sha256='b'*64,
-                      witness_sha256='c'*64, ping_sha256='d'*64)).encode()
+                      names=PAIR, broker_endpoint=shadow.ENDPOINT, broker_scope_sha256=shadow.BROKER_SCOPE,
+                      witness_sha256='c'*64, ping_sha256='d'*64,
+                      witness_enrollment_sha256='a'*64,pidbox_enrollment_sha256='b'*64)).encode()
             enrolled = package/'one-shot.json'
             enrolled.write_bytes(raw)
             enrolled.chmod(0o600)

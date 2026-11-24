@@ -84,6 +84,9 @@ STATE = Path('/run/samwise-celery-shadow')
 DROP = Path('/run/samwise-observations/celery-v1')
 WITNESS = INSTALL / 'witness'
 PING = INSTALL / 'pidbox-ping'
+WITNESS_ENROLL = INSTALL / 'witness-enrollment.json'
+PIDBOX_ENROLL = INSTALL / 'pidbox-enrollment.json'
+BROKER_SCOPE = '191dd4b1462369703511b422e36ee4c7bd4350f23ff963c77f7f1d9b8b3bc6d7'
 PERMIT = INSTALL / 'one-shot.json'
 ENDPOINT = '127.0.0.1:6379'
 OBSERVER_UID = 999
@@ -131,7 +134,7 @@ def trusted_bytes(path, owner, mode, maximum):
 def permit(raw, boot, now):
     p = keys(decode(raw), 'version host target boot nonce not_before_ns expires_ns backend_id '
              'backend_pid backend_start_ns net_inode names broker_endpoint broker_scope_sha256 '
-             'witness_sha256 ping_sha256')
+             'witness_sha256 ping_sha256 witness_enrollment_sha256 pidbox_enrollment_sha256')
     check(p['version'] == 'celery-shadow-once-v1' and p['host'] == HOST and p['target'] == TARGET)
     check(p['boot'] == boot and UUID.fullmatch(boot) is not None)
     digest(p['nonce'])
@@ -143,8 +146,9 @@ def permit(raw, boot, now):
     uint(p['net_inode'])
     check(type(p['names']) is list)
     destinations(tuple(p['names']))
-    check(p['broker_endpoint'] == ENDPOINT)
-    for field in ('broker_scope_sha256', 'witness_sha256', 'ping_sha256'):
+    check(p['broker_endpoint'] == ENDPOINT and p['broker_scope_sha256'] == BROKER_SCOPE)
+    for field in ('broker_scope_sha256', 'witness_sha256', 'ping_sha256',
+                  'witness_enrollment_sha256', 'pidbox_enrollment_sha256'):
         digest(p[field])
     return p
 
@@ -224,10 +228,23 @@ def pinned_worker(p, owner, readonly):
     for key, path in (('witness_sha256', WITNESS), ('ping_sha256', PING)):
         raw = trusted_bytes(path, owner, 0o755, 256*1024)
         check(hashlib.sha256(raw).hexdigest() == p[key])
+    def check_site_enrollments():
+        for key,path in (('witness_enrollment_sha256',WITNESS_ENROLL),
+                         ('pidbox_enrollment_sha256',PIDBOX_ENROLL)):
+            raw = trusted_bytes(path,owner,0o600,8192)
+            check(hashlib.sha256(raw).hexdigest() == p[key])
+        return decode(raw)  # pidbox enrollment is last, includes both exact PID/start identities.
+
     names = destinations(tuple(p['names']))
     boot = p['boot']
+    broker = check_site_enrollments()
+    check(type(broker) is dict and broker.get('boot')==boot and
+          broker.get('net_inode')==p['net_inode'] and
+          broker.get('scope_sha256')==BROKER_SCOPE and
+          type(broker.get('workers')) is dict and broker['workers'].keys()==set(names))
 
     def inspect():
+        check(check_site_enrollments()==broker)
         code, out, err = capture([str(WITNESS)], '/', CAPTURE_ENV, WITNESS_SECONDS)
         check(code == 0 and not err)
         frame = keys(decode(out), 'boot backend workers net_inode endpoint scope_sha256')
@@ -235,12 +252,12 @@ def pinned_worker(p, owner, readonly):
               frame['endpoint'] == ENDPOINT and frame['scope_sha256'] == p['broker_scope_sha256'])
         check(tuple(frame['backend'][k] for k in ('Id','Pid','StartedNs')) ==
               tuple(p[k] for k in ('backend_id','backend_pid','backend_start_ns')))
-        check(type(frame['workers']) is dict and frame['workers'].keys() == set(names))
+        check(type(frame['workers']) is dict and frame['workers']==broker['workers'])
         check(all(type(v) is list for v in frame['workers'].values()))
         return Witness(boot, frame['backend'], {k: tuple(v) for k,v in frame['workers'].items()})
 
     def ping(exact):
-        check(exact == names)
+        check(exact == names and check_site_enrollments()==broker)
         return capture([str(PING), '--destination='+','.join(names), '--timeout=8', '--json'],
                        '/', CAPTURE_ENV, BROKER_SECONDS)
 
