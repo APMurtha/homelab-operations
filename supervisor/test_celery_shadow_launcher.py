@@ -108,6 +108,8 @@ class ShadowLauncher(unittest.TestCase):
         user = b'samwise-observe:x:999:985::/nonexistent:/opt/samwise-observe/login\n'
         group = b'samwise-observe:x:985:\n'
         shadow.observer_ids(user,group)
+        with self.assertRaises(ValueError):
+            shadow.observer_ids(user+b'duplicate:x:998:985::/tmp:/bin/false\n',group)
         for wrong in (user.replace(b':999:',b':1000:'),user.replace(b':985:',b':986:')):
             with self.assertRaises(ValueError):
                 shadow.observer_ids(wrong,group)
@@ -213,6 +215,8 @@ class ShadowLauncher(unittest.TestCase):
 class FlatProductionEntrypoint(unittest.TestCase):
     def test_exact_isolated_argv_bootstraps_flat_package_from_hostile_cwd(self):
         from shutil import copyfile
+        import importlib.util
+        import py_compile
         actual_boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
         now = time.time_ns()
         with tempfile.TemporaryDirectory(prefix='celery-flat-stage-') as tmp:
@@ -226,6 +230,14 @@ class FlatProductionEntrypoint(unittest.TestCase):
                 copyfile(Path(__file__).with_name(name),package/name)
                 (package/name).chmod(0o644)
                 (hostile/name).write_text("raise RuntimeError('HOSTILE_IMPORT')\n")
+            shadow_pkg = package/'ops_protocol'
+            shadow_pkg.mkdir()
+            (shadow_pkg/'__init__.py').write_text("raise RuntimeError('SHADOW_PACKAGE')\n")
+            bytecode = Path(importlib.util.cache_from_source(str(package/'celery_handoff.py')))
+            bytecode.parent.mkdir()
+            py_compile.compile(str(hostile/'celery_handoff.py'),str(bytecode),
+                               invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH,
+                               doraise=True)
             raw = json.dumps(dict(version='celery-shadow-once-v1', host=shadow.HOST,
                       target=shadow.TARGET, boot=actual_boot, nonce='f'*64,
                       not_before_ns=now-NS, expires_ns=now+60*NS, backend_id='a'*64,

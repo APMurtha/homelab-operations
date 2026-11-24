@@ -12,6 +12,7 @@ import stat
 import subprocess
 import sys
 import time
+from types import ModuleType
 
 def trust_flat_entrypoint():
     """Python -I excludes the script directory; admit only the pinned package."""
@@ -30,15 +31,36 @@ def trust_flat_entrypoint():
             meta = os.fstat(fd)
             if meta.st_uid != 0 or meta.st_mode & 0o022:
                 raise ValueError('untrusted_entry')
-        for name in ('celery_shadow_launcher.py', 'celery_readiness.py',
-                     'dispatcharr_project.py', 'ops_protocol.py', 'celery_handoff.py'):
-            meta = os.stat(name, dir_fd=fd, follow_symlinks=False)
-            if (not stat.S_ISREG(meta.st_mode) or meta.st_uid != 0 or
-                    stat.S_IMODE(meta.st_mode) != 0o644 or meta.st_nlink != 1):
+        # Read the exact vetted .py files, then load from those bytes without
+        # consulting importlib filesystem discovery (packages, .so or pycache).
+        ordered = ('ops_protocol', 'celery_handoff', 'dispatcharr_project', 'celery_readiness')
+        sources = {}
+        for name in (*ordered, 'celery_shadow_launcher'):
+            filename = name + '.py'
+            source_fd = os.open(filename, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK |
+                                os.O_CLOEXEC, dir_fd=fd)
+            with os.fdopen(source_fd,'rb') as stream:
+                before = os.fstat(stream.fileno())
+                if (not stat.S_ISREG(before.st_mode) or before.st_uid != 0 or
+                        stat.S_IMODE(before.st_mode) != 0o644 or before.st_nlink != 1 or
+                        before.st_size > 256*1024):
+                    raise ValueError('untrusted_entry')
+                data = stream.read(256*1024+1)
+                after = os.stat(filename, dir_fd=fd, follow_symlinks=False)
+                if (not os.path.samestat(before,after) or before.st_ctime_ns != after.st_ctime_ns or
+                        len(data) != before.st_size):
+                    raise ValueError('untrusted_entry')
+                sources[name] = data
+        for name in ordered:
+            if name in sys.modules:
                 raise ValueError('untrusted_entry')
+            module = ModuleType(name)
+            module.__file__ = str(package/(name+'.py'))
+            sys.modules[name] = module
+            exec(compile(sources[name], module.__file__, 'exec', dont_inherit=True),
+                 module.__dict__)
     finally:
         os.close(fd)
-    sys.path.insert(0, str(package))
 
 
 try:
@@ -48,7 +70,7 @@ try:
     from celery_readiness import Witness, capture, destinations, leased_acquisition
     from dispatcharr_project import directory
     from ops_protocol import NS, check, decode
-except (OSError, ValueError, ImportError):
+except (OSError, ValueError, ImportError, SyntaxError):
     if __name__ != '__main__':
         raise
     print('unavailable')
@@ -136,6 +158,7 @@ def observer_ids(passwd, groups):
     check(len(owns) == 1 and owns[0][2:4] == [str(OBSERVER_UID),str(OBSERVER_GID)] and
           owns[0][-1] == '/opt/samwise-observe/login')
     check(sum(len(row) == 7 and row[2] == str(OBSERVER_UID) for row in users) == 1)
+    check(sum(len(row) == 7 and row[3] == str(OBSERVER_GID) for row in users) == 1)
     memberships = [line.split(':') for line in groups.decode('utf-8').splitlines()]
     named = [row for row in memberships if len(row) == 4 and row[0] == OBSERVER]
     check(len(named) == 1 and named[0][2] == str(OBSERVER_GID) and

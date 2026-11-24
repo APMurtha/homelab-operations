@@ -160,8 +160,9 @@ kill, reserving one second for outer startup/teardown against the 18-second
 operational cap. The worker refuses launch beyond that one-second startup
 margin on the same boot monotonic clock and clamps the lease to the outer
 deadline. The outer wait deducts elapsed preflight rather than opening a
-new 18-second budget. Flat-package startup admits only vetted root-owned
-paths in isolated Python mode; a disposable namespace tested the generated
+new 18-second budget. Flat-package startup loads only verified no-follow root-owned source bytes
+in isolated Python mode, never resolving sibling package, native-extension
+or cached-bytecode alternatives; a disposable namespace tested the generated
 argv from an unrelated hostile cwd/PYTHONPATH, plus refusal with a corrupt
 module mode or outside its cgroup. Unbounded host scheduling delay is still an abort gate. The
 producer uses a closed environment and fixed executables, never sends commands
