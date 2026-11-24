@@ -93,7 +93,7 @@ def running(pid):
 @unittest.skipUnless(os.environ.get('SAMWISE_CELERY_CGROUP_STAGE') == '1',
                      'requires Bag-End user systemd and bubblewrap')
 class StageLauncher(unittest.TestCase):
-    def exercise(self, mode):
+    def exercise(self, mode, limit=2):
         with tempfile.TemporaryDirectory(prefix='celery-cgroup-stage-') as tmp:
             root = Path(tmp)
             fixture = root/'fixture.py'
@@ -102,7 +102,7 @@ class StageLauncher(unittest.TestCase):
             unit = 'samwise-celery-stage-'+secrets.token_hex(6)+'.service'
             command = [
                 '/usr/bin/systemd-run', '--user', '--unit='+unit, '--quiet', '--wait',
-                '--pipe', '-p', 'RuntimeMaxSec=2s', '-p', 'KillMode=control-group',
+                '--pipe', '-p', 'RuntimeMaxSec='+str(limit)+'s', '-p', 'KillMode=control-group',
                 '-p', 'TimeoutStopSec=200ms', '-p', 'NoNewPrivileges=yes',
                 '-p', 'RestrictAddressFamilies=AF_UNIX AF_NETLINK', '-p', 'IPAddressDeny=any',
                 '/usr/bin/bwrap', '--unshare-user', '--unshare-pid', '--unshare-net',
@@ -120,7 +120,7 @@ class StageLauncher(unittest.TestCase):
             observed = set()
             escaped = set()
             try:
-                deadline = begun + 6
+                deadline = begun + limit + 4
                 while wrapper.poll() is None and time.monotonic() < deadline:
                     if group is None:
                         cg = show(unit, 'ControlGroup')
@@ -145,11 +145,11 @@ class StageLauncher(unittest.TestCase):
                 self.assertEqual(wrapper.returncode == 0, mode == 'clean')
                 if mode == 'timeout':
                     self.assertEqual(show(unit, 'Result'), 'timeout')
-                    self.assertLess(elapsed, 4)
+                    self.assertLess(elapsed, limit + 2)
                 self.assertFalse(pids(group), 'unit cgroup is not empty')
                 self.assertFalse(any(running(pid) for pid in escaped),
                                  'session-escaped descendant remained live')
-                print(f'launcher_{mode}_wall_seconds={elapsed:.3f} cgroup_empty=yes')
+                print(f'launcher_{mode}_{limit}s_wall_seconds={elapsed:.3f} cgroup_empty=yes')
             finally:
                 subprocess.run(SYSTEMCTL + ['stop', unit], stdout=subprocess.DEVNULL,
                                stderr=subprocess.DEVNULL, timeout=3)
@@ -164,6 +164,10 @@ class StageLauncher(unittest.TestCase):
 
     def test_runtime_limit_teardown(self):
         self.exercise('timeout')
+
+    def test_exact_shadow_runtime_limit_teardown(self):
+        from celery_shadow_launcher import HARD_SECONDS
+        self.exercise('timeout', HARD_SECONDS)
 
 
 if __name__ == '__main__':

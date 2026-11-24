@@ -96,7 +96,10 @@ used a fixed fixture with independently bounded witness subprocesses,
 NoNewPrivileges, zero capabilities, seccomp, bubblewrap-private
 filesystem/PID/network views, and observed an actual setsid descendant for
 each path. Both clean and forced runtime-limit runs left empty cgroups;
-startup and runtime tests took approximately 0.8 and 2.2 seconds. The
+startup and runtime tests took approximately 0.8 and 2.2 seconds. An
+additional isolated run at the production candidate's exact 18-second
+configured limit took 18.152 seconds wall time including launch/teardown
+and left the cgroup empty; it did not run the host-facing adapter. The
 cgroup test did not access a real runtime backend or use a broker.
 A separate real loopback SSH forced-command fixture, using disposable keys,
 actually read `both-ready` only while the candidate's OFD lease was live and
@@ -136,6 +139,65 @@ Bag-End user systemd/bubblewrap tests; with `SAMWISE_TEST_SSH=1` it also
 runs the scoped real SSH reader fixture. No command installs dependencies,
 changes a persistent system setting, or touches Rivendell.
 
+## Fixed host-facing launcher candidate and passive follow-up
+
+`celery_shadow_launcher.py` defines the exact host-side transient wrapper and
+worker entry, without installing or invoking it on Rivendell. It accepts no
+issue-provided parameters, validates a root-owned one-time expiring permit for
+the canonical Rivendell target and current boot, pins backend full ID/PID/start,
+network namespace inode, full enrolled names, endpoint and privately established
+broker/control scope, and pins both site-adapter SHA-256 values. It launches
+one fixed unit only, independently rechecks the approved permit digest in its
+worker, verifies cgroup/namespace, and consumes its nonce once before
+any observation. A positive local worker phase is not returned as readiness:
+only the separate read-only observer can read a live leased sample. The fixed
+path supports one witness subprocess before and one after, each independently
+limited to one second; an eight-second reply request with a 12-second process
+cap; and up to four seconds for the separate lease reader. systemd owns the
+18-second service budget, no restart, unconditional cgroup-wide kill. The
+producer uses a closed environment and fixed executables, never sends commands
+to the collector, and has no direct Docker access. A local IPv4 allowlist is
+not port filtering: the pinned, reviewed broker adapter must additionally
+enforce the exact port and authenticate its scope before enrollment.
+Adapter binaries, their permit and an active integration are **not** enrolled
+or distributed by this draft. No shadow attempt may occur with missing or
+unqualified adapters.
+
+Passive follow-up corroborated that the two actual worker masters do not
+inherit the Docker-creation CELERY_BROKER_URL as a direct override. Their
+startup fallback inputs resolve to loopback Redis port 6379, DB 0, with no
+separate read/write override. The deployed Django/Celery/Kombu configuration
+also resolves the default celery.pidbox exchange, DB-prefixed fanout, no
+global broker key prefix. Exactly two matching role masters were seen in
+the backend, but the existing passive sources did not expose live in-memory
+effective control settings or broker-wide exclusive subscriptions. No
+credentials, raw env, worker outputs or private identities were recorded
+here. Startup configuration plus open TCP sockets is **not** live broker
+attestation or readiness.
+
+The existing restricted SSH account is UID 999, primary GID 985 and has no
+supplementary or Docker group membership. The installed observer mode is
+root-owned evidence directory 0750 with group 985, the fixed SSH ForceCommand,
+key-only admission with source restriction, no forwarding, PTY, interactive
+auth or environment, an enforcing baseline `samwise-observe-v1` profile and
+a kernel seccomp socket-deny launcher. The installed profile does not permit
+the candidate module/drop. The candidate exact file-only diff compiles
+offline, but its active profile has not been loaded on any host: staging
+inventory contains no equivalent already-authorized loaded disposable
+profile. Staging proved the confinement mechanisms and real disposable
+SSH equivalent, not production root/group/AppArmor mediation or the exact
+site broker adapter.
+
+Exact-profile activation requires separate action-time authorization,
+preferably on a disposable replica only. Scope that grant to loading only the
+named, hash-verified candidate profile in the disposable replica, staging
+the exact UID/GID and synthetic evidence, and verifying open/lock mediation
+on the four fixed files, failure on missing/dead lease, and that writes,
+sockets, broker/Docker data, credentials and all unrelated reads remain
+denied. No production login, network request, key or permissions expansion
+is needed. Keep the installed Rivendell baseline independent, unchanged,
+and preserve the working relay and four-container paths.
+
 ## Proposed separately authorized one-shot, not part of this draft
 
 1. First review and stage the exact production fixed launcher and file-only
@@ -161,11 +223,13 @@ changes a persistent system setting, or touches Rivendell.
    existing 60-second TTL only as an upper bound; the live lease can end
    much earlier. A future continuous schedule requires a separate design
    and permission; one-shot passing does not qualify a daemon/timer.
-4. Abort/rollback by stopping only the candidate's cgroup, closing its lease
-   and verifying its cgroup empty. Withdraw only that run's shadow files.
-   If later separately approved file-only collector/profile integration
-   must be rolled back, restore only the verified old collector/module
-   set, AppArmor policy and Celery projected-path ownership, under the
-   known approval. Compare hashes and validate old relay/four-container
-   projections and timers. No worker or media restart, and no rollback of
-   unrelated state. Never revive the old Celery evidence.
+4. Before any separately authorized policy/collector action, capture
+   byte hashes, UID/GID/mode/link count, active enforce state, fixed SSH and
+   seccomp fingerprints and the relay/four-container modules, outputs and
+   timers. Keep verified private backups. Abort/rollback by stopping only
+   the candidate's cgroup, confirming it empty, closing its lease and
+   withdrawing only its shadow files. If profile/module changes were made,
+   atomically restore only the confirmed original files, ownership and
+   original policy under explicit approval; verify the same profile is
+   enforcing, files and relay/four-container checks match, and Celery is
+   unavailable. Never restore an old Celery receipt or restart media/workers.
