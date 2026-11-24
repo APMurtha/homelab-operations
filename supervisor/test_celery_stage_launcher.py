@@ -93,7 +93,7 @@ def running(pid):
 @unittest.skipUnless(os.environ.get('SAMWISE_CELERY_CGROUP_STAGE') == '1',
                      'requires Bag-End user systemd and bubblewrap')
 class StageLauncher(unittest.TestCase):
-    def exercise(self, mode, limit=2):
+    def exercise(self, mode, limit=2, wall_cap=None):
         with tempfile.TemporaryDirectory(prefix='celery-cgroup-stage-') as tmp:
             root = Path(tmp)
             fixture = root/'fixture.py'
@@ -103,7 +103,8 @@ class StageLauncher(unittest.TestCase):
             command = [
                 '/usr/bin/systemd-run', '--user', '--unit='+unit, '--quiet', '--wait',
                 '--pipe', '-p', 'RuntimeMaxSec='+str(limit)+'s', '-p', 'KillMode=control-group',
-                '-p', 'TimeoutStopSec=200ms', '-p', 'NoNewPrivileges=yes',
+                '-p', 'KillSignal=SIGKILL', '-p', 'TimeoutStopSec=1s',
+                '-p', 'NoNewPrivileges=yes',
                 '-p', 'RestrictAddressFamilies=AF_UNIX AF_NETLINK', '-p', 'IPAddressDeny=any',
                 '/usr/bin/bwrap', '--unshare-user', '--unshare-pid', '--unshare-net',
                 '--die-with-parent', '--clearenv', '--setenv', 'PATH', '/usr/bin',
@@ -146,6 +147,8 @@ class StageLauncher(unittest.TestCase):
                 if mode == 'timeout':
                     self.assertEqual(show(unit, 'Result'), 'timeout')
                     self.assertLess(elapsed, limit + 2)
+                if wall_cap is not None:
+                    self.assertLess(elapsed,wall_cap)
                 self.assertFalse(pids(group), 'unit cgroup is not empty')
                 self.assertFalse(any(running(pid) for pid in escaped),
                                  'session-escaped descendant remained live')
@@ -166,8 +169,8 @@ class StageLauncher(unittest.TestCase):
         self.exercise('timeout')
 
     def test_exact_shadow_runtime_limit_teardown(self):
-        from celery_shadow_launcher import HARD_SECONDS
-        self.exercise('timeout', HARD_SECONDS)
+        from celery_shadow_launcher import HARD_SECONDS, UNIT_SECONDS
+        self.exercise('timeout', UNIT_SECONDS, wall_cap=HARD_SECONDS)
 
 
 if __name__ == '__main__':

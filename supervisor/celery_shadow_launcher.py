@@ -31,7 +31,8 @@ OBSERVER_UID = 999
 OBSERVER_GID = 985
 WITNESS_SECONDS = 1
 BROKER_SECONDS = 12
-LEASE_SECONDS = 4
+LEASE_SECONDS = 3
+UNIT_SECONDS = 17
 HARD_SECONDS = 18
 CAPTURE_ENV = {'PATH': '/usr/bin:/bin', 'LC_ALL': 'C', 'HOME': '/nonexistent'}
 SHA = re.compile('[0-9a-f]{64}')
@@ -99,15 +100,16 @@ def claim(path, p, owner):
         os.close(token)
 
 
-def unit_command(p, permit_sha):
+def unit_command(p, permit_sha, began_ns):
     digest(permit_sha)
+    uint(began_ns)
     pid = uint(p['backend_pid'])
     check(pid <= 2**31-1)
     # A separate launcher policy audit must qualify the actual site adapters.
     # The network namespace and IPv4 address filter are independent of argv;
     # the immutable pidbox adapter must additionally enforce the exact port.
     props = (
-        'Type=exec', 'RuntimeMaxSec=18s', 'KillMode=control-group', 'KillSignal=SIGKILL',
+        'Type=exec', f'RuntimeMaxSec={UNIT_SECONDS}s', 'KillMode=control-group', 'KillSignal=SIGKILL',
         'TimeoutStopSec=1s', 'Restart=no', 'UMask=0077', 'NoNewPrivileges=yes',
         'CapabilityBoundingSet=', 'RestrictAddressFamilies=AF_UNIX AF_INET',
         'ProtectHome=yes', 'ProtectSystem=strict', 'PrivateTmp=yes', 'PrivateDevices=yes',
@@ -119,7 +121,7 @@ def unit_command(p, permit_sha):
     )
     return ['/usr/bin/systemd-run', '--unit='+UNIT, '--wait', '--collect', '--quiet'] + [
         '-p'+v for v in props] + ['/usr/bin/python3', '-IB', str(INSTALL/'celery_shadow_launcher.py'),
-                                '--worker', permit_sha]
+                                '--worker', permit_sha, str(began_ns)]
 
 
 def pinned_worker(p, owner, readonly):
@@ -152,13 +154,24 @@ def pinned_worker(p, owner, readonly):
     with leased_acquisition(DROP, owner, boot, names, inspect, ping) as result:
         if result not in ('both-ready','readiness-failed'):
             return 'unavailable'
-        end = min(launched+HARD_SECONDS, time.monotonic()+LEASE_SECONDS)
+        end = min(launched+UNIT_SECONDS, time.monotonic()+LEASE_SECONDS)
         # The staged reader observes the separate protected path. Hold the lease
         # only for the reviewed bounded collection window, with no child/fork.
         return readonly(result, end)
 
 
-def entry(mode, expected_sha=None):
+def entry(mode, expected_sha=None, start_text=None):
+    started = time.monotonic_ns()
+    wall_end = None
+    if mode == '--worker':
+        check(type(start_text) is str and re.fullmatch(r'[0-9]{1,19}', start_text))
+        launched = uint(int(start_text))
+        # A detached/late orchestrator execution cannot open a new window.
+        # Accept at most the dedicated one-second unit startup margin.
+        check(0 <= started-launched < (HARD_SECONDS-UNIT_SECONDS)*NS)
+        wall_end = (launched+HARD_SECONDS*NS)/NS
+    else:
+        check(start_text is None)
     check(os.geteuid() == 0 and os.uname().nodename == HOST)
     boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
     raw = trusted_bytes(PERMIT, 0, 0o600, 4096)
@@ -170,14 +183,14 @@ def entry(mode, expected_sha=None):
     p = permit(raw, boot, time.time_ns())
     if mode == '--plan-only':
         # No side effects, no nonce revealed and no active site access.
-        check(unit_command(p, permit_sha)[0] == '/usr/bin/systemd-run')
+        check(unit_command(p, permit_sha, started)[0] == '/usr/bin/systemd-run')
         return 'plan-valid'
     if mode == '--launch':
         # systemd, not this invocation, enforces the independent whole-cgroup
         # limit even if this parent exits. No failed unit is restarted.
-        run = subprocess.run(unit_command(p, permit_sha), cwd='/', env=CAPTURE_ENV,
+        run = subprocess.run(unit_command(p, permit_sha, started), cwd='/', env=CAPTURE_ENV,
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL, timeout=20, check=False)
+                             stderr=subprocess.DEVNULL, timeout=HARD_SECONDS, check=False)
         return 'shadow-finished' if run.returncode == 0 else 'unavailable'
     check(mode == '--worker')
     cgroup = Path('/proc/self/cgroup').read_text().strip().partition('::')[2]
@@ -189,7 +202,7 @@ def entry(mode, expected_sha=None):
     def lease_window(_value, end):
         # Actual readers must use the read-only leased collector. The producer
         # does not pass the lease descriptor, run SSH or publish raw evidence.
-        delay = end - time.monotonic()
+        delay = min(end, wall_end) - time.monotonic()
         check(delay > 0)
         time.sleep(delay)
         return 'shadow-window-closed'
@@ -200,7 +213,7 @@ def entry(mode, expected_sha=None):
 if __name__ == '__main__':
     try:
         check((len(sys.argv) == 2 and sys.argv[1] in ('--plan-only','--launch')) or
-              (len(sys.argv) == 3 and sys.argv[1] == '--worker'))
+              (len(sys.argv) == 4 and sys.argv[1] == '--worker'))
         result = entry(*sys.argv[1:])
     except (OSError, ValueError, TypeError, KeyError, OverflowError, subprocess.SubprocessError):
         result = 'unavailable'

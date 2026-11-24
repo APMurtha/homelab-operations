@@ -97,9 +97,9 @@ NoNewPrivileges, zero capabilities, seccomp, bubblewrap-private
 filesystem/PID/network views, and observed an actual setsid descendant for
 each path. Both clean and forced runtime-limit runs left empty cgroups;
 startup and runtime tests took approximately 0.8 and 2.2 seconds. An
-additional isolated run at the production candidate's exact 18-second
-configured limit took 18.152 seconds wall time including launch/teardown
-and left the cgroup empty; it did not run the host-facing adapter. The
+additional isolated run at the production candidate's exact 17-second
+configured limit left an independent one-second margin for launch/teardown
+and the fixture asserts wall time below 18 seconds with cgroup empty; it did not run the host-facing adapter. The
 cgroup test did not access a real runtime backend or use a broker.
 A separate real loopback SSH forced-command fixture, using disposable keys,
 actually read `both-ready` only while the candidate's OFD lease was live and
@@ -153,8 +153,12 @@ any observation. A positive local worker phase is not returned as readiness:
 only the separate read-only observer can read a live leased sample. The fixed
 path supports one witness subprocess before and one after, each independently
 limited to one second; an eight-second reply request with a 12-second process
-cap; and up to four seconds for the separate lease reader. systemd owns the
-18-second service budget, no restart, unconditional cgroup-wide kill. The
+cap; and up to three seconds for the separate lease reader. systemd owns an
+independent 17-second service budget, no restart, unconditional cgroup-wide
+kill, reserving one second for outer startup/teardown against the 18-second
+operational cap. The worker refuses launch beyond that one-second startup
+margin on the same boot monotonic clock and clamps the lease to the outer
+deadline. Unbounded host scheduling delay is still an abort gate. The
 producer uses a closed environment and fixed executables, never sends commands
 to the collector, and has no direct Docker access. A local IPv4 allowlist is
 not port filtering: the pinned, reviewed broker adapter must additionally
@@ -211,8 +215,9 @@ and preserve the working relay and four-container paths.
 2. After an explicit one-shot owner grant only, take passive snapshots
    before/after exactly one fixed ping (8 s reply timeout, 12 s maximum
    execution). Reserve two seconds total for independent witness enforcement,
-   plus up to four seconds for one read of the sanitized result while that
-   exact lease remains live. Cap the entire launcher cgroup at 18 seconds,
+   plus up to three seconds for one read of the sanitized result while that
+   exact lease remains live. Cap service runtime at 17 seconds and treat
+   18 seconds as the outer wall budget including cgroup teardown,
    deny any extra broker destination and use cgroup-wide teardown, including
    escaped groups, on success and timeout. No retries, task, playback,
    restarts, scheduling, or production rollout. The source timestamp is

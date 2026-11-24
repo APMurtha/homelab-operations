@@ -34,17 +34,17 @@ class ShadowLauncher(unittest.TestCase):
 
     def test_fixed_scope_time_command_and_no_data_arguments(self):
         p = self.parse()
-        args = shadow.unit_command(p,'e'*64)
+        args = shadow.unit_command(p,'e'*64,123)
         self.assertEqual(args[0], '/usr/bin/systemd-run')
         self.assertIn('--unit=samwise-celery-shadow-once.service',args)
-        self.assertIn('-pRuntimeMaxSec=18s',args)
+        self.assertIn('-pRuntimeMaxSec=17s',args)
         self.assertIn('-pKillMode=control-group',args)
         self.assertIn('-pKillSignal=SIGKILL',args)
         self.assertIn('-pRestart=no',args)
         self.assertIn('-pNetworkNamespacePath=/proc/202/ns/net',args)
         self.assertIn('-pIPAddressDeny=any',args)
-        self.assertEqual(args[-5:], ['/usr/bin/python3','-IB',
-                                    '/opt/samwise-celery-shadow/celery_shadow_launcher.py','--worker','e'*64])
+        self.assertEqual(args[-6:], ['/usr/bin/python3','-IB',
+                                    '/opt/samwise-celery-shadow/celery_shadow_launcher.py','--worker','e'*64,'123'])
         for private in self.p.values():
             if type(private) is str and len(private) == 64:
                 self.assertNotIn(private,' '.join(args))
@@ -79,6 +79,7 @@ class ShadowLauncher(unittest.TestCase):
                  patch.object(shadow,'trusted_bytes',return_value=json.dumps(self.p).encode()), \
                  patch.object(shadow.Path,'read_text',return_value=BOOT), \
                  patch.object(shadow.time,'time_ns',return_value=now), \
+                 patch.object(shadow.time,'monotonic_ns',return_value=123), \
                  patch.object(shadow.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as execute:
                 if mode == 'expired':
                     with self.assertRaises(ValueError):
@@ -89,10 +90,10 @@ class ShadowLauncher(unittest.TestCase):
                     if mode == '--launch':
                         self.assertEqual(result,'shadow-finished')
                         pin = hashlib.sha256(json.dumps(self.p).encode()).hexdigest()
-                        execute.assert_called_once_with(shadow.unit_command(self.p,pin),
+                        execute.assert_called_once_with(shadow.unit_command(self.p,pin,123),
                             cwd='/',env=shadow.CAPTURE_ENV,stdin=shadow.subprocess.DEVNULL,
                             stdout=shadow.subprocess.DEVNULL,stderr=shadow.subprocess.DEVNULL,
-                            timeout=20,check=False)
+                            timeout=18,check=False)
                     else:
                         self.assertEqual(result,'plan-valid')
                         execute.assert_not_called()
@@ -109,9 +110,13 @@ class ShadowLauncher(unittest.TestCase):
              patch.object(shadow,'trusted_bytes',return_value=json.dumps(self.p).encode()), \
              patch.object(shadow,'claim') as claim, patch.object(shadow,'pinned_worker') as worker:
             with self.assertRaises(ValueError):
-                shadow.entry('--worker','0'*64)
+                shadow.entry('--worker','0'*64,str(time.monotonic_ns()))
             claim.assert_not_called()
             worker.assert_not_called()
+        with patch.object(shadow,'trusted_bytes') as read:
+            with self.assertRaises(ValueError):
+                shadow.entry('--worker','0'*64,str(time.monotonic_ns()-2*NS))
+            read.assert_not_called()
 
     def test_real_bounded_witness_and_capture_fixture(self):
         row = dict(Name='/dispatcharr', Id=self.p['backend_id'], Status='running',
