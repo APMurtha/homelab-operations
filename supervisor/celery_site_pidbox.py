@@ -4,6 +4,7 @@
 No caller-supplied hosts, DBs, queues, credentials or arbitrary commands. The
 launcher supervises the independent, bounded execution of this single adapter.
 """
+import errno
 import hashlib
 import json
 import os
@@ -12,6 +13,7 @@ import re
 import socket
 import stat
 import sys
+import signal
 import time
 from types import ModuleType
 
@@ -282,21 +284,71 @@ def capture(Celery,names,validate, *, nonce=None):
     return replies(raw,names,validate)
 
 
+def signed_invocation(p, args, enrollment_hash, proc=PROC, now_ns=None):
+    need(len(args)==3 and all(arg.startswith(prefix) for arg,prefix in zip(
+         args, ('--challenge=', '--deadline-ns=', '--enrollment-sha='))))
+    challenge=args[0].removeprefix('--challenge=')
+    cutoff_text=args[1].removeprefix('--deadline-ns=')
+    requested_hash=args[2].removeprefix('--enrollment-sha=')
+    need(SHA.fullmatch(challenge) and SHA.fullmatch(requested_hash)
+         and requested_hash==enrollment_hash and re.fullmatch('[1-9][0-9]{0,18}',cutoff_text))
+    cutoff=int(cutoff_text)
+    now_ns=time.monotonic_ns() if now_ns is None else now_ns
+    need(0 < cutoff-now_ns <= 12*10**9)
+    # Manager resolves /proc/<pid>/ns/net separately from the attestor.
+    # Independently reject a rebound PID/net namespace before any socket.
+    need(small(proc/'sys/kernel/random/boot_id',64).strip()==p['boot'])
+    need((proc/'self/ns/net').stat().st_ino==p['net_inode'])
+    need(small(proc/'self/cgroup',8192)=='0::/system.slice/samwise-celery-shadow-broker.service\n')
+    return challenge,cutoff
+
+
+def preload_native_stdlib():
+    # Open just the trusted stdlib's native dependency closure before the
+    # Landlock file rule. -IBS excludes all ambient site or local packages.
+    # Do not preload any Celery/Redis/plugin code before confinement.
+    import _multiprocessing
+    import _posixsubprocess
+    import bz2
+    import lzma
+    import ssl
+    import uuid
+
+
+def discard_loader_handles():
+    # Some hardened native loaders leave verified regular library FDs open.
+    # Close them before untrusted runtime code; never swallow a passed socket,
+    # pipe, directory, or unknown descriptor. Guard independently rechecks.
+    for entry in os.listdir('/proc/self/fd'):
+        fd = int(entry)
+        if fd < 3:
+            continue
+        try:
+            info = os.fstat(fd)
+        except OSError as exc:
+            if exc.errno != errno.EBADF:
+                raise
+            continue  # readdir's own ephemeral descriptor
+        need(stat.S_ISREG(info.st_mode))
+        os.close(fd)
+
+
 def main(args):
     need(sys.flags.isolated and sys.flags.no_site and os.geteuid()==0 and Path(__file__)==INSTALL/'pidbox-ping')
-    p = enrollment(trusted_bytes(ENROLLMENT,8192))
+    raw=trusted_bytes(ENROLLMENT,8192)
+    p = enrollment(raw)
     names = enrolled_names(sorted(p['workers']))
     fixed=['--destination='+','.join(names),'--timeout=8','--json']
     signed=p['version']==SIGNED
     challenge=None
     if signed:
-        need(len(args)==5 and args[:3]==fixed and args[3].startswith('--challenge=')
-             and args[4].startswith('--deadline-ns='))
-        challenge=args[3].removeprefix('--challenge=')
-        cutoff_text=args[4].removeprefix('--deadline-ns=')
-        need(SHA.fullmatch(challenge) and re.fullmatch('[1-9][0-9]{0,18}',cutoff_text))
-        cutoff=int(cutoff_text)
-        need(0 < cutoff-time.monotonic_ns() <= 12*10**9)
+        need(args[:3]==fixed)
+        challenge,cutoff=signed_invocation(p,args[3:],digest(raw))
+        # Process-level monotonic relative timer complements both transient
+        # unit lifetimes. Expiration terminates the in-flight capture.
+        remaining=(cutoff-time.monotonic_ns())/10**9
+        need(remaining>0)
+        signal.setitimer(signal.ITIMER_REAL, remaining)
     else:
         need(args==fixed)
     need(digest(trusted_bytes(RUNTIME,MAX_RUNTIME,mode=0o644))==p['runtime_sha256'])
@@ -309,6 +361,8 @@ def main(args):
         guard=ModuleType('celery_broker_guard')
         guard.__file__=str(SANDBOX)
         exec(compile(source,str(SANDBOX),'exec',dont_inherit=True),guard.__dict__)
+        preload_native_stdlib()
+        discard_loader_handles()
         need(guard.apply(RUNTIME) is True)
         def verify(raw):
             need(type(raw) is list and 0<len(raw)<=2)

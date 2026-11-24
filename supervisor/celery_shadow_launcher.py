@@ -255,11 +255,12 @@ def broker_command(p, names, nonce, deadline_ns, now_ns=None):
     check(pid <= 2**31-1)
     check(now_ns is None or type(now_ns) is int)
     left = cutoff - (time.monotonic_ns() if now_ns is None else now_ns)
-    check(0 < left <= BROKER_SECONDS*NS)
+    check(1000 <= left <= BROKER_SECONDS*NS)
     # The fixed helper independently verifies the same absolute deadline.
     # Leave no reserve for a retry, and never place a permit/lease in this unit.
     props = (
-        'Type=exec', f'RuntimeMaxSec={left//1000}us', 'KillMode=control-group',
+        'Type=exec', f'RuntimeMaxSec={left//1000}us', f'TimeoutStartSec={left//1000}us',
+        f'BindsTo={UNIT}', f'After={UNIT}', 'KillMode=control-group',
         'KillSignal=SIGKILL', 'TimeoutStopSec=1s', 'Restart=no', 'UMask=0077',
         'NoNewPrivileges=yes', 'CapabilityBoundingSet=', 'RestrictAddressFamilies=AF_INET',
         'ProtectHome=yes', 'ProtectSystem=strict', 'PrivateTmp=yes', 'PrivateDevices=yes',
@@ -273,7 +274,7 @@ def broker_command(p, names, nonce, deadline_ns, now_ns=None):
     return ['/usr/bin/systemd-run', '--unit='+BROKER_UNIT, '--wait', '--pipe', '--collect',
             '--quiet', *('-p'+v for v in props), '/usr/bin/python3', '-IBS',str(PING),
             '--destination='+','.join(names),'--timeout=8','--json','--challenge='+digest(nonce),
-            '--deadline-ns='+str(cutoff)]
+            '--deadline-ns='+str(cutoff), '--enrollment-sha='+digest(p['pidbox_enrollment_sha256'])]
 
 
 def approved_module(name, expected, owner):

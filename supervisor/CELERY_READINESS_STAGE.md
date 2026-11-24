@@ -362,6 +362,31 @@ Independent component evidence on VM180:
   capabilities. This exercised the privilege split, not both complete
   generated units or a single end-to-end leased receipt.
 
+A second independent checkpoint fixed three omissions before any deployment:
+a VM-equivalent test showed native Redis/Celery imports need their trusted
+stdlib DSOs loaded before Landlock; a different staged unit verified the
+kernel-native port/file guard after that preload. The helper now discards
+unused regular loader handles, but refuses inherited foreign descriptor
+types. Only after kernel boot, current namespace inode, fixed unit cgroup,
+and pinned enrollment hash are rechecked can it open a socket. Boot/inode
+disagreement is therefore rejected before any wrongly directed network I/O,
+not merely after invalidating evidence.
+
+Verified VM180 controls (all synthetic, not the exact end-to-end run):
+* Under native confinement the approved Celery 5.6.3 / Kombu 5.6.2 /
+  Redis 6.4.0 imports succeeded; 127.0.0.1:6379 connected, the live test
+  listener at port 6380 was denied (EACCES), AF_UNIX was denied (EPERM),
+  and an unrelated file read was denied (EACCES). The disposable cgroup
+  was absent afterward.
+* With no IP policy, both synthetic addresses 127.0.0.1 and 127.0.0.2 on
+  port 6379 connected. With the real systemd IP policy only the first
+  connected. Both test cgroups were removed.
+* A representative `BindsTo` / `After` pair had detached children in the
+  inner test cgroup and both cgroups were removed in **1.884 s** after the
+  outer service's 1.6-s timeout. The nested launch uses supported startup and
+  runtime limits, and the helper adds an absolute-deadline self-timer. This
+  does not yet measure exact end-to-end cancellation or teardown.
+
 For a complete next run, exercise both exact generated units and the
 reader in one correlated scenario. For the same permit and boot compare
 the host procfs view to both real guest NSpid values and starts before and

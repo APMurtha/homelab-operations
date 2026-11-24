@@ -78,7 +78,11 @@ class ShadowLauncher(unittest.TestCase):
         self.assertIn(str(shadow.DROP), blocked)
         self.assertIn(str(shadow.STATE), blocked)
         self.assertIn('/run/systemd', blocked)
-        self.assertEqual(broker[-2:], ['--challenge='+'f'*64,'--deadline-ns='+str(2*NS)])
+        self.assertIn('-pBindsTo='+shadow.UNIT, broker)
+        self.assertIn('-pAfter='+shadow.UNIT, broker)
+        self.assertIn('-pTimeoutStartSec=1000000us', broker)
+        self.assertEqual(broker[-3:], ['--challenge='+'f'*64,'--deadline-ns='+str(2*NS),
+                                      '--enrollment-sha='+p['pidbox_enrollment_sha256']])
         for invalid in ((tuple(reversed(PAIR)), 'f'*64, 2*NS),
                         (tuple(PAIR), 'not-a-nonce', 2*NS),
                         (tuple(PAIR), 'f'*64, NS),

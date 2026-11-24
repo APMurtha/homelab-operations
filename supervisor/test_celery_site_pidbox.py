@@ -39,6 +39,32 @@ class PidboxRules(unittest.TestCase):
             with self.subTest(name=name,args=args),self.assertRaises(ValueError):
                 site.network_event(name,args)
 
+    def test_signed_entry_cannot_dial_after_proc_or_enrollment_rebinding(self):
+        with tempfile.TemporaryDirectory() as temp:
+            proc = Path(temp)
+            boot = proc/'sys/kernel/random/boot_id'
+            boot.parent.mkdir(parents=True)
+            boot.write_text('11111111-2222-3333-4444-555555555555\n')
+            ns = proc/'self/ns/net'
+            ns.parent.mkdir(parents=True)
+            ns.touch()
+            cgroup = proc/'self/cgroup'
+            cgroup.write_text('0::/system.slice/samwise-celery-shadow-broker.service\n')
+            enrolled = {'boot':boot.read_text().strip(), 'net_inode':ns.stat().st_ino}
+            args=['--challenge='+'a'*64,'--deadline-ns=12000000000','--enrollment-sha='+'b'*64]
+            args_ok = site.signed_invocation(enrolled,args,'b'*64,proc,10**9)
+            self.assertEqual(args_ok, ('a'*64,12*10**9))
+            for p,a,h,n in ((enrolled | {'net_inode':ns.stat().st_ino+1},args,'b'*64,10**9),
+                            (enrolled | {'boot':'wrong'},args,'b'*64,10**9),
+                            (enrolled,args,'c'*64,10**9),
+                            (enrolled,args,'b'*64,12*10**9),
+                            (enrolled,args+['--extra'],'b'*64,10**9)):
+                with self.assertRaises(ValueError):
+                    site.signed_invocation(p,a,h,proc,n)
+            cgroup.write_text('0::/system.slice/another.service\n')
+            with self.assertRaises(ValueError):
+                site.signed_invocation(enrolled,args,'b'*64,proc,10**9)
+
     def test_db_control_scope_and_namespace_proof_are_fixed(self):
         scope = site.digest(site.canonical(site.SCOPE))
         p=dict(version='celery-site-pidbox-v1',boot='1ee950ea-57f1-4c0e-b127-dbf0b23dc841',
