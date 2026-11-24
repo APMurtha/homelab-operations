@@ -13,9 +13,46 @@ import subprocess
 import sys
 import time
 
-from celery_readiness import Witness, capture, destinations, leased_acquisition
-from dispatcharr_project import directory
-from ops_protocol import NS, check, decode
+def trust_flat_entrypoint():
+    """Python -I excludes the script directory; admit only the pinned package."""
+    package = Path('/opt/samwise-celery-shadow')
+    check_path = Path(__file__)
+    if (os.geteuid() != 0 or not sys.flags.isolated or
+            check_path != package/'celery_shadow_launcher.py'):
+        raise ValueError('untrusted_entry')
+    fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+    try:
+        for part in package.parts[1:]:
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW |
+                            os.O_CLOEXEC, dir_fd=fd)
+            os.close(fd)
+            fd = child
+            meta = os.fstat(fd)
+            if meta.st_uid != 0 or meta.st_mode & 0o022:
+                raise ValueError('untrusted_entry')
+        for name in ('celery_shadow_launcher.py', 'celery_readiness.py',
+                     'dispatcharr_project.py', 'ops_protocol.py', 'celery_handoff.py'):
+            meta = os.stat(name, dir_fd=fd, follow_symlinks=False)
+            if (not stat.S_ISREG(meta.st_mode) or meta.st_uid != 0 or
+                    stat.S_IMODE(meta.st_mode) != 0o644 or meta.st_nlink != 1):
+                raise ValueError('untrusted_entry')
+    finally:
+        os.close(fd)
+    sys.path.insert(0, str(package))
+
+
+try:
+    if __name__ == '__main__':
+        trust_flat_entrypoint()
+    from celery_handoff import ANCHOR, current
+    from celery_readiness import Witness, capture, destinations, leased_acquisition
+    from dispatcharr_project import directory
+    from ops_protocol import NS, check, decode
+except (OSError, ValueError, ImportError):
+    if __name__ != '__main__':
+        raise
+    print('unavailable')
+    sys.exit(1)
 
 HOST = 'rivendell'
 TARGET = 'rivendell-dispatcharr'
@@ -88,6 +125,40 @@ def permit(raw, boot, now):
     for field in ('broker_scope_sha256', 'witness_sha256', 'ping_sha256'):
         digest(p[field])
     return p
+
+
+OBSERVER = 'samwise-observe'
+
+
+def observer_ids(passwd, groups):
+    users = [line.split(':') for line in passwd.decode('utf-8').splitlines()]
+    owns = [row for row in users if len(row) == 7 and row[0] == OBSERVER]
+    check(len(owns) == 1 and owns[0][2:4] == [str(OBSERVER_UID),str(OBSERVER_GID)] and
+          owns[0][-1] == '/opt/samwise-observe/login')
+    check(sum(len(row) == 7 and row[2] == str(OBSERVER_UID) for row in users) == 1)
+    memberships = [line.split(':') for line in groups.decode('utf-8').splitlines()]
+    named = [row for row in memberships if len(row) == 4 and row[0] == OBSERVER]
+    check(len(named) == 1 and named[0][2] == str(OBSERVER_GID) and
+          named[0][3] in ('',OBSERVER))
+    check(sum(len(row) == 4 and row[2] == str(OBSERVER_GID) for row in memberships) == 1)
+    check(all(len(row) != 4 or OBSERVER not in row[3].split(',') or
+              row[2] == str(OBSERVER_GID) for row in memberships))
+
+
+def evidence_ids(outer, drop):
+    check((outer.st_uid,outer.st_gid,stat.S_IMODE(outer.st_mode)) ==
+          (0,OBSERVER_GID,0o750))
+    check((drop.st_uid,drop.st_gid,stat.S_IMODE(drop.st_mode)) ==
+          (0,OBSERVER_GID,0o2750))
+
+
+def preflight_observer():
+    # Only local files, no NSS, DNS or call to the active SSH observer.
+    observer_ids(trusted_bytes(Path('/etc/passwd'),0,0o644,128*1024),
+                 trusted_bytes(Path('/etc/group'),0,0o644,128*1024))
+    with directory(DROP.parent, 0) as outer, directory(DROP, 0) as drop:
+        evidence_ids(os.fstat(outer),os.fstat(drop))
+        current(drop, ANCHOR, 0, OBSERVER_GID)
 
 
 def claim(path, p, owner):
@@ -186,17 +257,21 @@ def entry(mode, expected_sha=None, start_text=None):
         check(unit_command(p, permit_sha, started)[0] == '/usr/bin/systemd-run')
         return 'plan-valid'
     if mode == '--launch':
+        preflight_observer()
         # systemd, not this invocation, enforces the independent whole-cgroup
         # limit even if this parent exits. No failed unit is restarted.
+        left = HARD_SECONDS - (time.monotonic_ns()-started)/NS
+        check(0 < left <= HARD_SECONDS)
         run = subprocess.run(unit_command(p, permit_sha, started), cwd='/', env=CAPTURE_ENV,
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL, timeout=HARD_SECONDS, check=False)
+                             stderr=subprocess.DEVNULL, timeout=left, check=False)
         return 'shadow-finished' if run.returncode == 0 else 'unavailable'
     check(mode == '--worker')
     cgroup = Path('/proc/self/cgroup').read_text().strip().partition('::')[2]
     check(cgroup == '/system.slice/'+UNIT)
     ns = Path('/proc/self/ns/net').stat()
     check(ns.st_ino == p['net_inode'])
+    preflight_observer()
     claim(STATE, p, 0)
 
     def lease_window(_value, end):

@@ -144,7 +144,8 @@ changes a persistent system setting, or touches Rivendell.
 `celery_shadow_launcher.py` defines the exact host-side transient wrapper and
 worker entry, without installing or invoking it on Rivendell. It accepts no
 issue-provided parameters, validates a root-owned one-time expiring permit for
-the canonical Rivendell target and current boot, pins backend full ID/PID/start,
+the canonical Rivendell target and current boot, exact observer UID/GID and
+root-owned observer-group drop and anchor, and pins backend full ID/PID/start,
 network namespace inode, full enrolled names, endpoint and privately established
 broker/control scope, and pins both site-adapter SHA-256 values. It launches
 one fixed unit only, independently rechecks the approved permit digest in its
@@ -158,11 +159,19 @@ independent 17-second service budget, no restart, unconditional cgroup-wide
 kill, reserving one second for outer startup/teardown against the 18-second
 operational cap. The worker refuses launch beyond that one-second startup
 margin on the same boot monotonic clock and clamps the lease to the outer
-deadline. Unbounded host scheduling delay is still an abort gate. The
+deadline. The outer wait deducts elapsed preflight rather than opening a
+new 18-second budget. Flat-package startup admits only vetted root-owned
+paths in isolated Python mode; a disposable namespace tested the generated
+argv from an unrelated hostile cwd/PYTHONPATH, plus refusal with a corrupt
+module mode or outside its cgroup. Unbounded host scheduling delay is still an abort gate. The
 producer uses a closed environment and fixed executables, never sends commands
 to the collector, and has no direct Docker access. A local IPv4 allowlist is
 not port filtering: the pinned, reviewed broker adapter must additionally
 enforce the exact port and authenticate its scope before enrollment.
+ProtectSystem makes paths read-only, not unreadable, and allowing local Unix
+addresses or loopback does not prove a single port. Exact adapter confinement
+needs a file read allowlist that excludes credentials and Docker, and verified
+endpoint enforcement. These remain deployment blockers.
 Adapter binaries, their permit and an active integration are **not** enrolled
 or distributed by this draft. No shadow attempt may occur with missing or
 unqualified adapters.

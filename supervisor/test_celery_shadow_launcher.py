@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 from types import SimpleNamespace
+import subprocess
 import tempfile
 import time
 import unittest
@@ -80,6 +81,7 @@ class ShadowLauncher(unittest.TestCase):
                  patch.object(shadow.Path,'read_text',return_value=BOOT), \
                  patch.object(shadow.time,'time_ns',return_value=now), \
                  patch.object(shadow.time,'monotonic_ns',return_value=123), \
+                 patch.object(shadow,'preflight_observer'), \
                  patch.object(shadow.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as execute:
                 if mode == 'expired':
                     with self.assertRaises(ValueError):
@@ -101,6 +103,34 @@ class ShadowLauncher(unittest.TestCase):
         check_launch('--plan-only',self.now)
         check_launch('--launch',self.now)
         check_launch('expired',self.now+60*NS)
+
+    def test_exact_observer_identity_and_group_refuses_drift(self):
+        user = b'samwise-observe:x:999:985::/nonexistent:/opt/samwise-observe/login\n'
+        group = b'samwise-observe:x:985:\n'
+        shadow.observer_ids(user,group)
+        for wrong in (user.replace(b':999:',b':1000:'),user.replace(b':985:',b':986:')):
+            with self.assertRaises(ValueError):
+                shadow.observer_ids(wrong,group)
+        with self.assertRaises(ValueError):
+            shadow.observer_ids(user,group+b'docker:x:988:samwise-observe\n')
+        outer = SimpleNamespace(st_uid=0,st_gid=985,st_mode=0o40750)
+        drop = SimpleNamespace(st_uid=0,st_gid=985,st_mode=0o42750)
+        shadow.evidence_ids(outer,drop)
+        with self.assertRaises(ValueError):
+            shadow.evidence_ids(outer,SimpleNamespace(st_uid=0,st_gid=988,st_mode=0o42750))
+
+    def test_outer_timeout_deducts_preflight(self):
+        uname = SimpleNamespace(nodename=shadow.HOST)
+        with patch.object(shadow.os,'geteuid',return_value=0), \
+             patch.object(shadow.os,'uname',return_value=uname), \
+             patch.object(shadow.Path,'read_text',return_value=BOOT), \
+             patch.object(shadow,'trusted_bytes',return_value=json.dumps(self.p).encode()), \
+             patch.object(shadow.time,'time_ns',return_value=self.now), \
+             patch.object(shadow.time,'monotonic_ns',side_effect=[NS,NS+NS//4]), \
+             patch.object(shadow,'preflight_observer'), \
+             patch.object(shadow.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as run:
+            self.assertEqual(shadow.entry('--launch'),'shadow-finished')
+            self.assertEqual(run.call_args.kwargs['timeout'],17.75)
 
     def test_worker_refuses_replaced_permit_before_nonce_or_capture(self):
         uname = SimpleNamespace(nodename=shadow.HOST)
@@ -176,3 +206,54 @@ class ShadowLauncher(unittest.TestCase):
                 self.assertEqual(shadow.pinned_worker(p,os.getuid(),None),'unavailable')
                 runner.assert_called_once_with([str(shadow.WITNESS)],'/',shadow.CAPTURE_ENV,1)
                 self.assertFalse((output/'celery').exists())
+
+
+@unittest.skipUnless(os.environ.get('SAMWISE_CELERY_CGROUP_STAGE') == '1',
+                     'requires disposable bubblewrap staging')
+class FlatProductionEntrypoint(unittest.TestCase):
+    def test_exact_isolated_argv_bootstraps_flat_package_from_hostile_cwd(self):
+        from shutil import copyfile
+        actual_boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+        now = time.time_ns()
+        with tempfile.TemporaryDirectory(prefix='celery-flat-stage-') as tmp:
+            base = Path(tmp)
+            package = base/'package'
+            hostile = base/'hostile'
+            package.mkdir(mode=0o755)
+            hostile.mkdir(mode=0o755)
+            for name in ('celery_shadow_launcher.py','celery_readiness.py','dispatcharr_project.py',
+                         'ops_protocol.py','celery_handoff.py'):
+                copyfile(Path(__file__).with_name(name),package/name)
+                (package/name).chmod(0o644)
+                (hostile/name).write_text("raise RuntimeError('HOSTILE_IMPORT')\n")
+            raw = json.dumps(dict(version='celery-shadow-once-v1', host=shadow.HOST,
+                      target=shadow.TARGET, boot=actual_boot, nonce='f'*64,
+                      not_before_ns=now-NS, expires_ns=now+60*NS, backend_id='a'*64,
+                      backend_pid=202, backend_start_ns=now-2*NS, net_inode=300,
+                      names=PAIR, broker_endpoint=shadow.ENDPOINT, broker_scope_sha256='b'*64,
+                      witness_sha256='c'*64, ping_sha256='d'*64)).encode()
+            enrolled = package/'one-shot.json'
+            enrolled.write_bytes(raw)
+            enrolled.chmod(0o600)
+            def invoke(argv):
+                command = ['/usr/bin/bwrap','--unshare-user','--uid','0','--gid','0',
+                           '--unshare-uts','--hostname',shadow.HOST,'--unshare-net',
+                           '--clearenv','--setenv','PYTHONPATH','/hostile',
+                           '--ro-bind','/usr','/usr','--symlink','usr/lib','/lib',
+                           '--symlink','usr/lib64','/lib64','--proc','/proc','--dev','/dev',
+                           '--dir','/opt','--ro-bind',str(package),str(shadow.INSTALL),
+                           '--ro-bind',str(hostile),'/hostile','--chdir','/hostile',*argv]
+                return subprocess.run(command,timeout=4,stdin=subprocess.DEVNULL,
+                                      capture_output=True,text=True)
+            exec_argv = shadow.unit_command(
+                {'backend_pid':202},hashlib.sha256(raw).hexdigest(),time.monotonic_ns())[-6:]
+            good = invoke(exec_argv[:3]+['--plan-only'])
+            self.assertEqual((good.returncode,good.stdout,good.stderr),(0,'plan-valid\n',''))
+            # Exact generated worker argv on the wrong cgroup must refuse,
+            # with no import traceback or capture; the plan proves imports.
+            exec_argv[-1] = str(time.monotonic_ns())
+            denied = invoke(exec_argv)
+            self.assertEqual((denied.returncode,denied.stdout,denied.stderr),(1,'unavailable\n',''))
+            (package/'ops_protocol.py').chmod(0o664)
+            unsafe = invoke(exec_argv[:3]+['--plan-only'])
+            self.assertEqual((unsafe.returncode,unsafe.stdout,unsafe.stderr),(1,'unavailable\n',''))
