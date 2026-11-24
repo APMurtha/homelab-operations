@@ -13,7 +13,7 @@ import stat
 import sys
 
 PORT = 6379
-MIN_ABI = 6
+MIN_ABI = 4
 RUNTIME = Path('/opt/samwise-celery-shadow/pidbox-runtime.zip')
 STDLIB = Path(f'/usr/lib/python{sys.version_info.major}.{sys.version_info.minor}')
 READ_FILE, READ_DIR = 1 << 2, 1 << 3
@@ -24,7 +24,7 @@ NE, EQ, GT, MASKED_EQ = 1, 4, 6, 7
 
 
 class Ruleset(C.Structure):
-    _fields_ = [('fs', C.c_uint64), ('net', C.c_uint64), ('scoped', C.c_uint64)]
+    _fields_ = [('fs', C.c_uint64), ('net', C.c_uint64)]
 
 
 class PathRule(C.Structure):
@@ -46,6 +46,7 @@ def reject_rules():
                  'sendmsg', 'sendmmsg', 'recvmsg', 'recvmmsg', 'clone', 'clone3',
                  'fork', 'vfork', 'execve', 'execveat', 'unshare', 'setns',
                  'bpf', 'ptrace', 'process_vm_readv', 'process_vm_writev',
+                 'kill', 'tkill', 'tgkill', 'pidfd_send_signal', 'rt_sigqueueinfo', 'rt_tgsigqueueinfo',
                  'pidfd_getfd', 'io_uring_setup', 'io_uring_enter', 'io_uring_register'):
         yield name, ()
     yield 'socket', (Compare(0, NE, socket.AF_INET, 0),)
@@ -96,9 +97,10 @@ def activate_fs_and_port(libc, runtime):
 
     if syscall(444, C.c_void_p(), C.c_size_t(), C.c_uint(1)) < MIN_ABI:
         raise ValueError('broker_guard_unsupported_abi')
-    # ABI 6 supports all FS rights through IOCTL_DEV and scope restrictions
-    # on abstract Unix sockets and signals.
-    policy = Ruleset(0xffff, TCP_BIND | TCP_CONNECT, 3)
+    # ABI 4 already has TCP port restrictions and all filesystem rights
+    # through TRUNCATE. No device FD is inherited and no device can be opened;
+    # native seccomp independently rejects AF_UNIX and all signal sends.
+    policy = Ruleset(0x7fff, TCP_BIND | TCP_CONNECT)
     rules = syscall(444, C.byref(policy), C.c_size_t(C.sizeof(policy)), C.c_uint(0))
     try:
         for path, is_dir, rights in ((STDLIB, True, READ_FILE | READ_DIR),

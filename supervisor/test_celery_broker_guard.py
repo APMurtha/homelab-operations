@@ -19,9 +19,9 @@ class GuardShape(unittest.TestCase):
 
     def test_native_struct_and_fixed_target(self):
         self.assertEqual((ctypes.sizeof(g.Ruleset), ctypes.sizeof(g.PathRule),
-                          ctypes.sizeof(g.NetRule)), (24, 12, 16))
+                          ctypes.sizeof(g.NetRule)), (16, 12, 16))
         self.assertEqual(g.PORT, 6379)
-        self.assertEqual(g.MIN_ABI, 6)
+        self.assertEqual(g.MIN_ABI, 4)
         self.assertEqual(g.RUNTIME, Path('/opt/samwise-celery-shadow/pidbox-runtime.zip'))
 
     def test_only_unconnected_ipv4_tcp_sockets_can_be_created(self):
@@ -36,7 +36,7 @@ class GuardShape(unittest.TestCase):
 
     def test_denies_process_socket_escape_paths(self):
         for name in ('bind', 'listen', 'accept', 'accept4', 'socketpair', 'clone3',
-                     'execveat', 'setns', 'bpf', 'io_uring_setup', 'pidfd_getfd'):
+                     'execveat', 'setns', 'bpf', 'io_uring_setup', 'pidfd_getfd', 'kill', 'pidfd_send_signal'):
             self.assertTrue(self.denied(name))
         self.assertFalse(self.denied('sendto', (42, 0, 0, 0, 0)))
         self.assertTrue(self.denied('sendto', (42, 0, 0, 0, 0x1234)))

@@ -1,442 +1,241 @@
-# Celery readiness: staging candidate; production remains held
+# Celery control-plane readiness: operational one-shot
 
-Issue #40 did not enroll Celery. Issue #42 covered only relay, backend, gateway,
-VPN-container and Jellyfin. On November 23 the newest retained historical
-Celery pass was at 04:11:39 UTC, well outside the 60-second validity limit.
-Stored Docker health and the application's Redis-backed **uWSGI** heartbeats
-are not evidence of Celery broker responsiveness. Keep live Celery unavailable.
+This draft qualifies a least-privilege, fixed-scope Celery **readiness
+observation**, not per-worker cryptographic identity. It does not install
+a monitor, register a timer, mutate the application, or authorize production
+execution. The local publication candidate must be reviewed and approved
+separately before reaching the existing public PR.
 
-## Read-only Rivendell source findings
+## Security model and choice
 
-The two passive bracket passes took 0.120 s and 0.114 s. They agreed on the
-full backend container ID, PID/start tuple, worker-master PID/start ticks,
-and cgroup and PID, network, mount and UTS namespaces. Both worker masters
-are distinct and in the backend container's cgroup and namespaces; exclude
-the shell wrappers and prefork children from the observation. Deployed
-Celery's worker CLI expands its actual configured default/DVR nodename
-templates against the backend hostname. The exact configured names were
-verified privately; do not publish host-specific worker or runtime IDs.
+Use the conventional [Celery remote-control ping](https://docs.celeryq.dev/en/stable/userguide/workers.html#remote-control)
+inside an **operator-reviewed application trust boundary**. The pinned
+[Kombu pidbox implementation](https://github.com/celery/kombu/blob/v5.6.2/kombu/pidbox.py)
+defines how the bounded collection delivers its raw reply list. Two exact worker names must reply, the
+enrolled host/guest process identities and the broker endpoint must be
+consistent before and after, and a separate file-only observer must see
+the result during the publisher lease. This shows that the expected
+control-plane names responded in scope during this sample. It does not
+measure task execution, queues, throughput, media quality, or the
+cryptographic identity of the reply origin.
 
-Joining worker open socket inodes to the backend namespace's existing TCP
-table independently found both workers connected to Redis on loopback
-port 6379 inside the VPN-shared namespace. Stored backend creation settings
-specify Redis DB 0 and no separate read/write override. These are passive
-configured identity and kernel endpoint observations, not a proof of the
-live logical DB, control namespace, worker reply authenticity, or
-runtime readiness. No production ping, broker request, task execution,
-payload capture, service/configuration change, or enrollment occurred.
-A genuine before/after bracket spanning a real production capture remains
-to be qualified under a separate grant.
+Redis pub/sub does not attach an authenticated publisher identity to a
+Celery pong. A process allowed to publish on the relevant broker paths
+can emit a name. Loopback, the selected Redis DB, the exchange, a matching
+UID, and identical before/after process identities establish consistency,
+not isolation from broker-capable peers. This design assumes **all**
+principals that can publish on the selected control/reply paths are
+trusted for this observation. Do not enroll the site on reachability
+alone. Review actual shared-network members, host/namespace entry rights,
+broker transport/ACLs or isolation and control publishing authority.
+An unknown, unreviewed, or untrusted writer is a hard no-go; leave Celery
+unavailable or separately design stronger isolation. Never enumerate or
+test this on production by publishing messages.
 
-## Acquisition and exclusive publication
+Per-worker signing could assert an independent source only with controlled
+per-worker keys and independently authenticated incarnation enrollment,
+rotation and revocation. Privilege sharing, copied keys, or handing out
+the same trust root undermine that advantage. That engineering and
+operational cost is disproportionate for this trusted application
+readiness observation. There is no signer, key, UID migration, or signed/
+legacy fallback in the active producer.
 
-- The staging core uses one Celery 5.6.3 destination-scoped
-  `inspect ping --timeout=8 --json` with the two enrolled **full exact
-  names**, no task, 12-second subprocess deadline, 16 KiB max per pipe in
-  memory and no raw-output retention. It waits for leader exit without
-  reaping, signals the original process group, then reaps; a child escaping
-  that group requires the independent launcher/cgroup boundary.
-- Exit 0, strict complete UTF-8 JSON, empty stderr, no duplicate keys at
-  any depth, only enrolled exact names and exact pong values are
-  required. A nonempty validated set of one role is `readiness-failed`
-  (no positive witness for the other role, not a confirmed outage). An
-  empty or malformed capture, broker/transport error, nonzero exit, clock
-  discontinuity or timeout is unavailable.
-- Two trusted bounded passive adapters must report the same producer
-  boot, full backend container ID/PID/start time, both enrolled PID/start
-  tick tuples and a fresh healthy backend. The fixture output timestamp
-  remains the earliest of acquisition start and the input engine probe
-  timestamps; publication never refreshes it. The unchanged wire format
-  and vocabulary expire at that original time plus 60 seconds.
-- A dedicated fixed `celery-v1/` subdirectory under the existing evidence
-  directory holds the exclusive Celery path. The existing multi-observation
-  projector no longer writes or unlinks Celery; the collector ignores the
-  old top-level Celery file. A provisioned same-group 0640 anchor is
-  used only for shared/exclusive nonblocking synchronization. A writer
-  withdraws any previous commit before capturing and creates a new lease
-  inode, never relocking an old one. An atomic receipt and fail-closed
-  commit gate bind stable inode/owner/group/mode/size/time signatures of the
-  drop, anchor, lease and receipt. Commit creation and its final contents
-  happen while the writer holds the exclusive anchor, so a partial commit
-  or crash can never serve a positive. The reader holds the shared anchor
-  throughout the bounded file reads and verifies the exact signatures and
-  liveness before and after reading.
-- Linux open-file-description write locking requires an actually writable
-  lease descriptor. The restricted reader only queries conflicts through a
-  read-only descriptor and cannot assert liveness. No publisher, dead
-  publisher, missing or replaced anchor, invalid owner or mode, malformed
-  or incomplete commit, receipt replacement, unsafe directory, wrong
-  group, or expired observation cannot return a current positive. The
-  result is point-in-time during the active lease only; expiry still wins.
-  An OFD lock follows its open file description, not a PID: the
-  anchor and lease are CLOEXEC, the capture uses close_fds with no passed
-  descriptors, and the pinned publisher must never fork an inheriting
-  child or transfer the lease descriptor. Enforce whole-cgroup teardown.
-  Read-time revalidation is not an assurance about a future operation or
-  a restart after the final worker bracket. An unprivileged reader may
-  contend for its read lock; this can withhold but cannot forge evidence.
-  A malicious root/custodian is outside this trust boundary.
-- Acquisition is not launched by untrusted issue content. The caller,
-  executable, app, full names, broker binding, and passive adapters must
-  be fixed in a separately reviewed launcher/enrollment. This branch adds
-  no production launcher, root privileged callable dispatcher, Docker
-  socket allowance, lease-holder service, timer, credential or policy
-  installation. Production drop must be boot-local under /run, root-owned,
-  with the enrolled read-only observer group; no inherited old boot state.
+## Acquisition and refusal
 
-## Qualification and remaining enforcement gate
+* A fresh, root-owned, hash-pinned one-shot permit binds the reviewed
+  boundary inventory digest, source hashes, boot, backend incarnation,
+  target namespace, exact names and reviewed broker scope. The private
+  inventory itself is not stored in the receipt or Git. Record the
+  authority and inspection that make each reachable principal trusted.
+  Revalidate immediately before each one-shot: the digest binds the
+  manual trust decision, not a live membership detector. An idle or
+  same-UID entrant can be invisible to the runtime witness. The renderer
+  hashes the record, it cannot approve it.
+* A single transient, zero-capability systemd service joins only the
+  pinned backend network namespace. The witness checks readable host
+  procfs PID/start/command/cgroup/NSpid information, fresh backend health
+  and its own Redis endpoint. It reads no foreign process FD directory
+  and needs neither SYS_PTRACE nor DAC override.
+* The child requires the exact boot, current network namespace, fixed
+  service cgroup, boundary enrollment hash and monotonic cutoff before
+  dialing. systemd restricts traffic to the fixed loopback address;
+  native Landlock additionally restricts TCP port and app/runtime files;
+  native seccomp denies other socket types, signal sends, subprocess and
+  namespace changes. The reviewed implementation requires x86-64 Linux,
+  Landlock TCP ABI 4+, functioning systemd cgroup v2 and cgroup IP policy,
+  libseccomp, the pinned stdlib and immutable Celery/Kombu/Redis archive.
+  The native child refuses if its own kernel guards cannot apply. An
+  unsupported systemd can ignore cgroup address filtering: the property
+  alone is not evidence. Verify effective kernel enforcement in a separate
+  disposable local-only cgroup on the target before authorizing any live
+  ping; refuse production rollout if it is unverified. The Python audit
+  hook binds the reviewed client destination but is not a kernel IP filter.
+* The helper makes one destination-scoped `ping` with an eight-second
+  collection interval, no command from user data, no task execution and
+  no retry. It checks the real transport database/control/reply exchange
+  and serializer/key-prefix settings. It examines the raw list, with
+  an explicit limit of three so an observed third reply cannot be hidden
+  by Celery flattening or normal destination-count termination. Only
+  exactly two unique expected `{"ok":"pong"}` replies qualify. This
+  says nothing about replies outside the collection horizon.
+* Missing, stopped, late or renamed workers, wrong scope, malformed,
+  duplicate or unexpected observed replies, a contradictory witness, and
+  stale/missing/dead receipt all read unavailable, not a confirmed outage.
+  One healthy response is not both-ready. The fenced reader needs a
+  current matching commit and the OFD publisher lock. Failed acquisition
+  cannot resurrect a previous healthy receipt.
+* One bounded wrapper (18 seconds), transient unit runtime (17 seconds),
+  broker command budget (12 seconds) and one process timer bound execution.
+  Both witness process and broker helper are in that same cgroup; no
+  detached restart or separate service survives its cancellation. The
+  test runner checks teardown without treating its emergency cleanup as
+  a pass.
 
-Opt-in Bag-End tests used two real unprivileged Celery workers and disposable
-Redis with TCP disabled, no persistence and a private Unix-domain socket;
-container metadata was synthetic. In the staged leased path, obtaining
-both pongs and publishing took approximately 1.04 s and losing the broker
-became unavailable in approximately 3.05 s. The reader returned both-ready
-only while the live lease existed. The separate transient user-cgroup test
-used a fixed fixture with independently bounded witness subprocesses,
-NoNewPrivileges, zero capabilities, seccomp, bubblewrap-private
-filesystem/PID/network views, and observed an actual setsid descendant for
-each path. Both clean and forced runtime-limit runs left empty cgroups;
-startup and runtime tests took approximately 0.8 and 2.2 seconds. An
-additional isolated run at the production candidate's exact 17-second
-configured limit left an independent one-second margin for launch/teardown
-and the fixture asserts wall time below 18 seconds with cgroup empty; it did not run the host-facing adapter. The
-cgroup test did not access a real runtime backend or use a broker.
-A separate real loopback SSH forced-command fixture, using disposable keys,
-actually read `both-ready` only while the candidate's OFD lease was live and
-returned unavailable following its closure. The staged allowlist mounted
-only the fixture code/evidence read-only; native cBPF mirrored the installed
-socket-related deny list. AF_UNIX/INET/INET6 creation was actually refused;
-host credential and Redis/Docker socket paths were hidden, and the reader
-could not reopen or lock the lease as writer. The fixture deliberately
-substituted its unprivileged owner for the production root/observer-group
-binding; it is not a test of the installed Rivendell AppArmor profile.
-Offline regressions cover lock/receipt corruption, missing/dead publisher,
-live contention, kill before withdrawal and after commit, interrupted commit,
-restore-mode non-revival, lease forgery, TTL, and fresh recovery. The existing
-relay/four-container readers and unrelated media were not changed on production.
+## Staging and reproducibility
 
-Rivendell's existing AppArmor policy names the old top-level Celery projection
-and does not allow the new directory/module. Its native seccomp deny list blocks
-socket and related syscalls, and does not deny fcntl. The exact file-only
-review delta is `celery-observer.apparmor.patch`: one read-only Python module,
-one read-only fixed directory, two specific read/lock paths and two specific
-read-only files; remove the superseded top-level access. No network, write,
-credential or Docker access is added. The existing profile and candidate
-were reviewed and the candidate compiled with `apparmor_parser -Q -T -K`
-(no kernel load or cache writes); this is not a production policy test.
-Pin a host-specific active-profile test to verify lock syscall mediation,
-drop traversal and denied access on the exact dedicated account before
-ever enabling a real producer. Do not infer deployment authorization
-from an unprivileged test or installed capability.
+The tested staging model has split host/guest PID views, a shared but
+egress-free application network, and Redis plus two real Celery workers
+under the same synthetic service UID. The actual launcher, witness,
+broker adapter and UID/GID-restricted native seccomp observer are used.
+No production addresses, keys, configs, media, or mounts enter the fixture.
 
-Run default offline tests:
-`cd supervisor && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -v`.
-Run the independent broker fixture in that directory with
-`SAMWISE_CELERY_STAGE=1`, `SAMWISE_STAGE_REDIS`, and
-`SAMWISE_STAGE_LIBRARIES` pointing to independently verified existing
-staging dependencies. `SAMWISE_CELERY_CGROUP_STAGE=1` enables the disposable
-Bag-End user systemd/bubblewrap tests; with `SAMWISE_TEST_SSH=1` it also
-runs the scoped real SSH reader fixture. No command installs dependencies,
-changes a persistent system setting, or touches Rivendell.
+Run offline tests from the commit's `supervisor/` directory:
 
-## Fixed host-facing launcher candidate and passive follow-up
+```sh
+python3 -B -m unittest discover -p 'test*.py'
+```
 
-`celery_shadow_launcher.py` defines the exact host-side transient wrapper and
-worker entry, without installing or invoking it on Rivendell. It accepts no
-issue-provided parameters, validates a root-owned one-time expiring permit for
-the canonical Rivendell target and current boot, exact observer UID/GID and
-root-owned observer-group drop and anchor, and pins backend full ID/PID/start,
-network namespace inode, full enrolled names, endpoint and privately established
-broker/control scope, and pins both site-adapter SHA-256 values. It launches
-one fixed unit only, independently rechecks the approved permit digest in its
-worker, verifies cgroup/namespace, and consumes its nonce once before
-any observation. A positive local worker phase is not returned as readiness:
-only the separate read-only observer can read a live leased sample. The fixed
-path supports one witness subprocess before and one after, each independently
-limited to one second; an eight-second reply request with a 12-second process
-cap; and up to three seconds for the separate lease reader. systemd owns an
-independent 17-second service budget, no restart, unconditional cgroup-wide
-kill, reserving one second for outer startup/teardown against the 18-second
-operational cap. The worker refuses launch beyond that one-second startup
-margin on the same boot monotonic clock and clamps the lease to the outer
-deadline. The outer wait deducts elapsed preflight rather than opening a
-new 18-second budget. Flat-package startup loads only verified no-follow root-owned source bytes
-in isolated Python mode, never resolving sibling package, native-extension
-or cached-bytecode alternatives; a disposable namespace tested the generated
-argv from an unrelated hostile cwd/PYTHONPATH, plus refusal with a corrupt
-module mode or outside its cgroup. Unbounded host scheduling delay is still an abort gate. The
-producer uses a closed environment and fixed executables, never sends commands
-to the collector, and has no direct Docker access. A local IPv4 allowlist is
-not port filtering: the pinned, reviewed broker adapter must additionally
-enforce the exact port and authenticate its scope before enrollment.
-ProtectSystem makes paths read-only, not unreadable, and allowing local Unix
-addresses or loopback does not prove a single port. Exact adapter confinement
-needs a file read allowlist that excludes credentials and Docker, and verified
-endpoint enforcement. These remain deployment blockers.
-The staged site adapters are `celery_site_witness.py` and
-`celery_site_pidbox.py`; any future isolated installation must copy the
-approved source bytes at the fixed paths `witness` and `pidbox-ping`. Their
-executables, enrollment files and broker/dependency identity must match
-the reviewed values, and worker PID/start identity must match independently
-in both sides of the bracket. No production adapter, permit or publisher
-has been enrolled or installed. Never accept a claimed configuration hash
-as evidence of a running, qualified topology.
+On the explicitly approved disposable staging VM only, build a local bundle
+of the files named by `stage_celery_operational_vm.py`, the previously
+reviewed observer's native `launch.py`, disposable `redis-server`, and
+the pinned runtime package directory `pkg/` (Celery 5.6.3, Kombu 5.6.2,
+redis-py 6.4.0). Verify the code/version manifest and runtime checksums
+before transfer; the renderer writes the hash of the actual staged ZIP.
+For the media test, supply a user-approved dependency directory
+`media-root/`, created by extracting official Ubuntu package files
+without installing them. This run used FFmpeg 8.0.1-3ubuntu2 and its
+extracted libraries. The harness checks the executable SHA-256,
+generates a synthetic color/sine clip, and decodes only its own loopback
+HTTP transport.
 
-Passive follow-up corroborated that the two actual worker masters do not
-inherit the Docker-creation CELERY_BROKER_URL as a direct override. Their
-startup fallback inputs resolve to loopback Redis port 6379, DB 0, with no
-separate read/write override. The deployed Django/Celery/Kombu configuration
-also resolves the default celery.pidbox exchange, DB-prefixed fanout, no
-global broker key prefix. Exactly two matching role masters were seen in
-the backend, but the existing passive sources did not expose live in-memory
-effective control settings or broker-wide exclusive subscriptions. No
-credentials, raw env, worker outputs or private identities were recorded
-here. Startup configuration plus open TCP sockets is **not** live broker
-attestation or readiness.
+```sh
+sudo timeout --signal=TERM 42 /usr/bin/python3 -IB   stage_celery_operational_vm.py "$BUNDLE"
+```
 
-The existing restricted SSH account is UID 999, primary GID 985 and has no
-supplementary or Docker group membership. The installed observer mode is
-root-owned evidence directory 0750 with group 985, the fixed SSH ForceCommand,
-key-only admission with source restriction, no forwarding, PTY, interactive
-auth or environment, an enforcing baseline `samwise-observe-v1` profile and
-a kernel seccomp socket-deny launcher. The installed profile does not permit
-the candidate module/drop. The candidate exact file-only diff compiles
-offline, but its active profile has not been loaded on any host: staging
-inventory contains no equivalent already-authorized loaded disposable
-profile. Staging proved the confinement mechanisms and real disposable
-SSH equivalent, not production root/group/AppArmor mediation or the exact
-site broker adapter.
+The optional final argument names a synthetic fault; see the allowed
+choices in the script. Verify the KVM guest and trusted SSH host key from
+private inventory first. The harness refuses existing fixed paths/cgroups,
+owns the temporary children/files it creates, and never loads AppArmor.
+The native observer, policy patch, protocol, lease handoff code, paths and
+format match the previously enforced reader test byte-for-byte. This
+operational producer test does not reload the already qualified observer
+profile and is not a new end-to-end AppArmor load. Requalification of new
+reader/policy bytes would require separate approval.
 
-Exact-profile activation requires separate action-time authorization,
-preferably on a disposable replica only. Scope that grant to loading only the
-named, hash-verified candidate profile in the disposable replica, staging
-the exact UID/GID and synthetic evidence, and verifying open/lock mediation
-on the four fixed files, failure on missing/dead lease, and that writes,
-sockets, broker/Docker data, credentials and all unrelated reads remain
-denied. No production login, network request, key or permissions expansion
-is needed. Keep the installed Rivendell baseline independent, unchanged,
-and preserve the working relay and four-container paths.
+The same native observer returned unavailable before the lease, both-ready
+during it, and unavailable after closure. The positive run containing
+the actual renderer and representative continuous playback took
+**12.966 seconds**, sampled **1.521 CPU seconds** and a **45.43 MiB**
+cgroup peak, and left the publisher cgroup absent. The service had zero
+capabilities and Seccomp mode 2. All five synthetic legacy observations
+and their hashes were unchanged. One HTTP MPEG-TS audio/video decoder
+advanced **16 → 192 → 244 → 315 frames** before, during, after, and at
+completion, with no decoder errors. This is not production media,
+provider, user player, or SSH authentication validation.
 
-## Site adapter qualification and exact boundary
+Representative fault runs of the exact generated unit, no positive
+receipt and cgroup absent:
 
-- The passive witness accepts no argv or service requests. It reads only
-  trusted root-owned fixed inputs and bounded local kernel witnesses: boot,
-  backend ID/PID/start and cgroup, worker master UID/argv/role/start,
-  PID/mount/UTS/network membership, recent stored engine health and each
-  worker's already-established loopback socket. It rejects ambiguous
-  process trees, wrong queue/role, PID reuse, replacement, permission drift,
-  health staleness and socket ownership errors; only the closed witness
-  shape reaches the launcher. A synthetic trusted health file fixture is not
-  a deployed producer. Empty capability boundaries may deny cross-UID
-  proc FD access on Rivendell; no capabilities were added or requested.
-- The captured broker adapter is fixed to TCP 127.0.0.1:6379 and Redis
-  database 0, `celery.pidbox` fanout (`/0.` prefix with fanout patterns),
-  `reply.celery.pidbox` reply exchange, empty global prefix, JSON only.
-  The observed effective Kombu values are checked rather than inferring
-  pub/sub isolation from the selected Redis DB. The helper pins the Redis
-  executable bytes and PID/start plus boot/PID/net namespaces, verifies
-  its exact listener and both worker-owned kernel connections, and refuses
-  a foreign connection or non-loopback interface. It runs with isolated
-  Python/no ambient site discovery and a SHA-pinned local dependency
-  archive, an exact permitted endpoint audit policy, no arbitrary commands,
-  no credential input and no raw receipt persistence. Application-layer
-  hook is not independent kernel egress mediation: qualifying real-site
-  one-port/file confinement remains mandatory before any approved use.
-- One explicit two-name `ping` destination list, no task invocation/network
-  fallback. The fixed path retains raw reply frames only in bounded process
-  memory and collects a third frame rather than flattening by worker name
-  at the first two. Duplicate, foreign or malformed replies fail closed;
-  one positively validated enrolled reply is still not both-ready. A
-  before/after socket snapshot cannot detect every possible transient
-  foreign process between snapshots; use independently controlled
-  exclusive topology and reject any ambiguous origin. No live shared
-  Rivendell VPN namespace is considered equivalent to this isolated fixture.
-  The fixed systemd unit joins only the enrolled network namespace, not a
-  guest/container PID namespace. This adapter deliberately requires itself,
-  both workers and Redis to share the enrolled private PID namespace, so a
-  host-PID worker confronting the normal Docker/PID split refuses before any
-  broker connection. The loopback-only network requirement separately refuses
-  a shared VPN namespace with additional interfaces. Do not bypass either
-  condition, add namespace capabilities, or run a production shadow with
-  this revision. A future production adapter must independently qualify a
-  bounded read-only host-PID mapping (and exclusive endpoint/confinement) or
-  continue reporting unavailable.
-- Real positive check used pinned existing Celery/Kombu/redis-py sources,
-  disposable Redis and two workers on actual TCP 127.0.0.1:6379 in private
-  PID/network namespaces, not the production site. It also exercised the
-  exact broker executable through the launcher SHA pins, live leased
-  publication and read path using a synthetic backend-health witness. The adapter rejected
-  a foreign subscriber and a duplicate-role worker, and the decoy-port test
-  measured no connection to a real TCP listener at 6380. The kernel-witness
-  helper separately passed synthetic proc/cgroup/file fixtures; the actual
-  production UID and cgroup witness path was not emulated or attested.
-  Run the additional real fixture by setting `SAMWISE_CELERY_SITE_STAGE=1`
-  with the same existing redis/library variables.
+| Synthetic fault | Observed wall time |
+| --- | ---: |
+| Either worker dead; Redis stopped/replaced; unexpected peer UID | 0.49–0.51 s |
+| In-flight cancelled after both worker handlers got the ping | 1.77 s |
+| Either worker slow; wrong exchange; malformed reply | 9.74–9.85 s |
 
-### Exact-profile enforcement remains on hold
+The offline raw reply tests additionally validate third observed replies,
+unexpected names, duplicates, bad transport options and partial replies.
+The prior unchanged observer enforcement and kernel IP/port tests supply
+separate layer evidence; they are not a new live production test.
 
-No independently verified disposable VM with a separate kernel and existing
-authorization was available. Rootless user namespaces/containers are useful
-for socket and reader regressions but share their host kernel and are not a
-candidate for AppArmor policy mutation here. Do not use a host based only
-on a familiar staging nickname or assume its security policies are private.
+## Production procedure (operator only, not pre-approved)
 
-Review pins: baseline full policy SHA-256
-`55211466bb0a28e3f28b5fb7184e74428f528d194bf0a8fba85c10341d34cf17`;
-offline-compiled candidate full policy
-`367ed81e10859210a542f1b2497a56d854d086f7fe86d037e373bb8c385f0857`;
-repository diff
-`17c604186d4034039df46cae5a0c157f8fd171029637516b33251477bfd3920e`.
-They are distinct artifacts. No load/unload step ran.
+1. **First stop if the trust boundary cannot be established.** Compare the
+   reviewed release and immutable payload manifest to the target. Obtain
+   only read-only local metadata: host boot, exact process and backend
+   incarnations, namespace, worker full names/queues, Redis endpoint and
+   non-secret control configuration. Review every principal able to
+   publish replies from the shared namespace, including how namespace
+   access and sharing are controlled. Reject unknown participation,
+   weaker/missing restrictions, unrelated broker sockets, unsupported
+   kernel or missing fresh health. Write root-owned, private
+   `witness-snapshot.json`, `backend-frame.json`, and an operator-reviewed
+   `boundary-inventory` documenting the justification. Do not copy
+   secrets, environment dumps, names/IDs or private addresses to Git.
+2. **Build and independently review payloads** in a root-owned private
+   staging directory. Use the tested x86-64 stdlib/native libraries, exact
+   runtime ZIP, witness executable and pidbox adapter. Use these fixed names
+   in `$PAYLOAD`:
+   `witness` from `celery_operational_witness.py` (0755),
+   `pidbox-ping` from `celery_site_pidbox.py` (0755),
+   `celery_broker_guard.py` and `pidbox-runtime.zip` (0644).
+   Verify each source/dependency hash against the reviewed manifest.
+   Prepare the four records **offline** using `$NODE` as the exact existing
+   production launcher node selector and epoch nanoseconds from the trusted
+   target clock:
+   ```sh
+   python3 -B render_celery_operational_enrollment.py      --witness "$PRIVATE/witness-snapshot.json"      --health "$PRIVATE/backend-frame.json"      --boundary "$PRIVATE/boundary-inventory"      --payload "$PAYLOAD" --output "$NEW_PRIVATE_DIR"      --node "$NODE" --now-ns "$NOW_NS" --ttl-seconds 60
+   ```
+   The command refuses to overwrite an output and cannot install or run
+   anything. Refresh if stale; never retry a consumed permit or edit a
+   deployed enrollment in place.
+3. **Separate approval before any install, profile change or live ping.**
+   Snapshot existing observer/collector/loader bytes and modes and the
+   entire policy inventory; stage the exact reviewed AppArmor file-only
+   delta without applying it. Confirm baseline hash, policy SHA,
+   interpreter paths, and how rollback restores only modified files.
+   Check the existing observer account/group already match
+   `OBSERVER_UID`/`OBSERVER_GID`; do not change accounts. Use only
+   root-owned, non-writable ancestors. Under installation approval install
+   precisely the reviewed launcher and its four flat dependency files
+   (`celery_readiness.py`, `celery_handoff.py`, `dispatcharr_project.py`,
+   `ops_protocol.py`, all 0644) plus `$PAYLOAD` to
+   `/opt/samwise-celery-shadow` (0755). Install the three private enrollment
+   records there mode 0600 and `backend-witness.json` mode 0600 in
+   `/run/samwise-celery-shadow` (0700). Create only the Celery drop under
+   the existing observation parent: root:existing observer group
+   `/run/samwise-observations/celery-v1` (02750) with mode-0640
+   `.celery-acquisition.lock` and no prior Celery data.
+   If needed and separately approved, install only the reviewed compatible
+   observer Python module/collector and exact file-only AppArmor change,
+   without changing the native socket-deny launcher or five baseline
+   paths. Dry compile with `apparmor_parser -Q -T -K`; do not replace an
+   unknown incumbent. Verify baseline observations before any active check.
+4. **Separately approved shadow only.** With the fresh permit in place,
+   invoke these fixed commands on the approved target:
+   ```sh
+   sudo /usr/bin/python3 -IB /opt/samwise-celery-shadow/celery_shadow_launcher.py --plan-only
+   sudo /usr/bin/python3 -IB /opt/samwise-celery-shadow/celery_shadow_launcher.py --launch
+   ```
+   The plan command makes no broker request; its success is not health or
+   a production grant. Coordinate one sanitized read through the existing
+   restricted observer during the live lease, triggered by the reviewed
+   root-local update to `.celery-publication.json` in the Celery-only
+   drop. Verify unavailable after exit, generated cgroup absent, and all
+   five existing observations unchanged. A failed sample is not retried.
+   Do not install a timer from this one-shot candidate. Recurring/live
+   dashboard monitoring needs its own reviewed scheduling and freshness
+   contract and separate approval.
 
-Once a named disposable replica is independently verified (pinned host key,
-separate kernel/boot, no shared policy paths or production mounts/services,
-no production network or credentials), request confirmation for that exact
-temporary addition/removal, not a replacement on any persistent host.
-Privately snapshot its existing policy inventory, ensure the candidate
-profile name is absent, and verify the two full hashes and exact file-only
-diff. In that approved VM only: compile with no load/cache, temporarily load
-only those exact bytes in enforce mode, validate the real forced reader
-as UID 999/GID 985 with synthetic root:985 files and the native deny list.
-Check read/OFD mediation on the four fixed paths, lease live/dead/missing,
-and denial of writes, socket/TCP, Docker/Redis, credentials and unrelated
-traversal. Tear down only the test SSH/process cgroup and candidate profile;
-verify cgroup empty, no socket/file residue and byte-for-byte original
-policy inventory. A discrepancy or existing-name conflict stops the test.
-Absence of an approved replica means report this gate as blocked, not passed.
+## Rollback (operator only)
 
-## Samwise-staging signed-origin prototype (not production-qualified)
-
-VM180 (`staging`) is the designated KVM guest. Its kernel reported
-7.0.0-43-generic, AppArmor, Landlock, BPF and cgroup v2; no NFS/CIFS/9p/virtiofs
-mounts were present. The VM has a management default route. Fixtures must
-have a separate network namespace with **no routes out**, no host/production
-mounts or credentials, and no physical link/bridge attachment. A synthetic
-second interface may model VPN namespace sharing without introducing a route.
-
-The same launcher now verifies a disjoint staging-only hostname, target and
-permit version along with a pinned signed-origin enrollment. Rivendell
-cannot consume the staging tuple. The stage launcher mounts root-owned
-synthetic user/group files read-only into the transient attestor mount
-namespace: GID 985 is already used by tss on VM180. Do not change or reuse
-that system account to get the test through.
-
-A failed VM180 stock-kernel control showed that the original no-capability
-unit could not resolve PID namespace and executable links for a different
-UID. The new candidate splits the interval into independent units:
-* A fixed lease publisher brackets the ping with kernel-backed host/guest
-  PID, start ticks, cgroup membership, broker socket and per-role UID
-  validation. It receives no AF_INET/AF_INET6 sockets and has its own
-  private network. Local AF_UNIX IPC to systemd starts the fixed helper.
-  `CAP_SYS_PTRACE` is required in this unit for cross-UID procfs metadata;
-  the debug syscall filter denies direct tracing. This remains privileged
-  host-side code and its trust boundary needs independent review.
-* The one-shot broker unit has **zero** capabilities (not even ptrace),
-  no lease/evidence/state or management socket paths, and only joins the
-  enrolled broker network namespace. The unit permits only loopback IPv4;
-  the immutable broker guard independently restricts allowed TCP port,
-  file reads, subprocess creation and socket types. Any failed entry guard,
-  deadline or proof is unavailable. The inner process cannot publish.
-* The exact two role names respond to the single capture with separate
-  signatures bound to one fresh nonce, fixed scope and the attested
-  incarnation; unsigned or wrong-role responses do not qualify. The
-  production worker-side signing and per-role identity deployment is not
-  installed or authorized. It requires review of key lifecycle, worker
-  isolation and compatibility with the existing service, then separate
-  production approval. Never apply it as part of prototype staging.
-
-Independent component evidence on VM180:
-* The pinned candidate AppArmor SHA above compiled on the VM with
-  `apparmor_parser -Q -T -K`; `samwise-observe-v1` was absent afterward.
-  This is **not** kernel enforcement or an AppArmor profile load.
-* The credentials-free rootless private-loopback Redis/Celery signed
-  fixture completed its positive capture in **8.199 s**. It rejected a
-  duplicate identity and a wrong key after restart; both attempts to read
-  the other synthetic role's process memory were denied. Fixture limits
-  were 512 MiB and 64 processes, with its root filesystem read-only
-  and a 32-MiB scratch volume. These are limits, not measured consumption.
-* The disposable transient service split retained only
-  `CAP_SYS_PTRACE` (effective mask 0x80000), reported `Seccomp: 2`, read
-  the synthetic cross-UID namespace metadata, and failed to create an IP
-  socket. A nested unit via the local manager reported zero effective
-  capabilities. This exercised the privilege split, not both complete
-  generated units or a single end-to-end leased receipt.
-
-A second independent checkpoint fixed three omissions before any deployment:
-a VM-equivalent test showed native Redis/Celery imports need their trusted
-stdlib DSOs loaded before Landlock; a different staged unit verified the
-kernel-native port/file guard after that preload. The helper now discards
-unused regular loader handles, but refuses inherited foreign descriptor
-types. Only after kernel boot, current namespace inode, fixed unit cgroup,
-and pinned enrollment hash are rechecked can it open a socket. Boot/inode
-disagreement is therefore rejected before any wrongly directed network I/O,
-not merely after invalidating evidence.
-
-Verified VM180 controls (all synthetic, not the exact end-to-end run):
-* Under native confinement the approved Celery 5.6.3 / Kombu 5.6.2 /
-  Redis 6.4.0 imports succeeded; 127.0.0.1:6379 connected, the live test
-  listener at port 6380 was denied (EACCES), AF_UNIX was denied (EPERM),
-  and an unrelated file read was denied (EACCES). The disposable cgroup
-  was absent afterward.
-* With no IP policy, both synthetic addresses 127.0.0.1 and 127.0.0.2 on
-  port 6379 connected. With the real systemd IP policy only the first
-  connected. Both test cgroups were removed.
-* A representative `BindsTo` / `After` pair had detached children in the
-  inner test cgroup and both cgroups were removed in **1.884 s** after the
-  outer service's 1.6-s timeout. The nested launch uses supported startup and
-  runtime limits, and the helper adds an absolute-deadline self-timer. This
-  does not yet measure exact end-to-end cancellation or teardown.
-
-For a complete next run, exercise both exact generated units and the
-reader in one correlated scenario. For the same permit and boot compare
-the host procfs view to both real guest NSpid values and starts before and
-after; verify signed live replies from both workers, observe one live
-lease and fail-closed behavior on expiry and contradictory identity, and
-record reader AppArmor mode, Seccomp filter, effective guard denials,
-both cgroup terminations, and peak CPU/memory. Use the exact profile only
-after concrete action-time confirmation. Remove stage-only mounts, files,
-profile and processes without changing the underlying identity database
-or restoring old positive evidence. Until this passes, this remains a
-prototype and is a no-go for Rivendell.
-
-## Future one-shot acceptance budget, not executable with this revision
-
-This is a future validation outline, **not a production execution proposal
-for the current revision**. The host/container PID split and shared VPN
-namespace above have no qualified implementation here. Do not request or run
-a production shadow until a new narrow architecture is independently accepted.
-
-1. First review and stage the exact production fixed launcher and file-only
-   profile on an isolated unprivileged fixture. Configure only independently
-   verified full roles, broker/control namespace and container binding;
-   recheck PIDs/start ticks plus same cgroups/namespaces against the confirmed
-   backend incarnation. Verify the actual production AppArmor/seccomp
-   confinement and exact account behavior using a separately approved
-   isolated validation. No access expansion to the observer. Abort if any
-   source, identity, role, boot, UID/group/mode, path or clock drifts.
-2. After an explicit one-shot owner grant only, take passive snapshots
-   before/after exactly one fixed ping (8 s reply timeout, 12 s maximum
-   execution). Reserve two seconds total for independent witness enforcement,
-   plus up to three seconds for one read of the sanitized result while that
-   exact lease remains live. Cap service runtime at 17 seconds and treat
-   18 seconds as the outer wall budget including cgroup teardown,
-   deny any extra broker destination and use cgroup-wide teardown, including
-   escaped groups, on success and timeout. No retries, task, playback,
-   restarts, scheduling, or production rollout. The source timestamp is
-   the actual oldest contributing UTC witness, not time of reporting.
-3. Compare one sanitized result and original sample time with the private
-   authorized bracket. Record time, resource cost and cleanup. Report
-   unavailable on an ambiguous or missing result, not healthy. Keep the
-   existing 60-second TTL only as an upper bound; the live lease can end
-   much earlier. A future continuous schedule requires a separate design
-   and permission; one-shot passing does not qualify a daemon/timer.
-4. Before any separately authorized policy/collector action, capture
-   byte hashes, UID/GID/mode/link count, active enforce state, fixed SSH and
-   seccomp fingerprints and the relay/four-container modules, outputs and
-   timers. Keep verified private backups. Abort/rollback by stopping only
-   the candidate's cgroup, confirming it empty, closing its lease and
-   withdrawing only its shadow files. If profile/module changes were made,
-   atomically restore only the confirmed original files, ownership and
-   original policy under explicit approval; verify the same profile is
-   enforcing, files and relay/four-container checks match, and Celery is
-   unavailable. Never restore an old Celery receipt or restart media/workers.
+Stop only `samwise-celery-shadow-once.service` if it exists; verify that
+its cgroup is absent before cleanup. Retain the consumed-permit marker
+until verified withdrawal or reboot so a stale permit cannot be reused.
+Remove only the root-owned reviewed Celery receipt/lease/drop and shadow
+install/state files created by the approved rollout. Restore only changed
+observer files and the original verified file-only profile captured
+beforehand. Verify the baseline policy inventory, restricted user, native
+socket denial and all five baseline observations. Never copy back a
+previous healthy Celery receipt. Do not restart or reconfigure Redis,
+workers, the relay, provider, media stack, or dashboards for a change
+that only touched the monitor.

@@ -5,7 +5,6 @@ discovery, Docker socket or credentials. Required site adapters are deliberately
 not enrolled by this draft; without their reviewed hashes it cannot emit ready.
 """
 import hashlib
-import json
 import os
 from pathlib import Path
 import re
@@ -81,10 +80,9 @@ HOST = 'rivendell'
 TARGET = 'rivendell-dispatcharr'
 STAGE_HOST = 'staging'
 STAGE_TARGET = 'samwise-staging-dispatcharr-fixture'
-PRODUCTION_PERMIT = 'celery-shadow-once-v1'
-STAGE_PERMIT = 'celery-shadow-signed-fixture-once-v1'
+PRODUCTION_PERMIT = 'celery-operational-shadow-once-v1'
+STAGE_PERMIT = 'celery-operational-fixture-once-v1'
 UNIT = 'samwise-celery-shadow-once.service'
-BROKER_UNIT = 'samwise-celery-shadow-broker.service'
 INSTALL = Path('/opt/samwise-celery-shadow')
 STATE = Path('/run/samwise-celery-shadow')
 DROP = Path('/run/samwise-observations/celery-v1')
@@ -92,11 +90,13 @@ WITNESS = INSTALL / 'witness'
 PING = INSTALL / 'pidbox-ping'
 WITNESS_ENROLL = INSTALL / 'witness-enrollment.json'
 PIDBOX_ENROLL = INSTALL / 'pidbox-enrollment.json'
-SIGNED_ORIGIN = 'celery-site-signed-origin-v2'
+OPERATIONAL = 'celery-site-operational-pidbox-v1'
+TRUST = 'all-broker-reachable-reply-principals-reviewed-v1'
 BROKER_SCOPE = '191dd4b1462369703511b422e36ee4c7bd4350f23ff963c77f7f1d9b8b3bc6d7'
 PERMIT = INSTALL / 'one-shot.json'
 STAGE_PASSWD = INSTALL / 'stage-fixture.passwd'
 STAGE_GROUP = INSTALL / 'stage-fixture.group'
+STAGE_SOURCE = Path('/run/samwise-celery-stage-fixture')
 ENDPOINT = '127.0.0.1:6379'
 OBSERVER_UID = 999
 OBSERVER_GID = 985
@@ -143,10 +143,12 @@ def trusted_bytes(path, owner, mode, maximum):
 def permit(raw, boot, now, *, node=HOST):
     p = keys(decode(raw), 'version host target boot nonce not_before_ns expires_ns backend_id '
              'backend_pid backend_start_ns net_inode names broker_endpoint broker_scope_sha256 '
-             'witness_sha256 ping_sha256 witness_enrollment_sha256 pidbox_enrollment_sha256')
+             'witness_sha256 ping_sha256 witness_enrollment_sha256 pidbox_enrollment_sha256 '
+             'boundary_contract boundary_sha256')
     check(node in (HOST, STAGE_HOST) and p['host'] == node)
     expected = (PRODUCTION_PERMIT, TARGET) if node == HOST else (STAGE_PERMIT, STAGE_TARGET)
-    check((p['version'], p['target']) == expected)
+    check((p['version'],p['target'])==expected and p['boundary_contract']==TRUST)
+    digest(p['boundary_sha256'])
     check(p['boot'] == boot and UUID.fullmatch(boot) is not None)
     digest(p['nonce'])
     start, end = uint(p['not_before_ns']), uint(p['expires_ns'])
@@ -211,7 +213,7 @@ def claim(path, p, owner):
         os.close(token)
 
 
-def unit_command(p, permit_sha, began_ns, *, attestor=False):
+def unit_command(p, permit_sha, began_ns):
     digest(permit_sha)
     uint(began_ns)
     pid = uint(p['backend_pid'])
@@ -230,184 +232,73 @@ def unit_command(p, permit_sha, began_ns, *, attestor=False):
         'InaccessiblePaths=-/root -/home -/run/credentials -/run/docker.sock -/var/lib/docker',
         f'ReadWritePaths={DROP} {STATE}', f'NetworkNamespacePath=/proc/{pid}/ns/net',
     )
-    if attestor:
-        # No IP sockets and no target namespace in this service. Root uses
-        # local systemd IPC only to start the separately bounded broker unit.
-        replace = ('CapabilityBoundingSet=', 'RestrictAddressFamilies=',
-                   'IPAddressAllow=', 'NetworkNamespacePath=')
-        props = tuple(prop for prop in props if not prop.startswith(replace)) + (
-            'PrivateNetwork=yes', 'CapabilityBoundingSet=CAP_SYS_PTRACE',
-            'RestrictAddressFamilies=AF_UNIX', 'SystemCallFilter=~@debug',
-        )
     if p.get('host') == STAGE_HOST:
-        check(attestor and (p['version'],p['target']) == (STAGE_PERMIT,STAGE_TARGET))
-        # Never edit or shadow another account on the actual stage host.
-        # Only the transient VM180 fixture gets the synthetic principals.
-        props += (f'BindReadOnlyPaths={STAGE_PASSWD}:/etc/passwd {STAGE_GROUP}:/etc/group',)
+        check((p['version'],p['target'])==(STAGE_PERMIT,STAGE_TARGET))
+        props += ('TemporaryFileSystem=/opt:mode=0755',
+                  f'BindReadOnlyPaths={STAGE_SOURCE}:{INSTALL} '
+                  f'{STAGE_SOURCE/STAGE_PASSWD.name}:/etc/passwd '
+                  f'{STAGE_SOURCE/STAGE_GROUP.name}:/etc/group')
     return ['/usr/bin/systemd-run', '--unit='+UNIT, '--wait', '--collect', '--quiet'] + [
         '-p'+v for v in props] + ['/usr/bin/python3', '-IB', str(INSTALL/'celery_shadow_launcher.py'),
                                 '--worker', permit_sha, str(began_ns)]
 
 
-def broker_command(p, names, nonce, deadline_ns, now_ns=None):
-    check(destinations(names) == tuple(p['names']))
-    pid, cutoff = uint(p['backend_pid']), uint(deadline_ns)
-    check(pid <= 2**31-1)
-    check(now_ns is None or type(now_ns) is int)
-    left = cutoff - (time.monotonic_ns() if now_ns is None else now_ns)
-    check(1000 <= left <= BROKER_SECONDS*NS)
-    # The fixed helper independently verifies the same absolute deadline.
-    # Leave no reserve for a retry, and never place a permit/lease in this unit.
-    props = (
-        'Type=exec', f'RuntimeMaxSec={left//1000}us', f'TimeoutStartSec={left//1000}us',
-        f'BindsTo={UNIT}', f'After={UNIT}', 'KillMode=control-group',
-        'KillSignal=SIGKILL', 'TimeoutStopSec=1s', 'Restart=no', 'UMask=0077',
-        'NoNewPrivileges=yes', 'CapabilityBoundingSet=', 'RestrictAddressFamilies=AF_INET',
-        'ProtectHome=yes', 'ProtectSystem=strict', 'PrivateTmp=yes', 'PrivateDevices=yes',
-        'ProtectKernelTunables=yes', 'ProtectKernelModules=yes', 'ProtectControlGroups=yes',
-        'RestrictSUIDSGID=yes', 'RestrictNamespaces=yes', 'IPAddressDeny=any',
-        'IPAddressAllow=127.0.0.1/32', 'SocketBindDeny=any',
-        'InaccessiblePaths=-/root -/home -/run/credentials -/run/docker.sock -/var/lib/docker '
-        f'{DROP} {STATE} -/run/systemd -/run/dbus',
-        f'NetworkNamespacePath=/proc/{pid}/ns/net',
-    )
-    return ['/usr/bin/systemd-run', '--unit='+BROKER_UNIT, '--wait', '--pipe', '--collect',
-            '--quiet', *('-p'+v for v in props), '/usr/bin/python3', '-IBS',str(PING),
-            '--destination='+','.join(names),'--timeout=8','--json','--challenge='+digest(nonce),
-            '--deadline-ns='+str(cutoff), '--enrollment-sha='+digest(p['pidbox_enrollment_sha256'])]
-
-
-def approved_module(name, expected, owner):
-    # Exact source bytes only (root metadata and permit-pinned enrollment), no
-    # ambient package discovery or possibility of stale cached bytecode.
-    src = INSTALL/(name+'.py')
-    data=trusted_bytes(src,owner,0o644,128*1024)
-    check(hashlib.sha256(data).hexdigest()==digest(expected))
-    module=ModuleType(name)
-    module.__file__=str(src)
-    exec(compile(data,module.__file__,'exec',dont_inherit=True),module.__dict__)
-    return module
-
-
-def kernel_ids(proc, name, mapped, broker):
-    host,guest=mapped[name]
-    expected=broker['workers'][name]
-    check(type(expected) is list and len(expected)==2 and host==expected[0])
-    uid=uint(broker['worker_uids'][name])
-    st=proc/str(host)/'status'
-    with st.open('rb') as stream:
-        raw=stream.read(16385)
-    check(len(raw)<=16384)
-    rows=re.findall(rb'^Uid:[ 	]+([0-9]+)[ 	]+([0-9]+)[ 	]+([0-9]+)[ 	]+([0-9]+)$',
-                    raw,re.M)
-    check(len(rows)==1 and all(int(value)==uid for value in rows[0]))
-    return (host,guest,expected[1])
-
-
-def signed_plan(mapping, origin, names, p, broker, proc=Path('/proc')):
-    check(type(broker.get('worker_uids')) is dict and
-          type(broker.get('public_keys')) is dict and
-          broker['worker_uids'].keys()==broker['public_keys'].keys()==set(names))
-    check(len({uint(i) for i in broker['worker_uids'].values()})==2)
-    validate=getattr(mapping, 'signed_endpoint')
-    mapped=validate(proc,broker)
-    check(list(broker['guest_init'])[0]==p['backend_pid'] and
-          broker['guest_cgroup']=='/system.slice/docker-'+p['backend_id']+'.scope')
-    identities={n:kernel_ids(proc,n,mapped,broker) for n in names}
-    check(validate(proc,broker)==mapped)
-    return {n:origin.incarnation(site=p['host'],boot=p['boot'],backend=p['backend_id'],
-                                  host_pid=v[0],guest_pid=v[1],ticks=v[2])
-            for n,v in identities.items()}
-
-
 def checked_enrollment(p, owner):
-    for key,path in (('witness_enrollment_sha256', WITNESS_ENROLL),
-                     ('pidbox_enrollment_sha256', PIDBOX_ENROLL)):
-        raw = trusted_bytes(path, owner, 0o600, 8192)
-        check(hashlib.sha256(raw).hexdigest() == p[key])
-    broker = decode(raw)  # pidbox enrollment is last.
-    check(type(broker) is dict)
-    if p['host'] == STAGE_HOST:
-        # The exact deployed bytes run in both places; staging cannot turn
-        # an unsigned/no-origin fixture into a readiness claim.
-        check(broker.get('version') == SIGNED_ORIGIN)
+    # A root-reviewed inventory hash and contract bind an explicit trust
+    # decision to one expiring permit. Reachability is not authorization.
+    for key,path in (('witness_enrollment_sha256',WITNESS_ENROLL),
+                     ('pidbox_enrollment_sha256',PIDBOX_ENROLL)):
+        raw=trusted_bytes(path,owner,0o600,8192)
+        check(hashlib.sha256(raw).hexdigest()==p[key])
+    broker=decode(raw)
+    check(type(broker) is dict and broker.get('version')==OPERATIONAL
+          and broker.get('boundary_sha256')==p['boundary_sha256'] and p['boundary_contract']==TRUST
+          and broker.get('boot')==p['boot'] and broker.get('net_inode')==p['net_inode']
+          and broker.get('scope_sha256')==BROKER_SCOPE and broker.get('names')==p['names'])
     return broker
 
 
-def pinned_worker(p, owner, readonly, deadline_ns=None, *, broker_sender=None):
-    # Adapters are site-local fixed executables reviewed separately, not
-    # general shell runners; re-check pinned executable bodies before using.
-    for key, path in (('witness_sha256', WITNESS), ('ping_sha256', PING)):
-        raw = trusted_bytes(path, owner, 0o755, 256*1024)
-        check(hashlib.sha256(raw).hexdigest() == p[key])
-    names = destinations(tuple(p['names']))
-    boot = p['boot']
-    broker = checked_enrollment(p, owner)
-    check(type(broker) is dict)
-    signed = broker.get('version')==SIGNED_ORIGIN
-    origin = mapping = None
-    if signed:
-        # Neither ordinary Redis replies nor matching pre/post socket samples are
-        # a source-authentication fallback.
-        check(deadline_ns is not None and callable(broker_sender))
-        origin=approved_module('celery_signed_origin',broker['launcher_origin_sha256'],owner)
-        mapping=approved_module('celery_host_topology',broker['launcher_topology_sha256'],owner)
-    elif 'version' in broker:
-        check(broker['version']=='celery-site-pidbox-v1')
+def pinned_worker(p, owner, readonly, deadline_ns):
+    # The passive witness and guarded broker are immutable file pins. The
+    # same zero-capability service owns child cleanup and the live lease.
+    for key,path in (('witness_sha256',WITNESS),('ping_sha256',PING)):
+        raw=trusted_bytes(path,owner,0o755,256*1024)
+        check(hashlib.sha256(raw).hexdigest()==p[key])
+    names=destinations(tuple(p['names']))
+    boot=p['boot']
+    broker=checked_enrollment(p,owner)
+
     def budget(limit):
-        if deadline_ns is None:
-            return limit
         remaining=(deadline_ns-time.monotonic_ns())/NS
         check(remaining>0)
         return min(limit,remaining)
-    incarnation=None
-    check(type(broker) is dict and broker.get('boot')==boot and
-          broker.get('net_inode')==p['net_inode'] and
-          broker.get('scope_sha256')==BROKER_SCOPE and
-          type(broker.get('workers')) is dict and broker['workers'].keys()==set(names))
 
     def inspect():
-        nonlocal incarnation
-        check(checked_enrollment(p, owner)==broker)
-        code, out, err = capture([str(WITNESS)], '/', CAPTURE_ENV, budget(WITNESS_SECONDS))
-        check(code == 0 and not err)
-        frame = keys(decode(out), 'boot backend workers net_inode endpoint scope_sha256')
-        check(frame['boot'] == boot and frame['net_inode'] == p['net_inode'] and
-              frame['endpoint'] == ENDPOINT and frame['scope_sha256'] == p['broker_scope_sha256'])
-        check(tuple(frame['backend'][k] for k in ('Id','Pid','StartedNs')) ==
+        check(checked_enrollment(p,owner)==broker)
+        code,out,err=capture([str(WITNESS)],'/',CAPTURE_ENV,budget(WITNESS_SECONDS))
+        check(code==0 and not err)
+        frame=keys(decode(out),'boot backend workers net_inode endpoint scope_sha256')
+        check(frame['boot']==boot and frame['net_inode']==p['net_inode'] and
+              frame['endpoint']==ENDPOINT and frame['scope_sha256']==p['broker_scope_sha256'])
+        check(tuple(frame['backend'][k] for k in ('Id','Pid','StartedNs'))==
               tuple(p[k] for k in ('backend_id','backend_pid','backend_start_ns')))
-        check(type(frame['workers']) is dict and frame['workers']==broker['workers'])
-        check(all(type(v) is list for v in frame['workers'].values()))
-        if signed:
-            current_ids=signed_plan(mapping,origin,names,p,broker)
-            check(incarnation is None or current_ids==incarnation)
-            incarnation=current_ids
-            budget(WITNESS_SECONDS)
-        return Witness(boot, frame['backend'], {k: tuple(v) for k,v in frame['workers'].items()})
+        check(type(frame['workers']) is dict and frame['workers'].keys()==set(names)
+              and all(type(v) is list for v in frame['workers'].values()))
+        return Witness(boot,frame['backend'],{k:tuple(v) for k,v in frame['workers'].items()})
 
     def ping(exact):
-        check(exact == names and checked_enrollment(p, owner)==broker)
-        argv=[str(PING), '--destination='+','.join(names), '--timeout=8', '--json']
-        if not signed:
-            return capture(argv,'/',CAPTURE_ENV,budget(BROKER_SECONDS))
-        check(incarnation is not None)
-        nonce=origin.challenge()
-        code,out,err=broker_sender(exact, nonce, budget(BROKER_SECONDS))
-        check(code==0 and not err and type(out) is bytes and 0<len(out)<=16384)
-        proved=origin.qualify(decode(out),list(names),broker['public_keys'],
-                              incarnation,nonce,BROKER_SCOPE)
-        budget(WITNESS_SECONDS)
-        return (0,json.dumps(proved,separators=(',',':')).encode('ascii'),b'')
+        check(exact==names and checked_enrollment(p,owner)==broker)
+        began=time.monotonic_ns()
+        cutoff=min(began+BROKER_SECONDS*NS,deadline_ns)
+        check(cutoff>began)
+        args=[str(PING),'--destination='+','.join(names),'--timeout=8','--json',
+              '--deadline-ns='+str(cutoff),'--enrollment-sha='+p['pidbox_enrollment_sha256']]
+        return capture(args,'/',CAPTURE_ENV,(cutoff-began)/NS)
 
-    launched = time.monotonic()
-    with leased_acquisition(DROP, owner, boot, names, inspect, ping, deadline_ns=deadline_ns) as result:
-        if result not in ('both-ready','readiness-failed'):
+    with leased_acquisition(DROP,owner,boot,names,inspect,ping,deadline_ns=deadline_ns) as state:
+        if state!='both-ready':
             return 'unavailable'
-        end = min(launched+UNIT_SECONDS, time.monotonic()+LEASE_SECONDS,
-                  deadline_ns/NS if deadline_ns is not None else float('inf'))
-        # The staged reader observes the separate protected path. Hold the lease
-        # only for the reviewed bounded collection window, with no child/fork.
-        return readonly(result, end)
+        return readonly(state,min(time.monotonic()+LEASE_SECONDS,deadline_ns/NS))
 
 
 def entry(mode, expected_sha=None, start_text=None):
@@ -432,14 +323,10 @@ def entry(mode, expected_sha=None, start_text=None):
     else:
         check(expected_sha is None)
     p = permit(raw, boot, time.time_ns(), node=node)
-    attestor = False
-    if node == STAGE_HOST or mode != '--plan-only':
-        # Legacy production plan-only performs no site access. All executions
-        # pin the same reviewed enrollment before selecting a unit shape.
-        attestor = checked_enrollment(p, 0).get('version') == SIGNED_ORIGIN
+    checked_enrollment(p,0)  # never launch without a pinned boundary review
     if mode == '--plan-only':
         # No side effects, no nonce revealed and no active site access.
-        check(unit_command(p, permit_sha, started, attestor=attestor)[0] == '/usr/bin/systemd-run')
+        check(unit_command(p, permit_sha, started)[0] == '/usr/bin/systemd-run')
         return 'plan-valid'
     if mode == '--launch':
         if node == STAGE_HOST:
@@ -450,7 +337,7 @@ def entry(mode, expected_sha=None, start_text=None):
         # limit even if this parent exits. No failed unit is restarted.
         left = HARD_SECONDS - (time.monotonic_ns()-started)/NS
         check(0 < left <= HARD_SECONDS)
-        run = subprocess.run(unit_command(p, permit_sha, started, attestor=attestor), cwd='/', env=CAPTURE_ENV,
+        run = subprocess.run(unit_command(p, permit_sha, started), cwd='/', env=CAPTURE_ENV,
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                              stderr=subprocess.DEVNULL, timeout=left, check=False)
         return 'shadow-finished' if run.returncode == 0 else 'unavailable'
@@ -458,15 +345,7 @@ def entry(mode, expected_sha=None, start_text=None):
     cgroup = Path('/proc/self/cgroup').read_text().strip().partition('::')[2]
     check(cgroup == '/system.slice/'+UNIT)
     ns = Path('/proc/self/ns/net').stat()
-    if attestor:
-        check(ns.st_ino != p['net_inode'])
-        # The manager confines this service before Python starts. Refuse an
-        # accidentally shared host network even if the cgroup name matches.
-        interfaces = [line.split(':',1)[0].strip() for line in
-                      Path('/proc/self/net/dev').read_text().splitlines()[2:]]
-        check(interfaces == ['lo'])
-    else:
-        check(ns.st_ino == p['net_inode'])
+    check(ns.st_ino == p['net_inode'])
     preflight_observer()
     claim(STATE, p, 0)
 
@@ -478,14 +357,7 @@ def entry(mode, expected_sha=None, start_text=None):
         time.sleep(delay)
         return 'shadow-window-closed'
 
-    def send(names, nonce, timeout):
-        began = time.monotonic_ns()
-        cutoff = min(began + int(timeout*NS), int(wall_end*NS))
-        args = broker_command(p, names, nonce, cutoff, began)
-        return capture(args, '/', CAPTURE_ENV, (cutoff-began)/NS)
-
-    return pinned_worker(p, 0, lease_window, int(wall_end*NS),
-                         broker_sender=send if attestor else None)
+    return pinned_worker(p,0,lease_window,int(wall_end*NS))
 
 
 if __name__ == '__main__':
