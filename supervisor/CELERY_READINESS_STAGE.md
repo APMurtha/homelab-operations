@@ -251,6 +251,16 @@ and preserve the working relay and four-container paths.
   foreign process between snapshots; use independently controlled
   exclusive topology and reject any ambiguous origin. No live shared
   Rivendell VPN namespace is considered equivalent to this isolated fixture.
+  The fixed systemd unit joins only the enrolled network namespace, not a
+  guest/container PID namespace. This adapter deliberately requires itself,
+  both workers and Redis to share the enrolled private PID namespace, so a
+  host-PID worker confronting the normal Docker/PID split refuses before any
+  broker connection. The loopback-only network requirement separately refuses
+  a shared VPN namespace with additional interfaces. Do not bypass either
+  condition, add namespace capabilities, or run a production shadow with
+  this revision. A future production adapter must independently qualify a
+  bounded read-only host-PID mapping (and exclusive endpoint/confinement) or
+  continue reporting unavailable.
 - Real positive check used pinned existing Celery/Kombu/redis-py sources,
   disposable Redis and two workers on actual TCP 127.0.0.1:6379 in private
   PID/network namespaces, not the production site. It also exercised the
@@ -295,7 +305,12 @@ verify cgroup empty, no socket/file residue and byte-for-byte original
 policy inventory. A discrepancy or existing-name conflict stops the test.
 Absence of an approved replica means report this gate as blocked, not passed.
 
-## Proposed separately authorized one-shot, not part of this draft
+## Future one-shot acceptance budget, not executable with this revision
+
+This is a future validation outline, **not a production execution proposal
+for the current revision**. The host/container PID split and shared VPN
+namespace above have no qualified implementation here. Do not request or run
+a production shadow until a new narrow architecture is independently accepted.
 
 1. First review and stage the exact production fixed launcher and file-only
    profile on an isolated unprivileged fixture. Configure only independently
